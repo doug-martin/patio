@@ -325,104 +325,221 @@
 
 
 
-<h1>Connecting to a database</h1>
-<h2><a href="./patio.html#createConnection">patio.createConnection</a></h2>
-<p>When using <a href="./patio.html#createConnection">patio.createConnection</a> to connect a database there are two types of parameters you can use.
+    <a name=""></a>
+    <div class="navbar subnav">
+    <div class="navbar-inner  subnav-inner">
+          <div class="container">
+            <a href="#" class="brand">
+            patio.sql.StringMethods
+            
+                    
+             <span class="label label-success">Public</span>
+                    
+            
+            </a>
+           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                    </a>
+                    <div class="nav-collapse">
+
+            <ul class="nav pull-right">
+             <li><a href="#constructor">Constructor</a></li>
+                        
+                        
+                        
+                        
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Instance Methods<b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                
+                                <li><a href="./patio_sql_StringMethods.html#ilike">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                ilike
+
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_StringMethods.html#like">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                like
+
+                                </a></li>
+                                
+                            </ul>
+                        </li>
+                        
+            </ul>
+            </div>
+            </div>
+     </div>
+</div>
+
+
+
+    <p>
+This mixin provides SQL string methods such as (like and iLike).</p>
+    
+        <em>Example</em>
+            <pre class="prettyprint linenums lang-js">
+sql.a.like(&quot;A%&quot;); //=&gt; &quot;a&quot; LIKE &#x27;A%&#x27;
+sql.a.iLike(&quot;A%&quot;); //=&gt; &quot;a&quot; LIKE &#x27;A%&#x27;
+sql.a.like(/^a/); //=&gt;  &quot;a&quot; ~* &#x27;^a&#x27;
+            </pre>
+    
+
+    
+
+    
+    
+
+    <a name="constructor"></a>
+    <h3>Constructor</h3>
+
+    <em>Defined sql.js</em>
+    
+    
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+comb.define(null, {
+            </pre>
+      
+    
+
+  
+  
+    <a name="ilike"></a>
+    <h3>
+        ilike
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
+Create a <a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a> case insensitive pattern match of the receiver
+with the given patterns.  See <a href='./patio_sql_StringExpression.html#like'> patio.sql.StringExpression#like</a>.
 
 </p>
-<h3>Connetion URI</h3>
-<p>This is a well formed URI that will be used to connect to the database.
+
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.iLike(&quot;A%&quot;); //=&gt; &quot;a&quot; LIKE &#x27;A%&#x27;
+        </pre>
+
+
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>expression</em>  : </li>
+    
+     </ul>
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> </li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (expression){
+   expression = comb.argsToArray(arguments);
+   return StringExpression.like.apply(StringExpression, [this].concat(expression).concat([
+       {caseInsensitive:true}
+   ]));
+           
+}
+    </pre>
+    
+
+
+  
+    <a name="like"></a>
+    <h3>
+        like
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
+Create a <a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a> case sensitive (if the database supports it) pattern match of the receiver with
+the given patterns.  See <a href='./patio_sql_StringExpression.html#like'> patio.sql.StringExpression#like</a>.
 
 </p>
-<p><strong>Currently supported databases</strong>
 
-</p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Query options</strong>
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.like(/^a/); //=&gt;  &quot;a&quot; ~* &#x27;^a&#x27;
+sql.a.like(&quot;A%&quot;); //=&gt; &quot;a&quot; LIKE &#x27;A%&#x27;
+        </pre>
 
-</p>
-<ul>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
 
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-// 1 connection by default and a max of 10
-var DB = patio.createConnection(&quot;mysql://test:testpass@localhost:3306/test?maxConnections=1&amp;minConnections=10&quot;);</code></pre>
-<h3>Connection Object</h3>
-<p>This is an object to used to connect.
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>expression</em>  : </li>
+    
+     </ul>
 
-</p>
-<p><strong>Currently supported databases</strong>
 
-</p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Options</strong>
 
-</p>
-<ul>
-<li><code>type</code> <ul>
-<li><code>pg</code> : use postgres adapter</li>
-<li><code>mysql</code> : use mysql adapter</li>
-</ul>
-</li>
-<li><code>host</code> : host of the database</li>
-<li><code>port</code> : port the database is accepting connections on</li>
-<li><code>user</code> : user to connect to the database as</li>
-<li><code>password</code> : password</li>
-<li><code>database</code> : database (<code>schema</code>) to connect to</li>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
 
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//connect using an object
-var DB = patio.createConnection({
-             host : &quot;localhost&quot;,
-             port : 3306,
-             type : &quot;mysql&quot;,
-             maxConnections : 10,
-             minConnections : 1,
-             user : &quot;test&quot;,
-             password : &quot;testpass&quot;,
-             database : &#39;test&#39;
-});
-    //Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-    // 1 connection by default and a max of 10</code></pre>
-<h2>Disconnecting</h2>
-<p>To disconnect from a database you can use:
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (expression){
+   expression = comb.argsToArray(arguments);
+   return StringExpression.like.apply(StringExpression, [this].concat(expression));
+           
+}
+    </pre>
+    
 
-</p>
-<ul>
-<li><a href="./patio.html#disconnect">patio.disconnect</a> which disconnects all databases currently connected.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>patio.disconnect().then(function(){
-    //all databases are disconnected all queued queries have finished
-});</code></pre>
-<ul>
-<li><a href="./patio_Database.html#disconnect">patio.Database#disconnect</a> which disconnects only that database.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>DB.disconnect().then(function(){
-    //database is disconnected and all queued queries have finished
-});</code></pre>
 
+  
 
 </div>
 </div>

@@ -325,104 +325,443 @@
 
 
 
-<h1>Connecting to a database</h1>
-<h2><a href="./patio.html#createConnection">patio.createConnection</a></h2>
-<p>When using <a href="./patio.html#createConnection">patio.createConnection</a> to connect a database there are two types of parameters you can use.
+    <a name=""></a>
+    <div class="navbar subnav">
+    <div class="navbar-inner  subnav-inner">
+          <div class="container">
+            <a href="#" class="brand">
+            patio.sql.InequalityMethods
+            
+                    
+             <span class="label label-success">Public</span>
+                    
+            
+            </a>
+           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                    </a>
+                    <div class="nav-collapse">
 
+            <ul class="nav pull-right">
+             <li><a href="#constructor">Constructor</a></li>
+                        
+                        
+                        
+                        
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Instance Methods<b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                
+                                <li><a href="./patio_sql_InequalityMethods.html#between">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                <span class="label label-important">P</span>
+                                
+                                between
+
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_InequalityMethods.html#eq">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                eq
+
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_InequalityMethods.html#gt">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                gt
+
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_InequalityMethods.html#gte">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                gte
+
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_InequalityMethods.html#lt">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                lt
+
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_InequalityMethods.html#lte">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                lte
+
+                                </a></li>
+                                
+                            </ul>
+                        </li>
+                        
+            </ul>
+            </div>
+            </div>
+     </div>
+</div>
+
+
+
+    <p>
+This mixin includes the inequality methods (>, <, >=, <=) that are defined on objects that can be
+used in a numeric or string context in SQL.</p>
+    
+        <em>Example</em>
+            <pre class="prettyprint linenums lang-js">
+sql.a.gt(&quot;b&quot;)  //=&gt; a &gt; &quot;b&quot;
+sql.a.lt(&quot;b&quot;)  //=&gt; a &gt; &quot;b&quot;
+sql.a.gte(&quot;b&quot;) //=&gt; a &gt;= &quot;b&quot;
+sql.a.lte(&quot;b&quot;) //=&gt; a &lt;= &quot;b&quot;
+sql.a.eq(&quot;b&quot;) //=&gt; a = &quot;b&quot;
+            </pre>
+    
+
+    
+
+    
+    
+
+    <a name="constructor"></a>
+    <h3>Constructor</h3>
+
+    <em>Defined sql.js</em>
+    
+    
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+comb.define(null, {
+            </pre>
+      
+    
+
+  
+  
+    <a name="between"></a>
+    <h3>
+        between
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+        <span class="label label-important">Private</span>
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
 </p>
-<h3>Connetion URI</h3>
-<p>This is a well formed URI that will be used to connect to the database.
 
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.x.between([1,2]) =&gt; //=&gt; WHERE ((x &gt;= 1) AND (x &lt;= 10))
+sql.x.between([1,2]).invert() =&gt; //=&gt; WHERE ((x &lt; 1) OR (x &gt; 10))
+        </pre>
+
+
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>items</em>  : a two element array where the first element it the item to be gte and the second item lte.</li>
+    
+     </ul>
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> a boolean expression containing the between expression.</li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (items){
+   return new BooleanExpression(&quot;AND&quot;, new BooleanExpression(&quot;gte&quot;, this, items[0]), new BooleanExpression(&quot;lte&quot;, this, items[1]))
+           
+}
+    </pre>
+    
+
+
+  
+    <a name="eq"></a>
+    <h3>
+        eq
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
 </p>
-<p><strong>Currently supported databases</strong>
 
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.eq(&quot;b&quot;)  //=&gt; a = &quot;b&quot;
+        </pre>
+
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> </li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+inequalityMethod(&quot;eq&quot;)
+    </pre>
+    
+
+
+  
+    <a name="gt"></a>
+    <h3>
+        gt
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
 </p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Query options</strong>
 
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.gt(&quot;b&quot;)  //=&gt; a &gt; &quot;b&quot;
+        </pre>
+
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> </li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+inequalityMethod(&quot;gt&quot;)
+    </pre>
+    
+
+
+  
+    <a name="gte"></a>
+    <h3>
+        gte
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
 </p>
-<ul>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
 
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.gte(&quot;b&quot;)  //=&gt; a &gt;= &quot;b&quot;
+        </pre>
+
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> </li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+inequalityMethod(&quot;gte&quot;)
+    </pre>
+    
+
+
+  
+    <a name="lt"></a>
+    <h3>
+        lt
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
 </p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-// 1 connection by default and a max of 10
-var DB = patio.createConnection(&quot;mysql://test:testpass@localhost:3306/test?maxConnections=1&amp;minConnections=10&quot;);</code></pre>
-<h3>Connection Object</h3>
-<p>This is an object to used to connect.
 
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.lt(&quot;b&quot;)  //=&gt; a &lt; &quot;b&quot;
+        </pre>
+
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> </li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+inequalityMethod(&quot;lt&quot;)
+    </pre>
+    
+
+
+  
+    <a name="lte"></a>
+    <h3>
+        lte
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
 </p>
-<p><strong>Currently supported databases</strong>
 
-</p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Options</strong>
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.lte(&quot;b&quot;)  //=&gt; a &lt;= &quot;b&quot;
+        </pre>
 
-</p>
-<ul>
-<li><code>type</code> <ul>
-<li><code>pg</code> : use postgres adapter</li>
-<li><code>mysql</code> : use mysql adapter</li>
-</ul>
-</li>
-<li><code>host</code> : host of the database</li>
-<li><code>port</code> : port the database is accepting connections on</li>
-<li><code>user</code> : user to connect to the database as</li>
-<li><code>password</code> : password</li>
-<li><code>database</code> : database (<code>schema</code>) to connect to</li>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
 
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//connect using an object
-var DB = patio.createConnection({
-             host : &quot;localhost&quot;,
-             port : 3306,
-             type : &quot;mysql&quot;,
-             maxConnections : 10,
-             minConnections : 1,
-             user : &quot;test&quot;,
-             password : &quot;testpass&quot;,
-             database : &#39;test&#39;
-});
-    //Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-    // 1 connection by default and a max of 10</code></pre>
-<h2>Disconnecting</h2>
-<p>To disconnect from a database you can use:
 
-</p>
-<ul>
-<li><a href="./patio.html#disconnect">patio.disconnect</a> which disconnects all databases currently connected.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>patio.disconnect().then(function(){
-    //all databases are disconnected all queued queries have finished
-});</code></pre>
-<ul>
-<li><a href="./patio_Database.html#disconnect">patio.Database#disconnect</a> which disconnects only that database.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>DB.disconnect().then(function(){
-    //database is disconnected and all queued queries have finished
-});</code></pre>
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> </li>
+    
+    </ul>
 
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+inequalityMethod(&quot;lte&quot;)
+    </pre>
+    
+
+
+  
 
 </div>
 </div>

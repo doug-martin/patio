@@ -325,103 +325,125 @@
 
 
 
-<h1>Connecting to a database</h1>
-<h2><a href="./patio.html#createConnection">patio.createConnection</a></h2>
-<p>When using <a href="./patio.html#createConnection">patio.createConnection</a> to connect a database there are two types of parameters you can use.
+<h1>Model Inheritance</h1>
+<h2><a href="http://www.martinfowler.com/eaaCatalog/classTableInheritance.html">Class Table Inheritance</a></h2>
+<p>Consider the following table model.
 
 </p>
-<h3>Connetion URI</h3>
-<p>This is a well formed URI that will be used to connect to the database.
-
-</p>
-<p><strong>Currently supported databases</strong>
-
-</p>
+<pre class='prettyprint linenums lang-js'><code>          employee
+            - id
+            - name (varchar)
+            - kind (varchar)
+     /                          \
+ staff                        manager
+   - id (fk employee)           - id (fk employee)
+   - manager_id (fk manger)     - numStaff (number)
+                                 |
+                              executive
+                                - id (fk manager)</code></pre>
 <ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
+<li><strong>employee</strong>: This is the parent table of all employee instances.</li>
+<li><strong>staff</strong>: Table that inherits from employee where and represents.</li>
+<li><strong>manager</strong>: Another subclass of employee.</li>
+<li><strong>executive</strong>: Subclass of manager that also inherits from employee through inhertiance</li>
 </ul>
-<p><strong>Query options</strong>
+<p>When setting up you tables the parent table should contain a String column that contains the &quot;kind&quot; of class it is. (i.e. employee, staff, manager, executive). This allows the plugin to return the proper instance type when querying the tables.
 
 </p>
-<ul>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
+<p>All other tables that inherit from employee should contain a foreign key to their direct super class that is the same name as the primary key of the parent table(<strong>employee</strong>). So, in the above example <strong>staff</strong> and <strong>manager</strong> both contain foreign keys to employee and <strong>executive</strong> contains a foreign key to <strong>manager</strong> and they are all named <strong>id</strong>.
 
 </p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-// 1 connection by default and a max of 10
-var DB = patio.createConnection(&quot;mysql://test:testpass@localhost:3306/test?maxConnections=1&amp;minConnections=10&quot;);</code></pre>
-<h3>Connection Object</h3>
-<p>This is an object to used to connect.
+<p>To set up you models the base super class should contain the <a href="./patio_plugins_ClassTableInheritance.html">ClassTableInheritancePlugin</a> plugin.
 
 </p>
-<p><strong>Currently supported databases</strong>
+<pre class='prettyprint linenums lang-js'><code> var Employee = patio.addModel(&quot;employee&quot;, {
+      plugins : [patio.plugins.ClassTableInheritancePlugin],
+      static:{
+          init:function () {
+              this._super(arguments);
+              this.configure({key : &quot;kind&quot;});
+          }
+      }
+  });</code></pre>
+<p>All sub classes should just inherit their super class
 
 </p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
+<pre class='prettyprint linenums lang-js'><code>  var Staff = patio.addModel(&quot;staff&quot;, Employee, {
+      static:{
+          init:function () {
+              this._super(arguments);
+              this.manyToOne(&quot;manager&quot;, {key : &quot;managerId&quot;, fetchType : this.fetchType.EAGER});
+          }
+      }
+ });
+ var Manager = patio.addModel(&quot;manager&quot;, Employee, {
+      static:{
+          init:function () {
+              this._super(arguments);
+              this.oneToMany(&quot;staff&quot;, {key : &quot;managerId&quot;, fetchType : this.fetchType.EAGER});
+          }
+      }
+ });</code></pre>
+<p><code>Executive</code> inherits from <code>Manager</code>, and through inheritance will also receive the <code>oneToMany</code> relationship with staff
+
+</p>
+<pre class='prettyprint linenums lang-js'><code> var Executive = patio.addModel(&quot;executive&quot;,  Manager);</code></pre>
+<p>Working with models
+
+</p>
+<pre class='prettyprint linenums lang-js'><code>var comb = require(&quot;comb&quot;),
+    when = comb.when;
+when(
+    new Employee({name:&quot;Bob&quot;}).save(),
+    new Staff({name:&quot;Greg&quot;}).save(),
+    new Manager({name:&quot;Jane&quot;}).save(),
+    new Executive({name:&quot;Sue&quot;}).save()
+).then(function(){
+      Employee.all().then(function(emps){
+          var bob = emps[0], greg = emps[1], jane = emps[2], sue = emps[3];
+          console.log(bob instanceof Employee); //true
+          console.log(greg instanceof Employee);  //true
+          console.log(greg instanceof Staff);  //true
+          console.log(jane instanceof Employee);  //true
+          console.log(jane instanceof Manager);  //true
+          console.log(sue instanceof Employee);  //true
+          console.log(sue instanceof Manager);  //true
+          console.log(sue instanceof Executive);  //true
+      });
+ });</code></pre>
+<h3>Configuring</h3>
+<p>When setting up the <a href="./patio_plugins_ClassTableInheritance.html">ClassTableInheritancePlugin</a> plugin you should include it as a plugin on the base model, and call configure in the <code>init</code> block of the Model.
+
+</p>
 <p><strong>Options</strong>
 
 </p>
 <ul>
-<li><code>type</code> <ul>
-<li><code>pg</code> : use postgres adapter</li>
-<li><code>mysql</code> : use mysql adapter</li>
+<li><strong>key</strong> : The name of the column in the parent table that contains the name of the subclass that the row in the parent table represents.</li>
 </ul>
-</li>
-<li><code>host</code> : host of the database</li>
-<li><code>port</code> : port the database is accepting connections on</li>
-<li><code>user</code> : user to connect to the database as</li>
-<li><code>password</code> : password</li>
-<li><code>database</code> : database (<code>schema</code>) to connect to</li>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
-
-</p>
+<pre class='prettyprint linenums lang-js'><code> var Employee = patio.addModel(&quot;employee&quot;, {
+      plugins : [patio.plugins.ClassTableInheritancePlugin],
+      static:{
+          init:function () {
+              this._super(arguments);
+              this.configure({key : &quot;kind&quot;});
+          }
+      }
+  });</code></pre>
 <ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
+<li><strong>keyCb</strong> : A callback to invoke on on the key returned from the database. This is useful if you are working with other orms that save the keys differently.</li>
 </ul>
-<pre class='prettyprint linenums lang-js'><code>//connect using an object
-var DB = patio.createConnection({
-             host : &quot;localhost&quot;,
-             port : 3306,
-             type : &quot;mysql&quot;,
-             maxConnections : 10,
-             minConnections : 1,
-             user : &quot;test&quot;,
-             password : &quot;testpass&quot;,
-             database : &#39;test&#39;
-});
-    //Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-    // 1 connection by default and a max of 10</code></pre>
-<h2>Disconnecting</h2>
-<p>To disconnect from a database you can use:
-
-</p>
-<ul>
-<li><a href="./patio.html#disconnect">patio.disconnect</a> which disconnects all databases currently connected.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>patio.disconnect().then(function(){
-    //all databases are disconnected all queued queries have finished
-});</code></pre>
-<ul>
-<li><a href="./patio_Database.html#disconnect">patio.Database#disconnect</a> which disconnects only that database.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>DB.disconnect().then(function(){
-    //database is disconnected and all queued queries have finished
-});</code></pre>
+<pre class='prettyprint linenums lang-js'><code> var Employee = patio.addModel(&quot;employee&quot;, {
+      plugins : [patio.plugins.ClassTableInheritancePlugin],
+      static:{
+          init:function () {
+              this._super(arguments);
+              this.configure({keyCb : function(key){
+                      return key.toLowerCase();
+              }});
+          }
+      }
+  });</code></pre>
 
 
 </div>

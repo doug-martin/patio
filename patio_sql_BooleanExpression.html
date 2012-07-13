@@ -325,104 +325,430 @@
 
 
 
-<h1>Connecting to a database</h1>
-<h2><a href="./patio.html#createConnection">patio.createConnection</a></h2>
-<p>When using <a href="./patio.html#createConnection">patio.createConnection</a> to connect a database there are two types of parameters you can use.
+    <a name=""></a>
+    <div class="navbar subnav">
+    <div class="navbar-inner  subnav-inner">
+          <div class="container">
+            <a href="#" class="brand">
+            patio.sql.BooleanExpression
+            
+                    
+             <span class="label label-success">Public</span>
+                    
+            
+            </a>
+           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                    </a>
+                    <div class="nav-collapse">
+
+            <ul class="nav pull-right">
+             <li><a href="#constructor">Constructor</a></li>
+                        
+                        
+                        
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Static Methods<b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                
+                                <li><a href="./patio_sql_BooleanExpression.html#.__filterObject">
+                                
+                                <span class="label label-info">S</span>
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                <span class="label label-important">P</span>
+                                
+                                __filterObject
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_BooleanExpression.html#.fromValuePairs">
+                                
+                                <span class="label label-info">S</span>
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                fromValuePairs
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_BooleanExpression.html#.invert">
+                                
+                                <span class="label label-info">S</span>
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                invert
+                                </a></li>
+                                
+                            </ul>
+                        </li>
+                        
+                        
+            </ul>
+            </div>
+            </div>
+     </div>
+</div>
+
+
+
+    <p>
+Subclass of <a href='./patio_sql_ComplexExpression.html#'> patio.sql.ComplexExpression</a> where the expression results
+in a boolean value in SQL.</p>
+    
+
+    
+        <em>Extends</em>
+        <ul>
+            
+                <li> <a href="./patio_sql_ComplexExpression.html">patio.sql.ComplexExpression</a></li>
+            
+                <li> <a href="./patio_sql_BooleanMethods.html">patio.sql.BooleanMethods</a></li>
+            
+        </ul>
+    
+
+    
+    
+
+    <a name="constructor"></a>
+    <h3>Constructor</h3>
+
+    <em>Defined sql.js</em>
+    
+    
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+comb.define([ComplexExpression, BooleanMethods], {
+            </pre>
+      
+    
+
+  
+    <a name=".__filterObject"></a>
+    <h3>
+        __filterObject
+        
+        <span class="label label-info">Static</span>
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+        <span class="label label-important">Private</span>
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
+</p>
+
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+Dataset._filterObject({a : 1}) //=&gt; WHERE (a = 1)
+ Dataset._filterObject({x : {gt : 1}}) //=&gt; WHERE (x &gt; 1)
+ Dataset._filterObject({x : {gt : 1}, a : 1}) //=&gt; WHERE ((x &gt; 1) AND (a = 1))
+ Dataset._filterObject({x : {like : &quot;name&quot;}}) //=&gt; WHERE (x LIKE &#x27;name&#x27;)
+ Dataset._filterObject({x : {iLike : &quot;name&quot;}}) //=&gt; WHERE (x LIKE &#x27;name&#x27;)
+ Dataset._filterObject({x : {between : [1,10]}}) //=&gt; WHERE ((x &gt;= 1) AND (x &lt;= 10))
+ Dataset._filterObject({x : {notBetween : [1,10]}}) //=&gt; WHERE ((x &lt; 1) OR (x &gt; 10))
+ Dataset._filterObject({x : {neq : 1}}) //=&gt; WHERE (x != 1)
+        </pre>
+
+
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>expr</em>  : the expression we need to create an expression out of</li>
+    
+        <li> <em>[key= <code>null</code>]</em>  : the key that the hash corresponds to</li>
+    
+     </ul>
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.Expression</code> an expression to use in the filter</li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (expr,key){
+   var pairs = [], opts, newKey;
+   var twoArityOperators = this.TWO_ARITY_OPERATORS;
+   for (var k in expr) {
+       var v = expr[k];
+       if (comb.isHash(v)) { //its a hash too filter it too!
+           pairs.push(this.__filterObject(v, k));
+       } else if (key &amp;&amp; (twoArityOperators[k.toUpperCase()] || k.match(/between/i))) {
+           //its a two arrity operator (e.g. &#x27;=&#x27;, &#x27;&gt;&#x27;)
+           newKey = comb.isString(key) ? key.split(&quot;,&quot;) : [key];
+           if (newKey.length &gt; 1) {
+               //this represents a hash where the key represents two columns
+               //(e.g. {&quot;col1,col2&quot; : 1}) =&gt; WHERE (col1 = 1 AND col2 = 1)
+               pairs = pairs.concat(newKey.map(function (k) {
+                   //filter each column with the expression
+                   return this.__filterObject(expr, k);
+               }, this));
+           } else {
+               newKey = [sql.stringToIdentifier(newKey[0])];
+               if (k.match(/^like$/)) {
+                   //its a like clause {col : {like : &quot;hello&quot;}}
+                   pairs.push(StringExpression.like.apply(StringExpression, (newKey.concat(comb.isArray(v) ? v : [v]))));
+               } else if (k.match(/^iLike$/)) {
+                   //its a like clause {col : {iLike : &quot;hello&quot;}}
+                   pairs.push(StringExpression.like.apply(StringExpression, (newKey.concat(comb.isArray(v) ? v : [v]).concat({caseInsensitive:true}))));
+               } else if (k.match(/between/i)) {
+                   //its a like clause {col : {between : [1,10]}}
+                   var between = sql.stringToIdentifier(newKey[0]).between(v);
+                   k == &quot;notBetween&quot; &amp;&amp; (between = between.not());
+                   pairs.push(between);
+               } else {
+                   //otherwise is just a boolean expressio
+                   //it its not a valid operator then we
+                   //BooleanExpression with throw an error
+                   pairs.push(new BooleanExpression(k, newKey[0], v));
+               }
+           }
+       } else {
+           //we&#x27;re not a twoarity operator
+           //so we create a boolean expression out of it
+           newKey = k.split(&quot;,&quot;);
+           if (newKey.length == 1) {
+               newKey = sql.stringToIdentifier(newKey[0]);
+           }
+           opts = [
+               [newKey, v]
+           ];
+           pairs.push(BooleanExpression.fromValuePairs(opts));
+       }
+   }
+   //if the total of pairs is one then we just return the first element
+   //otherwise we join them all with an AND
+   return pairs.length == 1 ? pairs[0] : BooleanExpression.fromArgs([&quot;AND&quot;].concat(pairs));
+           
+}
+    </pre>
+    
+
+
+  
+    <a name=".fromValuePairs"></a>
+    <h3>
+        fromValuePairs
+        
+        <span class="label label-info">Static</span>
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
+Take pairs of values (e.g. a hash or array of two element arrays)
+and converts it to a <a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a>.  The operator and args
+used depends on the case of the right (2nd) argument:
+
+<pre class='code'>
+BooleanExpression.fromValuePairs({a : [1,2,3]}) //=> a IN (1,2,3)
+BooleanExpression.fromValuePairs({a : true}); // a IS TRUE;
+BooleanExpression.fromValuePairs({a : /^A/i}); // a *~ '^A'
+</pre>
+
+If multiple arguments are given, they are joined with the op given (AND
+by default, OR possible).  If negate is set to true,
+all subexpressions are inverted before used.
+<pre class='code'>
+BooleanExpression.fromValuePairs({a : [1,2,3], b : true}) //=> a IN (1,2,3) AND b IS TRUE
+BooleanExpression.fromValuePairs({a : [1,2,3], b : true}, "OR") //=> a IN (1,2,3) OR b IS TRUE
+BooleanExpression.fromValuePairs({a : [1,2,3], b : true}, "OR", true) //=> a NOT IN (1,2,3) AND b IS NOT TRUE
+</pre>
+</p>
+
+
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>a</em>  : object to convert to a <a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a></li>
+    
+        <li> <em>[op= <code>"AND"</code>]</em>  : Boolean operator to join each subexpression with.
+<pre class="code">
+    BooleanExpression.fromValuePairs({a : [1,2,3], b : true}, "OR") //=> a IN (1,2,3) OR b IS TRUE
+</pre></li>
+    
+        <li> <em>[negate= <code>false</code>]</em>  : set to try to invert the <a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a>.
+<pre class="code">
+BooleanExpression.fromValuePairs({a : [1,2,3], b : true}, "OR", true) //=> a NOT IN (1,2,3) AND b IS NOT TRUE
+</pre></li>
+    
+     </ul>
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> expression composed of sub expressions built from the hash.</li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (a,op,negate){
+   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   op = op || &quot;AND&quot;, negate = negate || false;
+   var pairArr = [];
+   var isArr = comb.isArray(a) &amp;&amp; Expression.isConditionSpecifier(a);
+   if (comb.isHash(a)) {
+       pairArr.push(this.__filterObject(a));
+   } else {
+       for (var k in a) {
+           var v = isArr ? a[k][1] : a[k], ret;
+           k = isArr ? a[k][0] : k;
+           if (comb.isArray(v) || comb.isInstanceOf(v, Dataset)) {
+               k = comb.isArray(k) ? k.map(function (i) {
+                   return comb.isString(i) ? sql.stringToIdentifier(i) : i
+               }) : comb.isString(k) ? sql.stringToIdentifier(k) : k;
+               ret = new BooleanExpression(&quot;IN&quot;, k, v);
+           } else if (comb.isInstanceOf(v, NegativeBooleanConstant)) {
+               ret = new BooleanExpression(&quot;ISNOT&quot;, k, v.constant);
+           } else if (comb.isInstanceOf(v, BooleanConstant)) {
+               ret = new BooleanExpression(&quot;IS&quot;, k, v.constant);
+           } else if (comb.isNull(v) || comb.isBoolean(v)) {
+               ret = new BooleanExpression(&quot;IS&quot;, k, v);
+           } else if (comb.isHash(v)) {
+               ret = BooleanExpression.__filterObject(v, k);
+           } else if (comb.isRexExp(v)) {
+               ret = StringExpression.like(sql.stringToIdentifier(k), v);
+           } else {
+               ret = new BooleanExpression(&quot;EQ&quot;, sql.stringToIdentifier(k), v);
+           }
+           negate &amp;&amp; (ret = BooleanExpression.invert(ret));
+           pairArr.push(ret);
+       }
+   }
+   //if We just have one then return the first otherwise create a new Boolean expression
+   return pairArr.length == 1 ? pairArr[0] : BooleanExpression.fromArgs([op].concat(pairArr));
+           
+}
+    </pre>
+    
+
+
+  
+    <a name=".invert"></a>
+    <h3>
+        invert
+        
+        <span class="label label-info">Static</span>
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
+Invert the expression, if possible.  If the expression cannot
+be inverted, it throws an <a href='./patio_error_ExpressionError.html#'> patio.error.ExpressionError</a>.  An inverted expression should match
+everything that the uninverted expression did not match, and vice-versa, except for possible issues with
+SQL NULL (i.e. 1 == NULL is NULL and 1 != NULL is also NULL).
 
 </p>
-<h3>Connetion URI</h3>
-<p>This is a well formed URI that will be used to connect to the database.
 
-</p>
-<p><strong>Currently supported databases</strong>
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+BooleanExpression.invert(sql.a) //=&gt; NOT &quot;a&quot;
+        </pre>
 
-</p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Query options</strong>
 
-</p>
-<ul>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>expression</em>  : the expression to invert.</li>
+    
+     </ul>
 
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-// 1 connection by default and a max of 10
-var DB = patio.createConnection(&quot;mysql://test:testpass@localhost:3306/test?maxConnections=1&amp;minConnections=10&quot;);</code></pre>
-<h3>Connection Object</h3>
-<p>This is an object to used to connect.
 
-</p>
-<p><strong>Currently supported databases</strong>
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.BooleanExpression</code> the inverted expression.</li>
+    
+    </ul>
 
-</p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Options</strong>
 
-</p>
-<ul>
-<li><code>type</code> <ul>
-<li><code>pg</code> : use postgres adapter</li>
-<li><code>mysql</code> : use mysql adapter</li>
-</ul>
-</li>
-<li><code>host</code> : host of the database</li>
-<li><code>port</code> : port the database is accepting connections on</li>
-<li><code>user</code> : user to connect to the database as</li>
-<li><code>password</code> : password</li>
-<li><code>database</code> : database (<code>schema</code>) to connect to</li>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
 
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//connect using an object
-var DB = patio.createConnection({
-             host : &quot;localhost&quot;,
-             port : 3306,
-             type : &quot;mysql&quot;,
-             maxConnections : 10,
-             minConnections : 1,
-             user : &quot;test&quot;,
-             password : &quot;testpass&quot;,
-             database : &#39;test&#39;
-});
-    //Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-    // 1 connection by default and a max of 10</code></pre>
-<h2>Disconnecting</h2>
-<p>To disconnect from a database you can use:
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (expression){
+   if (comb.isInstanceOf(expression, BooleanExpression)) {
+       var op = expression.op, newArgs;
+       if (op == &quot;AND&quot; || op == &quot;OR&quot;) {
+           newArgs = [OPERTATOR_INVERSIONS[op]].concat(expression.args.map(function (arg) {
+               return BooleanExpression.invert(arg);
+           }));
+           return BooleanExpression.fromArgs(newArgs);
+       } else {
+           newArgs = [OPERTATOR_INVERSIONS[op]].concat(expression.args);
+           return BooleanExpression.fromArgs(newArgs);
+       }
+   } else if (comb.isInstanceOf(expression, StringExpression) || comb.isInstanceOf(expression, NumericExpression)) {
+       throw new ExpressionError(comb.string.format(&quot;Cannot invert %4j&quot;, [expression]));
+   } else {
+       return new BooleanExpression(&quot;NOT&quot;, expression);
+   }
+           
+}
+    </pre>
+    
 
-</p>
-<ul>
-<li><a href="./patio.html#disconnect">patio.disconnect</a> which disconnects all databases currently connected.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>patio.disconnect().then(function(){
-    //all databases are disconnected all queued queries have finished
-});</code></pre>
-<ul>
-<li><a href="./patio_Database.html#disconnect">patio.Database#disconnect</a> which disconnects only that database.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>DB.disconnect().then(function(){
-    //database is disconnected and all queued queries have finished
-});</code></pre>
 
+  
+  
 
 </div>
 </div>

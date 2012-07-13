@@ -325,104 +325,289 @@
 
 
 
-<h1>Connecting to a database</h1>
-<h2><a href="./patio.html#createConnection">patio.createConnection</a></h2>
-<p>When using <a href="./patio.html#createConnection">patio.createConnection</a> to connect a database there are two types of parameters you can use.
+    <a name=""></a>
+    <div class="navbar subnav">
+    <div class="navbar-inner  subnav-inner">
+          <div class="container">
+            <a href="#" class="brand">
+            patio.sql.CastMethods
+            
+                    
+             <span class="label label-success">Public</span>
+                    
+            
+            </a>
+           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                    </a>
+                    <div class="nav-collapse">
+
+            <ul class="nav pull-right">
+             <li><a href="#constructor">Constructor</a></li>
+                        
+                        
+                        
+                        
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Instance Methods<b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                
+                                <li><a href="./patio_sql_CastMethods.html#cast">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                cast
+
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_CastMethods.html#castNumeric">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                castNumeric
+
+                                </a></li>
+                                
+                                <li><a href="./patio_sql_CastMethods.html#castString">
+                                
+                                
+                                <span class="label label-label">F</span>
+                                
+                                
+                                        
+                                 <span class="label label-success">P</span>
+                                        
+                                
+                                castString
+
+                                </a></li>
+                                
+                            </ul>
+                        </li>
+                        
+            </ul>
+            </div>
+            </div>
+     </div>
+</div>
+
+
+
+    <p>
+Defines case methods</p>
+    
+
+    
+
+    
+    
+
+    <a name="constructor"></a>
+    <h3>Constructor</h3>
+
+    <em>Defined sql.js</em>
+    
+    
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+comb.define(null, {
+            </pre>
+      
+    
+
+  
+  
+    <a name="cast"></a>
+    <h3>
+        cast
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
+Cast the reciever to the given SQL type.
 
 </p>
-<h3>Connetion URI</h3>
-<p>This is a well formed URI that will be used to connect to the database.
+
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.cast(&quot;integer&quot;) //=&gt; CAST(a AS integer)
+sql.a.cast(String) //=&gt; CAST(a AS varchar(255))
+        </pre>
+
+
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>type</em>  : </li>
+    
+     </ul>
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.Cast</code> the casted expression</li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (type){
+   return new Cast(this, type);
+           
+}
+    </pre>
+    
+
+
+  
+    <a name="castNumeric"></a>
+    <h3>
+        castNumeric
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
+Cast the reciever to the given SQL type (or the database's default Number type if none given.
 
 </p>
-<p><strong>Currently supported databases</strong>
+
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.castNumeric() //=&gt; CAST(a AS integer)
+sql.a.castNumeric(&quot;double&quot;) //=&gt; CAST(a AS double precision)
+        </pre>
+
+
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>type</em>  : the numeric type to cast to</li>
+    
+     </ul>
+
+
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.NumericExpression</code> a casted numberic expression</li>
+    
+    </ul>
+
+
+
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (type){
+   return this.cast(type || &quot;integer&quot;).sqlNumber;
+           
+}
+    </pre>
+    
+
+
+  
+    <a name="castString"></a>
+    <h3>
+        castString
+        
+        
+        <span class="label label-label">Function</span>
+        
+        
+                
+         <span class="label label-success">Public</span>
+                
+        
+   </h3>
+
+<hr/>
+<em>Defined sql.js</em>
+
+<p>
+Cast the reciever to the given SQL type (or the database's default String type if none given),
+and return the result as a <a href='./patio_sql_StringExpression.html#'> patio.sql.StringExpression</a>.
 
 </p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Query options</strong>
 
-</p>
-<ul>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
+    <em>Example</em>
+        <pre class="prettyprint linenums lang-js">
+sql.a.castString() //=&gt; CAST(a AS varchar(255))
+ sql.a.castString(&quot;text&quot;) //=&gt; CAST(a AS text)
+        </pre>
 
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-// 1 connection by default and a max of 10
-var DB = patio.createConnection(&quot;mysql://test:testpass@localhost:3306/test?maxConnections=1&amp;minConnections=10&quot;);</code></pre>
-<h3>Connection Object</h3>
-<p>This is an object to used to connect.
 
-</p>
-<p><strong>Currently supported databases</strong>
+    <em>Arguments</em>
+    <ul>
+    
+        <li> <em>type</em>  : the string type to cast to</li>
+    
+     </ul>
 
-</p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Options</strong>
 
-</p>
-<ul>
-<li><code>type</code> <ul>
-<li><code>pg</code> : use postgres adapter</li>
-<li><code>mysql</code> : use mysql adapter</li>
-</ul>
-</li>
-<li><code>host</code> : host of the database</li>
-<li><code>port</code> : port the database is accepting connections on</li>
-<li><code>user</code> : user to connect to the database as</li>
-<li><code>password</code> : password</li>
-<li><code>database</code> : database (<code>schema</code>) to connect to</li>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
+    <em>Returns</em>
+    <ul>
+    
+        <li> <code>patio.sql.StringExpression</code> the casted string expression</li>
+    
+    </ul>
 
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//connect using an object
-var DB = patio.createConnection({
-             host : &quot;localhost&quot;,
-             port : 3306,
-             type : &quot;mysql&quot;,
-             maxConnections : 10,
-             minConnections : 1,
-             user : &quot;test&quot;,
-             password : &quot;testpass&quot;,
-             database : &#39;test&#39;
-});
-    //Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-    // 1 connection by default and a max of 10</code></pre>
-<h2>Disconnecting</h2>
-<p>To disconnect from a database you can use:
 
-</p>
-<ul>
-<li><a href="./patio.html#disconnect">patio.disconnect</a> which disconnects all databases currently connected.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>patio.disconnect().then(function(){
-    //all databases are disconnected all queued queries have finished
-});</code></pre>
-<ul>
-<li><a href="./patio_Database.html#disconnect">patio.Database#disconnect</a> which disconnects only that database.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>DB.disconnect().then(function(){
-    //database is disconnected and all queued queries have finished
-});</code></pre>
 
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+function (type){
+   return this.cast(type || String).sqlString;
+           
+}
+    </pre>
+    
+
+
+  
 
 </div>
 </div>

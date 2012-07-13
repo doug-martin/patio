@@ -325,104 +325,115 @@
 
 
 
-<h1>Connecting to a database</h1>
-<h2><a href="./patio.html#createConnection">patio.createConnection</a></h2>
-<p>When using <a href="./patio.html#createConnection">patio.createConnection</a> to connect a database there are two types of parameters you can use.
+    <a name=""></a>
+    <div class="navbar subnav">
+    <div class="navbar-inner  subnav-inner">
+                  <div class="container">
+                    <a href="#" class="brand">
+                                
+                                
+                                
+                                        
+                                 <span class="label label-success">Public</span>
+                                        
+                                
+                    </a>
+                   <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                              <span class="icon-bar"></span>
+                              <span class="icon-bar"></span>
+                              <span class="icon-bar"></span>
+                            </a>
 
-</p>
-<h3>Connetion URI</h3>
-<p>This is a well formed URI that will be used to connect to the database.
+                            <div class="nav-collapse">
+            
+            </div>
+            </div>
+     </div>
+</div>
+<em>Defined sql.js</em>
 
-</p>
-<p><strong>Currently supported databases</strong>
+<p>
+Holds default generic constants that can be referenced.  These
+are included in <a href='./patio.html#'> patio</a></p>
 
-</p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Query options</strong>
 
-</p>
-<ul>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
 
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-// 1 connection by default and a max of 10
-var DB = patio.createConnection(&quot;mysql://test:testpass@localhost:3306/test?maxConnections=1&amp;minConnections=10&quot;);</code></pre>
-<h3>Connection Object</h3>
-<p>This is an object to used to connect.
 
-</p>
-<p><strong>Currently supported databases</strong>
 
-</p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Options</strong>
+    
+    <em>Source</em>
+    <pre class="prettyprint linenums lang-js">
+{
+    /**@lends patio.sql.Constants*/
+    /**
+     * Constant for CURRENT DATE
+     * @type patio.sql.Constant
+     */
+    CURRENT_DATE:new Constant(&quot;CURRENT_DATE&quot;),
+    /**
+     * Constant for CURRENT TIME
+     * @type patio.sql.Constant
+     */
+    CURRENT_TIME:new Constant(&quot;CURRENT_TIME&quot;),
+    /**
+     * Constant for CURRENT TIMESTAMP
+     * @type patio.sql.Constant
+     */
+    CURRENT_TIMESTAMP:new Constant(&quot;CURRENT_TIMESTAMP&quot;),
+    /**
+     * Constant for TRUE
+     * @type patio.sql.BooleanConstant
+     */
+    SQLTRUE:new BooleanConstant(1),
+    /**
+     * Constant for TRUE
+     * @type patio.sql.BooleanConstant
+     */
+    TRUE:new BooleanConstant(1),
+    /**
+     * Constant for FALSE.
+     * @type patio.sql.BooleanConstant
+     */
+    SQLFALSE:new BooleanConstant(0),
+    /**
+     * Constant for FALSE
+     * @type patio.sql.BooleanConstant
+     */
+    FALSE:new BooleanConstant(0),
+    /**
+     * Constant for NULL
+     * @type patio.sql.BooleanConstant
+     */
+    NULL:new BooleanConstant(null),
+    /**
+     * Constant for NOT NULL
+     * @type patio.sql.NegativeBooleanConstant
+     */
+    NOTNULL:new NegativeBooleanConstant(null)
+}
+    </pre>
+    
 
-</p>
-<ul>
-<li><code>type</code> <ul>
-<li><code>pg</code> : use postgres adapter</li>
-<li><code>mysql</code> : use mysql adapter</li>
-</ul>
-</li>
-<li><code>host</code> : host of the database</li>
-<li><code>port</code> : port the database is accepting connections on</li>
-<li><code>user</code> : user to connect to the database as</li>
-<li><code>password</code> : password</li>
-<li><code>database</code> : database (<code>schema</code>) to connect to</li>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
-
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//connect using an object
-var DB = patio.createConnection({
-             host : &quot;localhost&quot;,
-             port : 3306,
-             type : &quot;mysql&quot;,
-             maxConnections : 10,
-             minConnections : 1,
-             user : &quot;test&quot;,
-             password : &quot;testpass&quot;,
-             database : &#39;test&#39;
-});
-    //Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-    // 1 connection by default and a max of 10</code></pre>
-<h2>Disconnecting</h2>
-<p>To disconnect from a database you can use:
-
-</p>
-<ul>
-<li><a href="./patio.html#disconnect">patio.disconnect</a> which disconnects all databases currently connected.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>patio.disconnect().then(function(){
-    //all databases are disconnected all queued queries have finished
-});</code></pre>
-<ul>
-<li><a href="./patio_Database.html#disconnect">patio.Database#disconnect</a> which disconnects only that database.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>DB.disconnect().then(function(){
-    //database is disconnected and all queued queries have finished
-});</code></pre>
-
+    <table class='table table-bordered table-striped'><tr><td>Property</td><td>Type</td><td>Default Value</td><td>Description</td></tr><tr><td><em>CURRENT_DATE</em></td><td>patio.sql.Constant</td><td><code>new Constant("CURRENT_DATE")</code></td><td>
+Constant for CURRENT DATE
+</td><tr><tr><td><em>CURRENT_TIME</em></td><td>patio.sql.Constant</td><td><code>new Constant("CURRENT_TIME")</code></td><td>
+Constant for CURRENT TIME
+</td><tr><tr><td><em>CURRENT_TIMESTAMP</em></td><td>patio.sql.Constant</td><td><code>new Constant("CURRENT_TIMESTAMP")</code></td><td>
+Constant for CURRENT TIMESTAMP
+</td><tr><tr><td><em>FALSE</em></td><td>patio.sql.BooleanConstant</td><td><code>new BooleanConstant(0)</code></td><td>
+Constant for FALSE
+</td><tr><tr><td><em>NOTNULL</em></td><td>patio.sql.NegativeBooleanConstant</td><td><code>new NegativeBooleanConstant(null)</code></td><td>
+Constant for NOT NULL
+</td><tr><tr><td><em>NULL</em></td><td>patio.sql.BooleanConstant</td><td><code>new BooleanConstant(null)</code></td><td>
+Constant for NULL
+</td><tr><tr><td><em>SQLFALSE</em></td><td>patio.sql.BooleanConstant</td><td><code>new BooleanConstant(0)</code></td><td>
+Constant for FALSE.
+</td><tr><tr><td><em>SQLTRUE</em></td><td>patio.sql.BooleanConstant</td><td><code>new BooleanConstant(1)</code></td><td>
+Constant for TRUE
+</td><tr><tr><td><em>TRUE</em></td><td>patio.sql.BooleanConstant</td><td><code>new BooleanConstant(1)</code></td><td>
+Constant for TRUE
+</td><tr></table>
+    
 
 </div>
 </div>
@@ -440,3 +451,4 @@ var DB = patio.createConnection({
 
 </body>
 </html>
+

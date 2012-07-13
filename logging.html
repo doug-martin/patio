@@ -325,103 +325,121 @@
 
 
 
-<h1>Connecting to a database</h1>
-<h2><a href="./patio.html#createConnection">patio.createConnection</a></h2>
-<p>When using <a href="./patio.html#createConnection">patio.createConnection</a> to connect a database there are two types of parameters you can use.
+<h1>Logging</h1>
+<p>Patio uses the <a href="http://pollenware.github.com/comb/symbols/comb.logging.Logger.html">comb.logging</a> framework for all logging. To set up logging there are two scenarios.
 
 </p>
-<h3>Connetion URI</h3>
-<p>This is a well formed URI that will be used to connect to the database.
+<p>If you installed comb at the root of your project and then installed patio
 
 </p>
-<p><strong>Currently supported databases</strong>
+<p><code>npm install comb patio</code>
+
 
 </p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Query options</strong>
+<p>Then patio should be using the same version of comb that your application uses. If that is the case then you can configure logging through
 
 </p>
 <ul>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
+<li><a href="http://pollenware.github.com/comb/symbols/comb.logging.BasicConfigurator.html">comb.logging.BasicConfigurator</a></li>
+<li><a href="http://pollenware.github.com/comb/symbols/comb.logging.PropertyConfigurator.html">comb.logging.PropertyConfigurator</a></li>
 </ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
+<pre class='prettyprint linenums lang-js'><code>var comb = require(&quot;comb&quot;),
+    Logger = comb.logging.Logger,
+    Level = comb.logging.Level,
+    patio = require(&quot;patio&quot;);                            
+
+new comb.logging.BasicConfigurator().configure();
+Logger.getLogger(&quot;patio&quot;).level = Level.INFO;</code></pre>
+<p>Or
+</p>
+<pre class='prettyprint linenums lang-js'><code>//configure with a JSON file.
+new comb.logging.PropertyConfigurator().configure(&quot;/location/of/log/config.json&quot;);
+
+//or
+
+var loggingConfig = {
+    //set the root patio logger to INFO by setting it on the root patio logger, patio.Dataset, patio.Database will
+    //all get set to INFO level.
+    &quot;patio&quot; : {
+        level : &quot;INFO&quot;,
+        appenders : [
+            {
+                type : &quot;ConsoleAppender&quot;
+            }
+        ]
+    },
+    //set the database logger to DEBUG
+    &quot;patio.Database&quot; : {
+        level : &quot;DEBUG&quot;,
+        appenders : [
+            {
+                type : &quot;ConsoleAppender&quot;
+            }
+        ]
+    }
+};
+new comb.logging.PropertyConfigurator().configure(loggingConfig);</code></pre>
+<p>If you are using a different version of comb or do not want to use comb, then you can use the following method <a href="./patio.html#configureLogging">patio.configureLogging</a>;
+
+</p>
+<pre class='prettyprint linenums lang-js'><code>var comb = require(&quot;comb&quot;),
+    patio = require(&quot;patio&quot;);
+//sets up a basic configurator
+patio.configureLogging();</code></pre>
+<p>Or with a JSON file
+</p>
+<pre class='prettyprint linenums lang-js'><code>patio.configureLogging(&quot;/location/of/log/config.json&quot;);</code></pre>
+<p>Or with an object
+
+</p>
+<pre class='prettyprint linenums lang-js'><code>var loggingConfig = {
+    //set the root patio logger to INFO by setting it on the root patio logger, patio.Dataset, patio.Database will
+    //all get set to INFO level.
+    &quot;patio&quot; : {
+        level : &quot;INFO&quot;,
+        appenders : [
+            {
+                type : &quot;ConsoleAppender&quot;
+            },
+            {
+                type:&quot;RollingFileAppender&quot;,
+                file:&quot;/var/log/patio.log&quot;
+            }
+        ]
+    },
+    //set the database logger to DEBUG
+    &quot;patio.Database&quot; : {
+        level : &quot;DEBUG&quot;,
+        appenders : [
+            {
+                type : &quot;ConsoleAppender&quot;
+            }
+        ]
+    }
+};
+patio.configureLogging(loggingConfig);</code></pre>
+<p>The patio logger currently contains the following loggers:
 
 </p>
 <ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
+<li>patio</li>
+<li>patio.Dataset</li>
+<li>patio.Database</li>
 </ul>
-<pre class='prettyprint linenums lang-js'><code>//Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-// 1 connection by default and a max of 10
-var DB = patio.createConnection(&quot;mysql://test:testpass@localhost:3306/test?maxConnections=1&amp;minConnections=10&quot;);</code></pre>
-<h3>Connection Object</h3>
-<p>This is an object to used to connect.
+<p>To get access to patios root logger use the <code>patio.LOGGER</code> property.
 
 </p>
-<p><strong>Currently supported databases</strong>
+<pre class='prettyprint linenums lang-js'><code>var patioLogger = patio.LOGGER;
+patioLogger.level = &quot;off&quot;;</code></pre>
+<p>There are also a methods for each logger method on patio.
 
 </p>
-<ul>
-<li><code>pg</code> : example <code>pg://test:testpass@localhost:5432/test</code></li>
-<li><code>mysql</code> : example <code>mysql://test:testpass@localhost:3306/test</code></li>
-</ul>
-<p><strong>Options</strong>
-
-</p>
-<ul>
-<li><code>type</code> <ul>
-<li><code>pg</code> : use postgres adapter</li>
-<li><code>mysql</code> : use mysql adapter</li>
-</ul>
-</li>
-<li><code>host</code> : host of the database</li>
-<li><code>port</code> : port the database is accepting connections on</li>
-<li><code>user</code> : user to connect to the database as</li>
-<li><code>password</code> : password</li>
-<li><code>database</code> : database (<code>schema</code>) to connect to</li>
-<li><code>maxConnections</code> : maximum number of connections to keep in the pool</li>
-<li><code>minConnections</code> : minimum number of connections to keep in the pool</li>
-</ul>
-<p><strong>Note:</strong> All other options will be passed to the underlying driver see the driver documentation for additional options.
-
-</p>
-<ul>
-<li><a href="https://github.com/felixge/node-mysql">mysql</a></li>
-<li><a href="https://github.com/brianc/node-postgres">postgres</a></li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>//connect using an object
-var DB = patio.createConnection({
-             host : &quot;localhost&quot;,
-             port : 3306,
-             type : &quot;mysql&quot;,
-             maxConnections : 10,
-             minConnections : 1,
-             user : &quot;test&quot;,
-             password : &quot;testpass&quot;,
-             database : &#39;test&#39;
-});
-    //Create a connection to a mysql database at localhost port 3306, with the username test, password test and
-    // 1 connection by default and a max of 10</code></pre>
-<h2>Disconnecting</h2>
-<p>To disconnect from a database you can use:
-
-</p>
-<ul>
-<li><a href="./patio.html#disconnect">patio.disconnect</a> which disconnects all databases currently connected.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>patio.disconnect().then(function(){
-    //all databases are disconnected all queued queries have finished
-});</code></pre>
-<ul>
-<li><a href="./patio_Database.html#disconnect">patio.Database#disconnect</a> which disconnects only that database.</li>
-</ul>
-<pre class='prettyprint linenums lang-js'><code>DB.disconnect().then(function(){
-    //database is disconnected and all queued queries have finished
-});</code></pre>
+<pre class='prettyprint linenums lang-js'><code>patio.logDebug(&quot;DEBUG&quot;);
+patio.logInfo(&quot;INFO&quot;);
+patio.logTrace(&quot;TRACE&quot;);
+patio.logError(&quot;ERROR&quot;);
+patio.logWarn(&quot;WARN&quot;);
+patio.logFatal(&quot;FATAL&quot;);</code></pre>
 
 
 </div>
