@@ -1,9 +1,10 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/oneToOne.helper.js"),
     patio = require("index"),
     comb = require("comb"),
-    Promise = comb.Promise,
     hitch = comb.hitch;
 
 
@@ -49,10 +50,7 @@ it.describe("One To One with camelize option", function (it) {
     it.describe("create a new model with association", function (it) {
 
         it.beforeAll(function () {
-            return comb.when(
-                Employee.remove(),
-                Works.remove()
-            );
+            return Promise.all([Employee.remove(), Works.remove()]);
         });
 
 
@@ -69,8 +67,8 @@ it.describe("One To One with camelize option", function (it) {
                     salary: 100000
                 }
             });
-            return employee.save().chain(function () {
-                return employee.works.chain(function (works) {
+            return employee.save().then(function () {
+                return employee.works.then(function (works) {
                     assert.equal(works.companyName, "Google");
                     assert.equal(works.salary, 100000);
                 });
@@ -102,12 +100,12 @@ it.describe("One To One with camelize option", function (it) {
         });
 
         it.should("not load associations when querying", function () {
-            return comb.when(Employee.one(), Works.one()).chain(function (res) {
+            return Promise.all([Employee.one(), Works.one()]).then(function (res) {
                 var emp = res[0], work = res[1];
                 var workPromise = emp.works, empPromise = work.employee;
                 assert.isPromiseLike(workPromise);
                 assert.isPromiseLike(empPromise);
-                return comb.when(empPromise, workPromise).chain(function (res) {
+                return Promise.all([empPromise, workPromise]).then(function (res) {
                     var emp = res[0], work = res[1];
                     assert.instanceOf(emp, Employee);
                     assert.instanceOf(work, Works);
@@ -116,14 +114,14 @@ it.describe("One To One with camelize option", function (it) {
         });
 
         it.should("allow the removing of associations", function () {
-            return Employee.one().chain(function (emp) {
+            return Employee.one().then(function (emp) {
                 emp.works = null;
-                return emp.save().chain(function (emp) {
-                    return emp.works.chain(function (works) {
+                return emp.save().then(function (emp) {
+                    return emp.works.then(function (works) {
                         assert.isNull(works);
-                        return Works.one().chain(function (work) {
+                        return Works.one().then(function (work) {
                             assert.isNotNull(work);
-                            return work.employee.chain(function (emp) {
+                            return work.employee.then(function (emp) {
                                 assert.isNull(emp);
                             });
                         });
@@ -136,10 +134,7 @@ it.describe("One To One with camelize option", function (it) {
 
     it.context(function () {
         it.beforeEach(function () {
-            return comb.when(
-                Works.remove(),
-                Employee.remove()
-            );
+            return Promise.all([Works.remove(), Employee.remove()]);
         });
 
         it.should("allow the setting of associations", function () {
@@ -151,15 +146,15 @@ it.describe("One To One with camelize option", function (it) {
                 street: "Street " + 1,
                 city: "City " + 1
             });
-            return emp.save().chain(function () {
-                return emp.works.chain(function (works) {
+            return emp.save().then(function () {
+                return emp.works.then(function (works) {
                     assert.isNull(works);
                     emp.works = {
                         companyName: "Google",
                         salary: 100000
                     };
-                    return emp.save().chain(function () {
-                        return emp.works.chain(function (works) {
+                    return emp.save().then(function () {
+                        return emp.works.then(function (works) {
                             assert.instanceOf(works, Works);
                         });
                     });
@@ -180,9 +175,9 @@ it.describe("One To One with camelize option", function (it) {
                     salary: 100000
                 }
             });
-            return e.save().chain(function () {
-                return e.remove().chain(function () {
-                    return comb.when(Employee.all(), Works.all()).chain(function (res) {
+            return e.save().then(function () {
+                return e.remove().then(function () {
+                    return Promise.all([Employee.all(), Works.all()]).then(function (res) {
                         assert.lengthOf(res[0], 0);
                         assert.lengthOf(res[1], 1);
                     });

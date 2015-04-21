@@ -1,3 +1,5 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/oneToOne.helper.js"),
@@ -47,10 +49,7 @@ it.describe("One To One eager with custom filter", function (it) {
     it.describe("create a new model with association", function (it) {
 
         it.beforeAll(function () {
-            return comb.when(
-                Employee.remove(),
-                Works.remove()
-            );
+            return Promise.all([Employee.remove(), Works.remove()]);
         });
 
 
@@ -99,12 +98,13 @@ it.describe("One To One eager with custom filter", function (it) {
         });
 
         it.should("load associations when querying", function () {
-            return comb.when(Employee.one(), Works.one()).chain(function (res) {
-                var emp = res[0], work = res[1];
-                var empWorks = emp.works, worksEmp = work.employee;
-                assert.instanceOf(worksEmp, Employee);
-                assert.instanceOf(empWorks, Works);
-            });
+            return Promise.all([Employee.one(), Works.one()])
+                .then(function (res) {
+                    var emp = res[0], work = res[1];
+                    var empWorks = emp.works, worksEmp = work.employee;
+                    assert.instanceOf(worksEmp, Employee);
+                    assert.instanceOf(empWorks, Works);
+                });
         });
 
         it.should("allow the removing of associations", function () {
@@ -134,10 +134,7 @@ it.describe("One To One eager with custom filter", function (it) {
 
     it.context(function () {
         it.beforeEach(function () {
-            return comb.when(
-                Works.remove(),
-                Employee.remove()
-            );
+            return Promise.all([Works.remove(), Employee.remove()]);
         });
 
         it.should("allow the setting of associations", function () {
@@ -176,10 +173,11 @@ it.describe("One To One eager with custom filter", function (it) {
             });
             return e.save().chain(function () {
                 return e.remove().chain(function () {
-                    return comb.when(Employee.all(), Works.all()).chain(function (res) {
-                        assert.lengthOf(res[0], 0);
-                        assert.lengthOf(res[1], 1);
-                    });
+                    return Promise.all([Employee.all(), Works.all()])
+                        .then(function (res) {
+                            assert.lengthOf(res[0], 0);
+                            assert.lengthOf(res[1], 1);
+                        });
                 });
             });
         });

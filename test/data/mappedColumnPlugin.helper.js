@@ -1,3 +1,5 @@
+"use strict";
+
 var patio = require("index"),
     config = require("../test.config.js"),
     comb = require("comb-proxy");
@@ -23,13 +25,13 @@ var createTables = function (underscore) {
                 this.street("string", {size: 50, allowNull: false});
                 this.city("string", {size: 20, allowNull: false});
             });
-            db.createTable("works", function (table) {
+            db.createTable("works", function () {
                 this.primaryKey("id");
                 this[underscore ? "company_name" : "companyName"]("string", {size: 20, allowNull: false});
-                this.salary("float", {size: [20, 8], allowNull: false})
-                this.salaryTwo("float", {size: [20, 8], allowNull: false})
-                this.salaryThree("float", {size: [20, 8], allowNull: false})
-                this.salaryInner("float", {size: [20, 8], allowNull: false})
+                this.salary("float", {size: [20, 8], allowNull: false});
+                this.salaryTwo("float", {size: [20, 8], allowNull: false});
+                this.salaryThree("float", {size: [20, 8], allowNull: false});
+                this.salaryInner("float", {size: [20, 8], allowNull: false});
                 this.foreignKey(underscore ? "employee_id" : "employeeId", "employee", {key: "id"});
             });
         }).addCallback(function (db) {

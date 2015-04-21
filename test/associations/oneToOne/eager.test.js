@@ -1,3 +1,5 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/oneToOne.helper.js"),
@@ -42,10 +44,7 @@ it.describe("One To One eager", function (it) {
     it.describe("create a new model with association", function (it) {
 
         it.beforeAll(function () {
-            return comb.when(
-                Employee.remove(),
-                Works.remove()
-            );
+            return Promise.all([Employee.remove(), Works.remove()]);
         });
 
 
@@ -62,7 +61,7 @@ it.describe("One To One eager", function (it) {
                     salary: 100000
                 }
             });
-            return employee.save().chain(function () {
+            return employee.save().then(function () {
                 var works = employee.works;
                 assert.equal(works.companyName, "Google");
                 assert.equal(works.salary, 100000);
@@ -94,20 +93,21 @@ it.describe("One To One eager", function (it) {
         });
 
         it.should("load associations when querying", function () {
-            return comb.when(Employee.one(), Works.one()).chain(function (res) {
-                var emp = res[0], work = res[1];
-                var empWorks = emp.works, worksEmp = work.employee;
-                assert.instanceOf(worksEmp, Employee);
-                assert.instanceOf(empWorks, Works);
-            });
+            return Promise.all([Employee.one(), Works.one()])
+                .then(function (res) {
+                    var emp = res[0], work = res[1];
+                    var empWorks = emp.works, worksEmp = work.employee;
+                    assert.instanceOf(worksEmp, Employee);
+                    assert.instanceOf(empWorks, Works);
+                });
         });
 
         it.should("allow the removing of associations", function () {
-            return Employee.one().chain(function (emp) {
+            return Employee.one().then(function (emp) {
                 emp.works = null;
-                return emp.save().chain(function (emp) {
+                return emp.save().then(function (emp) {
                     assert.isNull(emp.works);
-                    return Works.one().chain(function (work) {
+                    return Works.one().then(function (work) {
                         assert.isNotNull(work);
                         assert.isNull(work.employee);
                     });
@@ -119,10 +119,7 @@ it.describe("One To One eager", function (it) {
 
     it.context(function () {
         it.beforeEach(function () {
-            return comb.when(
-                Works.remove(),
-                Employee.remove()
-            );
+            return Promise.all([Works.remove(), Employee.remove()]);
         });
 
         it.should("allow the setting of associations", function () {
@@ -134,13 +131,13 @@ it.describe("One To One eager", function (it) {
                 street: "Street " + 1,
                 city: "City " + 1
             });
-            return emp.save().chain(function () {
+            return emp.save().then(function () {
                 assert.isNull(emp.works);
                 emp.works = {
                     companyName: "Google",
                     salary: 100000
                 };
-                return emp.save().chain(function () {
+                return emp.save().then(function () {
                     assert.instanceOf(emp.works, Works);
                 });
             });
@@ -159,12 +156,13 @@ it.describe("One To One eager", function (it) {
                     salary: 100000
                 }
             });
-            return e.save().chain(function () {
-                return e.remove().chain(function () {
-                    return comb.when(Employee.all(), Works.all()).chain(function (res) {
-                        assert.lengthOf(res[0], 0);
-                        assert.lengthOf(res[1], 1);
-                    });
+            return e.save().then(function () {
+                return e.remove().then(function () {
+                    return Promise.all([Employee.all(), Works.all()])
+                        .then(function (res) {
+                            assert.lengthOf(res[0], 0);
+                            assert.lengthOf(res[1], 1);
+                        });
                 });
             });
         });

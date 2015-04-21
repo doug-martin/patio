@@ -1,3 +1,5 @@
+"use strict";
+
 var patio = require("index"),
     config = require("../test.config.js"),
     comb = require("comb-proxy");
@@ -15,7 +17,7 @@ var createTables = function (underscore) {
         function (db) {
             db.forceDropTable(["staff", "executive", "manager", "employee"]);
             db.createTable("employee", function () {
-                this.primaryKey("id")
+                this.primaryKey("id");
                 this.name(String);
                 this.kind(String);
             });
