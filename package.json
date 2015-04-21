@@ -1,61 +1,63 @@
 {
-    "name": "patio",
-    "description": "Patio query engine and ORM",
-    "version": "0.9.3",
-    "keywords": [
-        "ORM",
-        "object relation mapper",
-        "relational",
-        "mapper",
-        "moose",
-        "mysql",
-        "MySQL",
-        "MySql",
-        "SQL",
-        "sql",
-        "query",
-        "database",
-        "dataset",
-        "transactions",
-        "DDl",
-        "Sequel",
-        "migrations"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:c2fo/patio.git"
-    },
-    "homepage": "http://c2fo.github.com/patio/index.html",
-    "author": "Doug Martin (http://c2fo.github.com)",
-    "main": "index.js",
-    "dependencies": {
-        "mysql": "2.5.3",
-        "pg": "4.0.0",
-        "comb": "~0.4.0",
-        "comb-proxy": ">=0.0.3",
-        "hive-cache": "0.0.3",
-        "commander": "0.5.1",
-        "validator": "~1.5.1",
-        "pg-query-stream": "0.7.0",
-        "pg-types": "1.6.0"
-    },
-    "scripts": {
-        "test": "grunt test"
-    },
-    "devDependencies": {
-        "grunt": "^0.4.5",
-        "grunt-contrib-jshint": "^0.10.0",
-        "grunt-exec": "^0.4.6",
-        "grunt-it": "^0.3.1",
-        "it": "0.2.7"
-    },
-    "directories": {
-        "lib": "lib"
-    },
-    "bin": {
-        "patio": "./bin/patio"
-    },
-    "engines": {
-        "node": ">=0.10.0"
-    }
+  "name": "patio",
+  "description": "Patio query engine and ORM",
+  "version": "0.9.3",
+  "keywords": [
+    "ORM",
+    "object relation mapper",
+    "relational",
+    "mapper",
+    "moose",
+    "mysql",
+    "MySQL",
+    "MySql",
+    "SQL",
+    "sql",
+    "query",
+    "database",
+    "dataset",
+    "transactions",
+    "DDl",
+    "Sequel",
+    "migrations"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:c2fo/patio.git"
+  },
+  "homepage": "http://c2fo.github.com/patio/index.html",
+  "author": "Doug Martin (http://c2fo.github.com)",
+  "main": "index.js",
+  "dependencies": {
+    "comb": "~0.4.0",
+    "comb-proxy": ">=0.0.3",
+    "commander": "0.5.1",
+    "hive-cache": "0.0.3",
+    "lodash": "^3.6.0",
+    "mysql": "2.5.3",
+    "pg": "4.0.0",
+    "pg-query-stream": "0.7.0",
+    "pg-types": "1.6.0",
+    "validator": "~1.5.1"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "babel": "^5.0.12",
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-exec": "^0.4.6",
+    "grunt-it": "^0.3.1",
+    "it": "0.2.7"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "bin": {
+    "patio": "./bin/patio"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  }
 }

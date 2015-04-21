@@ -1,22 +1,41 @@
+"use strict";
 var patio = require("index"),
     config = require("../test.config.js"),
     comb = require("comb-proxy");
 
+module.exports = {
+    createSchemaAndSync: createSchemaAndSync,
+    dropModels: dropModels
+}
+
+function createSchemaAndSync(underscore) {
+    return createTables(underscore).then(function () {
+        return patio.syncModels();
+    });
+}
+
+
+function dropModels() {
+    return dropTableAndDisconnect();
+}
+
 var DB;
-var createTables = function (underscore) {
+function createTables(underscore) {
     underscore = !!underscore;
     patio.resetIdentifierMethods();
     if (underscore) {
         patio.camelize = underscore;
     }
-    return patio.connectAndExecute(config.DB_URI + "/sandbox",
-        function (db) {
-            db.forceDropTable(["employee", "company"]);
-            db.createTable("company", function (table) {
+    DB = patio.connect(config.DB_URI + "/sandbox");
+    return DB.forceDropTable(["employee", "company"])
+        .then(function () {
+            return DB.createTable("company", function (table) {
                 this.primaryKey("id");
                 this[underscore ? "company_name" : "companyName"]("string", {size: 20, allowNull: false});
             });
-            db.createTable("employee", function () {
+        })
+        .then(function () {
+            return DB.createTable("employee", function () {
                 this.primaryKey("id");
                 this[underscore ? "first_name" : "firstname"]("string", {size: 20, allowNull: false});
                 this[underscore ? "last_name" : "lastname"]("string", {size: 20, allowNull: false});
@@ -27,25 +46,16 @@ var createTables = function (underscore) {
                 this.city("string", {size: 20, allowNull: false});
                 this.foreignKey(underscore ? "company_id" : "companyId", "company", {key: "id", onDelete: "cascade"});
             });
-        }).addCallback(function (db) {
-            DB = db;
         });
 };
 
+function dropTableAndDisconnect() {
+    return DB.dropTable(["employee", "company"])
+        .then(function () {
+            return patio.disconnect();
+        })
+        .then(function () {
+            patio.resetIdentifierMethods();
+        });
+}
 
-var dropTableAndDisconnect = function () {
-    return comb.executeInOrder(patio, DB, function (patio, db) {
-        db.dropTable(["employee", "company"]);
-        patio.disconnect();
-        patio.resetIdentifierMethods();
-    });
-};
-
-exports.createSchemaAndSync = function (underscore) {
-    return createTables(underscore).chain(comb.hitch(patio, "syncModels"));
-};
-
-
-exports.dropModels = function () {
-    return dropTableAndDisconnect();
-};

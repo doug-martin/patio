@@ -88,14 +88,14 @@ module.exports = function (grunt) {
         });
     });
 
+    grunt.loadNpmTasks('grunt-exec');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
     // Default task.
     grunt.registerTask('default', ['jshint', "test", "test-coverage", "docs"]);
     grunt.registerTask("test-coverage", ["exec:createCoverage", "exec:runMySqlCov", "exec:runPsqlCov"]);
     grunt.registerTask("docs", ["exec:removeDocs", "exec:createDocs"]);
     grunt.loadNpmTasks('grunt-it');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.registerTask('mysql', ['jshint', 'mysql_env', 'it']);
     grunt.registerTask('pg', ['jshint', 'test_psql']);
     grunt.registerTask('test', ['jshint', 'test_mysql', 'test_psql']);
-    grunt.loadNpmTasks('grunt-exec');
 };

@@ -19,7 +19,7 @@ var it = require('it'),
 
 
 //var ret = (module.exports = new comb.Promise());
-it.describe("Dataset actions",function (it) {
+it.describe("Dataset actions", function (it) {
 
     patio.identifierInputMethod = null;
     patio.identifierOutputMethod = null;
@@ -84,13 +84,13 @@ it.describe("Dataset actions",function (it) {
         });
 
 
-        it.should("cause dataset to pass all rows through the filter", function (next) {
+        it.should("cause dataset to pass all rows through the filter", function () {
             dataset.rowCb = function (h) {
                 h.der = h.kind + 2;
                 return h;
             };
 
-            return dataset.all().chain(function (rows) {
+            return dataset.all().then(function (rows) {
                 assert.lengthOf(rows, 10);
                 rows.forEach(function (r) {
                     assert.deepEqual(r.der, r.kind + 2);
@@ -118,10 +118,10 @@ it.describe("Dataset actions",function (it) {
         it.should("provide the usual functionality if no argument is given", function (next) {
             dataset.map(function (n) {
                 return n.a + n.b;
-            }).chain(function (r) {
+            }).then(function (r) {
                 assert.deepEqual(r, [3, 7, 11]);
                 //with callback
-                dataset.map(
+                return dataset.map(
                     function (n) {
                         return n.a + n.b;
                     },
@@ -131,7 +131,7 @@ it.describe("Dataset actions",function (it) {
                         next();
                     }
                 );
-            });
+            }, next);
         });
 
         it.should("map using #[column name] if column name is given", function (next) {
@@ -154,12 +154,12 @@ it.describe("Dataset actions",function (it) {
         });
 
         it.should("return the complete dataset values if nothing is given", function () {
-            return dataset.map().chain(function (r) {
+            return dataset.map().then(function (r) {
                 assert.deepEqual(r, dataset.VALUES);
-                return dataset.map(null,function (err, r) {
+                return dataset.map(null, function (err, r) {
                     assert.isNull(err);
                     assert.deepEqual(r, dataset.VALUES);
-                }).chain();
+                });
             });
         });
     });
@@ -169,11 +169,11 @@ it.describe("Dataset actions",function (it) {
 
         it.should("provide a hash with the first column as key and the second as value", function (next) {
             var a = {1: 2, 3: 4, 5: 6}, b = {2: 1, 4: 3, 6: 5};
-            return when(
-                dataset.toHash("a", "b").chain(function (ret) {
+            return Promise.all([
+                dataset.toHash("a", "b").then(function (ret) {
                     assert.deepEqual(a, ret);
                 }),
-                dataset.toHash("b", "a").chain(function (ret) {
+                dataset.toHash("b", "a").then(function (ret) {
                     assert.deepEqual(ret, b);
                 }),
 
@@ -185,18 +185,18 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.deepEqual(ret, b);
                 })
-            );
+            ]);
 
         });
 
         it.should("provide a hash with the first column as key and the entire hash as value if the value column is blank or null", function (next) {
             var a = {1: {a: 1, b: 2}, 3: {a: 3, b: 4}, 5: {a: 5, b: 6}};
             var b = {2: {a: 1, b: 2}, 4: {a: 3, b: 4}, 6: {a: 5, b: 6}};
-            return when(
-                dataset.toHash("a").chain(function (ret) {
+            return Promise.all([
+                dataset.toHash("a").then(function (ret) {
                     assert.deepEqual(ret, a);
                 }),
-                dataset.toHash("b").chain(function (ret) {
+                dataset.toHash("b").then(function (ret) {
                     assert.deepEqual(ret, b);
                 }),
                 dataset.toHash("a", function (err, ret) {
@@ -207,7 +207,7 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.deepEqual(ret, b);
                 })
-            );
+            ]);
         });
 
     });
@@ -216,8 +216,8 @@ it.describe("Dataset actions",function (it) {
         var dataset = new c().from("test");
 
         it.should("format SQL properly", function () {
-            return when(
-                dataset.count().chain(function (res) {
+            return Promise.all([
+                dataset.count().then(function (res) {
                     assert.equal(res, 1);
                     assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LIMIT 1');
                 }),
@@ -227,12 +227,12 @@ it.describe("Dataset actions",function (it) {
                     assert.equal(res, 1);
                     assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("include the where clause if it's there", function () {
-            return when(
-                dataset.filter(sql.abc.sqlNumber.lt(30)).count().chain(function (count) {
+            return Promise.all([
+                dataset.filter(sql.abc.sqlNumber.lt(30)).count().then(function (count) {
                     assert.equal(count, 1);
                     assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test WHERE (abc < 30) LIMIT 1');
                 }),
@@ -241,14 +241,14 @@ it.describe("Dataset actions",function (it) {
                     assert.equal(count, 1);
                     assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test WHERE (abc < 30) LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("count properly for datasets with fixed sql", function () {
             var dataset = new c().from("test");
             dataset.__opts.sql = "select abc from xyz";
-            return when(
-                dataset.count().chain(function (count) {
+            return Promise.all([
+                dataset.count().then(function (count) {
                     assert.equal(count, 1);
                     assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (select abc from xyz) AS t1 LIMIT 1");
                 }),
@@ -257,25 +257,25 @@ it.describe("Dataset actions",function (it) {
                     assert.equal(count, 1);
                     assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (select abc from xyz) AS t1 LIMIT 1");
                 })
-            );
+            ]);
         });
 
         it.should("count properly when using UNION, INTERSECT, or EXCEPT", function () {
             return serial([
                 function () {
-                    return dataset.union(dataset).count().chain(function (count) {
+                    return dataset.union(dataset).count().then(function (count) {
                         assert.equal(count, 1);
                         assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test UNION SELECT * FROM test) AS t1 LIMIT 1");
                     });
                 },
                 function () {
-                    return dataset.intersect(dataset).count().chain(function (count) {
+                    return dataset.intersect(dataset).count().then(function (count) {
                         assert.equal(count, 1);
                         assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test INTERSECT SELECT * FROM test) AS t1 LIMIT 1");
                     });
                 },
                 function () {
-                    return dataset.except(dataset).count().chain(function (count) {
+                    return dataset.except(dataset).count().then(function (count) {
                         assert.equal(count, 1);
                         assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test EXCEPT SELECT * FROM test) AS t1 LIMIT 1");
                     });
@@ -307,8 +307,8 @@ it.describe("Dataset actions",function (it) {
         });
 
         it.should("return limit if count is greater than it", function () {
-            return when(
-                dataset.limit(5).count().chain(function (count) {
+            return Promise.all([
+                dataset.limit(5).count().then(function (count) {
                     assert.equal(count, 1);
                     assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test LIMIT 5) AS t1 LIMIT 1");
                 }),
@@ -318,14 +318,14 @@ it.describe("Dataset actions",function (it) {
                     assert.equal(count, 1);
                     assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test LIMIT 5) AS t1 LIMIT 1");
                 })
-            );
+            ]);
 
         });
 
-        it.should("work on a graphed_dataset", function (next) {
-            dataset.graph(dataset, ["a"], {tableAlias: "test2"}).chain(function (ds) {
-                when(
-                    ds.count().chain(function (count) {
+        it.should("work on a graphed_dataset", function () {
+            return dataset.graph(dataset, ["a"], {tableAlias: "test2"}).then(function (ds) {
+                Promise.all([
+                    ds.count().then(function (count) {
                         assert.equal(count, 1);
                         assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');
                     }),
@@ -334,22 +334,22 @@ it.describe("Dataset actions",function (it) {
                         assert.equal(count, 1);
                         assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');
                     })
-                ).classic(next);
+                ]);
             });
         });
 
         it.should("not cache the columns value", function () {
             var ds = dataset.from("blah");
-            ds.columns.chain(function (cols) {
+            ds.columns.then(function (cols) {
                 assert.deepEqual(cols, ["a"]);
             });
-            return when(
-                ds.count().chain(function (count) {
+            return Promise.all([
+                ds.count().then(function (count) {
                     assert.equal(count, 1);
                     assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM blah LIMIT 1');
                 }),
 
-                ds.columns.chain(function (cols) {
+                ds.columns.then(function (cols) {
                     assert.deepEqual(cols, ["a"]);
                 }),
 
@@ -359,7 +359,7 @@ it.describe("Dataset actions",function (it) {
                     assert.equal(count, 1);
                     assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM blah LIMIT 1');
                 })
-            );
+            ]);
         });
 
     });
@@ -378,13 +378,13 @@ it.describe("Dataset actions",function (it) {
             var ds = new C().from("test");
             return serial([
                 function () {
-                    return ds.isEmpty().chain(function (res) {
+                    return ds.isEmpty().then(function (res) {
                         assert.isFalse(res);
                         assert.equal(C.sql, 'SELECT 1 FROM test LIMIT 1');
                     });
                 },
                 function () {
-                    return ds.filter(false).isEmpty().chain(function (res) {
+                    return ds.filter(false).isEmpty().then(function (res) {
                         assert.isTrue(res);
                         assert.equal(C.sql, "SELECT 1 FROM test WHERE 'f' LIMIT 1");
                     });
@@ -416,7 +416,7 @@ it.describe("Dataset actions",function (it) {
                 },
                 insert: function (arg) {
                     this.inserts.push(arg);
-                    return new comb.Promise().callback();
+                    return Promise.resolve();
                 }
             }
         }))();
@@ -424,16 +424,16 @@ it.describe("Dataset actions",function (it) {
         it.should("insert all items in the supplied array", function () {
             return serial([
                 function () {
-                    return d.insertMultiple(["aa", 5, 3, {1: 2}]).chain(function () {
+                    return d.insertMultiple(["aa", 5, 3, {1: 2}]).then(function () {
                         assert.deepEqual(d.inserts, ["aa", 5, 3, {1: 2}]);
                         d.inserts.length = 0;
                     });
                 },
                 function () {
-                    return d.insertMultiple(["aa", 5, 3, {1: 2}], null,function (err) {
+                    return d.insertMultiple(["aa", 5, 3, {1: 2}], null, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(d.inserts, ["aa", 5, 3, {1: 2}]);
-                    }).chain(function () {
+                    }).then(function () {
                         d.inserts.length = 0;
                     });
                 }
@@ -444,9 +444,9 @@ it.describe("Dataset actions",function (it) {
             var a = ["inevitable", "hello", "the ticking clock"];
             return serial([
                 function () {
-                    return d.insertMultiple(a,function (i) {
+                    return d.insertMultiple(a, function (i) {
                         return i.replace(/l/g, "r");
-                    }).chain(function () {
+                    }).then(function () {
                         assert.deepEqual(d.inserts, ["inevitabre", "herro", "the ticking crock"]);
                         d.inserts.length = 0;
                     });
@@ -460,7 +460,7 @@ it.describe("Dataset actions",function (it) {
                             assert.isNull(err);
                             assert.deepEqual(d.inserts, ["inevitabre", "herro", "the ticking crock"]);
                         }
-                    ).chain(function () {
+                    ).then(function () {
                             d.inserts.length = 0;
                         });
                 }
@@ -483,8 +483,8 @@ it.describe("Dataset actions",function (it) {
             }))().from("test");
 
         it.should("include min", function () {
-            return when(
-                d.min("a").chain(function (sql) {
+            return Promise.all([
+                d.min("a").then(function (sql) {
                     assert.equal(sql, 'SELECT min(a) FROM test LIMIT 1');
                 }),
 
@@ -492,12 +492,12 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(sql, 'SELECT min(a) FROM test LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("include max", function () {
-            return when(
-                d.max("a").chain(function (sql) {
+            return Promise.all([
+                d.max("a").then(function (sql) {
                     assert.equal(sql, 'SELECT max(a) FROM test LIMIT 1');
                 }),
 
@@ -505,24 +505,24 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(sql, 'SELECT max(a) FROM test LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("include sum", function () {
-            return when(
-                d.sum("a").chain(function (sql) {
+            return Promise.all([
+                d.sum("a").then(function (sql) {
                     assert.equal(sql, 'SELECT sum(a) FROM test LIMIT 1');
                 }),
                 d.sum("a", function (err, sql) {
                     assert.isNull(err);
                     assert.equal(sql, 'SELECT sum(a) FROM test LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("include avg", function () {
-            return when(
-                d.avg("a").chain(function (sql) {
+            return Promise.all([
+                d.avg("a").then(function (sql) {
                     assert.equal(sql, 'SELECT avg(a) FROM test LIMIT 1');
                 }),
 
@@ -530,12 +530,12 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(sql, 'SELECT avg(a) FROM test LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("accept qualified columns", function () {
-            return when(
-                d.avg("test__a").chain(function (sql) {
+            return Promise.all([
+                d.avg("test__a").then(function (sql) {
                     assert.equal(sql, 'SELECT avg(test.a) FROM test LIMIT 1');
                 }),
 
@@ -543,22 +543,22 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(sql, 'SELECT avg(test.a) FROM test LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("use a subselect for the same conditions as count", function () {
             d = d.order("a").limit(5);
-            return when(
-                d.avg("a").chain(function (sql) {
+            return Promise.all([
+                d.avg("a").then(function (sql) {
                     assert.equal(sql, 'SELECT avg(a) FROM (SELECT * FROM test ORDER BY a LIMIT 5) AS t1 LIMIT 1');
                 }),
-                d.sum("a").chain(function (sql) {
+                d.sum("a").then(function (sql) {
                     assert.equal(sql, 'SELECT sum(a) FROM (SELECT * FROM test ORDER BY a LIMIT 5) AS t1 LIMIT 1');
                 }),
-                d.min("a").chain(function (sql) {
+                d.min("a").then(function (sql) {
                     assert.equal(sql, 'SELECT min(a) FROM (SELECT * FROM test ORDER BY a LIMIT 5) AS t1 LIMIT 1');
                 }),
-                d.max("a").chain(function (sql) {
+                d.max("a").then(function (sql) {
                     assert.equal(sql, 'SELECT max(a) FROM (SELECT * FROM test ORDER BY a LIMIT 5) AS t1 LIMIT 1');
                 }),
 
@@ -580,7 +580,7 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(sql, 'SELECT max(a) FROM (SELECT * FROM test ORDER BY a LIMIT 5) AS t1 LIMIT 1');
                 })
-            );
+            ]);
         });
     });
 
@@ -597,7 +597,7 @@ it.describe("Dataset actions",function (it) {
                 fetchRows: function (sql, cb) {
                     this._static.sql = sql;
                     return comb.async.array([
-                        {v1: 1, v2: 10}
+                        {min: 1, max: 10}
                     ]);
                 }
             },
@@ -610,60 +610,60 @@ it.describe("Dataset actions",function (it) {
         it.should("generate a correct SQL statement", function () {
             return serial([
                 function () {
-                    return d.range("stamp").chain(function () {
-                        assert.equal(d.lastSql, "SELECT min(stamp) AS v1, max(stamp) AS v2 FROM test LIMIT 1");
+                    return d.range("stamp").then(function () {
+                        assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test LIMIT 1");
                     });
                 },
                 function () {
-                    return d.filter(sql.price.sqlNumber.gt(100)).range("stamp").chain(function () {
-                        assert.equal(d.lastSql, "SELECT min(stamp) AS v1, max(stamp) AS v2 FROM test WHERE (price > 100) LIMIT 1");
+                    return d.filter(sql.price.sqlNumber.gt(100)).range("stamp").then(function () {
+                        assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test WHERE (price > 100) LIMIT 1");
                     });
                 },
                 function () {
                     return d.range("stamp", function (err) {
                         assert.isNull(err);
-                        assert.equal(d.lastSql, "SELECT min(stamp) AS v1, max(stamp) AS v2 FROM test LIMIT 1");
+                        assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test LIMIT 1");
                     });
                 },
                 function () {
                     return d.filter(sql.price.sqlNumber.gt(100)).range("stamp", function (err) {
                         assert.isNull(err);
-                        assert.equal(d.lastSql, "SELECT min(stamp) AS v1, max(stamp) AS v2 FROM test WHERE (price > 100) LIMIT 1");
+                        assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test WHERE (price > 100) LIMIT 1");
                     });
                 }
             ]);
         });
 
         it.should("return a two values", function () {
-            return when(
-                d.range("tryme").chain(function (one, two) {
-                    assert.equal(one, 1);
-                    assert.equal(two, 10);
+            return Promise.all([
+                d.range("tryme").then(function (res) {
+                    assert.equal(res.min, 1);
+                    assert.equal(res.max, 10);
                 }),
 
-                d.range("tryme", function (err, one, two) {
+                d.range("tryme", function (err, res) {
                     assert.isNull(err);
-                    assert.equal(one, 1);
-                    assert.equal(two, 10);
+                    assert.equal(res.min, 1);
+                    assert.equal(res.max, 10);
                 })
-            );
+            ]);
         });
 
         it.should("use a subselect for the same conditions as count", function () {
-            return when(
-                d.order("stamp").limit(5).range("stamp").chain(function (one, two) {
-                    assert.equal(one, 1);
-                    assert.equal(two, 10);
-                    assert.equal(d.lastSql, 'SELECT min(stamp) AS v1, max(stamp) AS v2 FROM (SELECT * FROM test ORDER BY stamp LIMIT 5) AS t1 LIMIT 1');
+            return Promise.all([
+                d.order("stamp").limit(5).range("stamp").then(function (range) {
+                    assert.equal(range.min, 1);
+                    assert.equal(range.max, 10);
+                    assert.equal(d.lastSql, 'SELECT min(stamp) AS min, max(stamp) AS max FROM (SELECT * FROM test ORDER BY stamp LIMIT 5) AS t1 LIMIT 1');
                 }),
 
-                d.order("stamp").limit(5).range("stamp", function (err, one, two) {
+                d.order("stamp").limit(5).range("stamp", function (err, range) {
                     assert.isNull(err);
-                    assert.equal(one, 1);
-                    assert.equal(two, 10);
-                    assert.equal(d.lastSql, 'SELECT min(stamp) AS v1, max(stamp) AS v2 FROM (SELECT * FROM test ORDER BY stamp LIMIT 5) AS t1 LIMIT 1');
+                    assert.equal(range.min, 1);
+                    assert.equal(range.max, 10);
+                    assert.equal(d.lastSql, 'SELECT min(stamp) AS min, max(stamp) AS max FROM (SELECT * FROM test ORDER BY stamp LIMIT 5) AS t1 LIMIT 1');
                 })
-            );
+            ]);
         });
     });
 
@@ -699,12 +699,12 @@ it.describe("Dataset actions",function (it) {
         it.should("generate a correct SQL statement", function () {
             return serial([
                 function () {
-                    return d.interval("stamp").chain(function () {
+                    return d.interval("stamp").then(function () {
                         assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test LIMIT 1");
                     });
                 },
                 function () {
-                    return d.filter(sql.price.sqlNumber.gt(100)).interval("stamp").chain(function () {
+                    return d.filter(sql.price.sqlNumber.gt(100)).interval("stamp").then(function () {
                         assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test WHERE (price > 100) LIMIT 1");
                     });
                 },
@@ -712,7 +712,7 @@ it.describe("Dataset actions",function (it) {
                 //with callback
                 function () {
                     d.reset();
-                    return  d.interval("stamp", function (err) {
+                    return d.interval("stamp", function (err) {
                         assert.isNull(err);
                         assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test LIMIT 1");
                     });
@@ -727,8 +727,8 @@ it.describe("Dataset actions",function (it) {
 
         });
         it.should("return an integer", function () {
-            return when(
-                d.interval("tryme").chain(function (r) {
+            return Promise.all([
+                d.interval("tryme").then(function (r) {
                     assert.equal(r, 1234);
                 }),
 
@@ -737,12 +737,12 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(r, 1234);
                 })
-            );
+            ]);
         });
 
         it.should("use a subselect for the same conditions as count", function () {
-            return when(
-                d.order("stamp").limit(5).interval("stamp").chain(function (r) {
+            return Promise.all([
+                d.order("stamp").limit(5).interval("stamp").then(function (r) {
                     assert.equal(r, 1234);
                     assert.equal(d.lastSql, 'SELECT (max(stamp) - min(stamp)) FROM (SELECT * FROM test ORDER BY stamp LIMIT 5) AS t1 LIMIT 1');
                 }),
@@ -754,7 +754,7 @@ it.describe("Dataset actions",function (it) {
                     assert.equal(r, 1234);
                     assert.equal(d.lastSql, 'SELECT (max(stamp) - min(stamp)) FROM (SELECT * FROM test ORDER BY stamp LIMIT 5) AS t1 LIMIT 1');
                 })
-            );
+            ]);
 
         });
 
@@ -781,11 +781,11 @@ it.describe("Dataset actions",function (it) {
         }))().from("test");
 
         it.should("return a single record if no argument is given", function () {
-            return when(
-                d.order("a").first().chain(function (r) {
+            return Promise.all([
+                d.order("a").first().then(function (r) {
                     assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test ORDER BY a LIMIT 1']);
                 }),
-                d.order("a").last().chain(function (r) {
+                d.order("a").last().then(function (r) {
                     assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test ORDER BY a DESC LIMIT 1']);
                 }),
 
@@ -798,21 +798,21 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test ORDER BY a DESC LIMIT 1']);
                 })
-            );
+            ]);
         });
 
         it.should("return the first/last matching record if argument is not an Integer", function () {
-            return when(
-                d.order("a").first({z: 26}).chain(function (r) {
+            return Promise.all([
+                d.order("a").first({z: 26}).then(function (r) {
                     assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z = 26) ORDER BY a LIMIT 1']);
                 }),
-                d.order("a").first("z = ?", 15).chain(function (r) {
+                d.order("a").first("z = ?", 15).then(function (r) {
                     assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z = 15) ORDER BY a LIMIT 1']);
                 }),
-                d.order("a").last({z: 26}).chain(function (r) {
+                d.order("a").last({z: 26}).then(function (r) {
                     assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z = 26) ORDER BY a DESC LIMIT 1']);
                 }),
-                d.order("a").last("z = ?", 15).chain(function (r) {
+                d.order("a").last("z = ?", 15).then(function (r) {
                     assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z = 15) ORDER BY a DESC LIMIT 1']);
                 }),
 
@@ -834,7 +834,7 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z = 15) ORDER BY a DESC LIMIT 1']);
                 })
-            );
+            ]);
 
         });
 
@@ -842,13 +842,13 @@ it.describe("Dataset actions",function (it) {
             var i = Math.floor(Math.random() * 10) + 10;
             return serial([
                 function () {
-                    return d.order("a").first(i).chain(function (r) {
+                    return d.order("a").first(i).then(function (r) {
                         assert.lengthOf(r, i);
                         assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test ORDER BY a LIMIT %d", i)]);
                     });
                 },
                 function () {
-                    return d.order("a").last((i = Math.floor(Math.random() * 10) + 10)).chain(function (r) {
+                    return d.order("a").last((i = Math.floor(Math.random() * 10) + 10)).then(function (r) {
                         assert.lengthOf(r, i);
                         assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test ORDER BY a DESC LIMIT %d", i)]);
                     });
@@ -876,14 +876,14 @@ it.describe("Dataset actions",function (it) {
                 function () {
                     return d.first(function () {
                         return this.z.sqlNumber.gt(26);
-                    }).chain(function (r) {
+                    }).then(function (r) {
                         assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z > 26) LIMIT 1']);
                     });
                 },
                 function () {
                     return d.order("name").last(function () {
                         return this.z.sqlNumber.gt(26);
-                    }).chain(function (r) {
+                    }).then(function (r) {
                         assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z > 26) ORDER BY name DESC LIMIT 1']);
                     });
                 },
@@ -912,17 +912,17 @@ it.describe("Dataset actions",function (it) {
         });
 
         it.should("combine block and standard argument filters if argument is not an Integer", function () {
-            return when(
+            return Promise.all([
                 d.first({y: 25},
                     function () {
                         return this.z.sqlNumber.gt(26);
-                    }).chain(function (r) {
+                    }).then(function (r) {
                         assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE ((z > 26) AND (y = 25)) LIMIT 1']);
                     }),
                 d.order("name").last("y = ?", 16,
                     function () {
                         return this.z.sqlNumber.gt(26);
-                    }).chain(function (r) {
+                    }).then(function (r) {
                         assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE ((z > 26) AND (y = 16)) ORDER BY name DESC LIMIT 1']);
                     }),
                 //with callback
@@ -942,16 +942,16 @@ it.describe("Dataset actions",function (it) {
                         assert.isNull(err);
                         assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE ((z > 26) AND (y = 16)) ORDER BY name DESC LIMIT 1']);
                     })
-            );
+            ]);
         });
 
         it.should("return the first matching record if a block is given without an argument", function () {
             var i = Math.floor(Math.random() * 10) + 10;
             return serial([
                 function () {
-                    return d.order("a").first(i,function () {
+                    return d.order("a").first(i, function () {
                         return this.z.sqlNumber.gt(26);
-                    }).chain(function (r) {
+                    }).then(function (r) {
                         assert.lengthOf(r, i);
                         assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test WHERE (z > 26) ORDER BY a LIMIT %d", i)]);
                     });
@@ -960,7 +960,7 @@ it.describe("Dataset actions",function (it) {
                     return d.order("name").last((i = Math.floor(Math.random() * 10) + 10),
                         function () {
                             return this.z.sqlNumber.gt(26);
-                        }).chain(function (r) {
+                        }).then(function (r) {
                             assert.lengthOf(r, i);
                             assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test WHERE (z > 26) ORDER BY name DESC LIMIT %d", i)]);
                         });
@@ -992,25 +992,32 @@ it.describe("Dataset actions",function (it) {
         });
 
         it.should("last should raise an error if no order is given", function () {
-            assert.throws(hitch(d, "last"));
-            assert.throws(hitch(d, "last", 2));
-            assert.doesNotThrow(hitch(d.order("a"), "last"));
-            assert.doesNotThrow(hitch(d.order("a"), "last", 2));
+            return Promise.all([
+                d.last().then(assert.fail, function (err) {
+                    assert.equal(err.message, "QueryError : No order specified");
+                }),
+                d.last(2).then(assert.fail, function (err) {
+                    assert.equal(err.message, "QueryError : No order specified");
+                }),
+                d.order("a").last(),
+                d.order("a").last(2)
+
+            ]);
         });
 
         it.should("last should invert the order", function () {
-            return when(
-                d.order("a").last().chain(function (r) {
+            return Promise.all([
+                d.order("a").last().then(function (r) {
                     assert.equal(r.pop(), 'SELECT * FROM test ORDER BY a DESC LIMIT 1');
                 }),
-                d.order(sql.b.desc()).last().chain(function (r) {
+                d.order(sql.b.desc()).last().then(function (r) {
                     assert.equal(r.pop(), 'SELECT * FROM test ORDER BY b ASC LIMIT 1');
                 }),
-                d.order("c", "d").last().chain(function (r) {
+                d.order("c", "d").last().then(function (r) {
                     assert.equal(r.pop(), 'SELECT * FROM test ORDER BY c DESC, d DESC LIMIT 1');
                 }),
 
-                d.order(sql.e.desc(), "f").last().chain(function (r) {
+                d.order(sql.e.desc(), "f").last().then(function (r) {
                     assert.equal(r.pop(), 'SELECT * FROM test ORDER BY e ASC, f DESC LIMIT 1');
                 }),
 
@@ -1033,7 +1040,7 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(r.pop(), 'SELECT * FROM test ORDER BY e ASC, f DESC LIMIT 1');
                 })
-            );
+            ]);
         });
 
 
@@ -1057,27 +1064,27 @@ it.describe("Dataset actions",function (it) {
         }))().from("test");
 
         it.should("call each with a limit of 1 and return the record", function () {
-            return when(
-                d.singleRecord().chain(function (r) {
+            return Promise.all([
+                d.singleRecord().then(function (r) {
                     assert.equal(r, 'SELECT * FROM test LIMIT 1');
                 }),
                 d.singleRecord(function (err, r) {
                     assert.isNull(err);
                     assert.equal(r, 'SELECT * FROM test LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("return null if no record is present", function () {
-            return when(
-                e.singleRecord().chain(function (r) {
+            return Promise.all([
+                e.singleRecord().then(function (r) {
                     assert.isNull(r);
                 }),
                 e.singleRecord(function (err, r) {
                     assert.isNull(err);
                     assert.isNull(r);
                 })
-            );
+            ]);
         });
     });
 
@@ -1102,8 +1109,8 @@ it.describe("Dataset actions",function (it) {
         }))().from("test");
 
         it.should("call each and return the first value of the first record", function () {
-            return when(
-                d.singleValue().chain(function (r) {
+            return Promise.all([
+                d.singleValue().then(function (r) {
                     assert.equal(r, 'SELECT * FROM test LIMIT 1');
                 }),
                 //with callback
@@ -1111,12 +1118,12 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(r, 'SELECT * FROM test LIMIT 1');
                 })
-            );
+            ]);
         });
 
         it.should("return null if no record is present", function () {
-            return when(
-                e.singleValue().chain(function (r) {
+            return Promise.all([
+                e.singleValue().then(function (r) {
                     assert.isNull(r);
                 }),
                 //with callback
@@ -1124,13 +1131,13 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.isNull(r);
                 })
-            );
+            ]);
         });
 
-        it.should("should work on a graphed ataset", function (next) {
-            d.graph(d, ["a"], {tableAlias: "test2"}).chain(function (d) {
-                when(
-                    d.singleValue().chain(function (r) {
+        it.should("should work on a graphed ataset", function () {
+            return d.graph(d, ["a"], {tableAlias: "test2"}).then(function (d) {
+                return Promise.all([
+                    d.singleValue().then(function (r) {
                         assert.equal(r, 'SELECT test.a, test2.a AS test2_a FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');
                     }),
                     //with callback
@@ -1138,7 +1145,7 @@ it.describe("Dataset actions",function (it) {
                         assert.isNull(err);
                         assert.equal(r, 'SELECT test.a, test2.a AS test2_a FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');
                     })
-                ).classic(next);
+                ]);
             });
         });
     });
@@ -1158,11 +1165,11 @@ it.describe("Dataset actions",function (it) {
         }))().from("test");
 
         it.should("select the specified column and fetch its value", function () {
-            return when(
-                d.get("name").chain(function (r) {
+            return Promise.all([
+                d.get("name").then(function (r) {
                     assert.equal(r, "SELECT name FROM test LIMIT 1");
                 }),
-                d.get("abc").chain(function (r) {
+                d.get("abc").then(function (r) {
                     assert.equal(r, "SELECT abc FROM test LIMIT 1");
                 }),
 
@@ -1175,24 +1182,24 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(r, "SELECT abc FROM test LIMIT 1");
                 })
-            );
+            ]);
         });
 
         it.should("work with filters", function () {
-            return when(
-                d.filter({id: 1}).get("name").chain(function (r) {
+            return Promise.all([
+                d.filter({id: 1}).get("name").then(function (r) {
                     assert.equal(r, "SELECT name FROM test WHERE (id = 1) LIMIT 1");
                 }),
                 d.filter({id: 1}).get("name", function (err, r) {
                     assert.isNull(err);
                     assert.equal(r, "SELECT name FROM test WHERE (id = 1) LIMIT 1");
                 })
-            );
+            ]);
         });
 
         it.should("work with aliased fields", function () {
-            return when(
-                d.get(sql.x__b.as("name")).chain(function (r) {
+            return Promise.all([
+                d.get(sql.x__b.as("name")).then(function (r) {
                     assert.equal(r, "SELECT x.b AS name FROM test LIMIT 1");
                 }),
                 //with callback
@@ -1200,21 +1207,21 @@ it.describe("Dataset actions",function (it) {
                     assert.isNull(err);
                     assert.equal(r, "SELECT x.b AS name FROM test LIMIT 1");
                 })
-            );
+            ]);
         });
 
         it.should("accept a filter block", function () {
-            return when(
+            return Promise.all([
                 d.get(
                     function (o) {
                         return o.x__b.as("name");
-                    }).chain(function (r) {
+                    }).then(function (r) {
                         assert.equal(r, "SELECT x.b AS name FROM test LIMIT 1");
                     }),
                 d.get(
                     function () {
                         return this.x(1).as("name");
-                    }).chain(function (r) {
+                    }).then(function (r) {
                         assert.equal(r, "SELECT x(1) AS name FROM test LIMIT 1");
                     }),
                 //with callback
@@ -1234,25 +1241,26 @@ it.describe("Dataset actions",function (it) {
                         assert.isNull(err);
                         assert.equal(r, "SELECT x(1) AS name FROM test LIMIT 1");
                     })
-            );
+            ]);
         });
     });
 
     it.describe("#columns", function (it) {
         var i = 0;
         var arr = ["a", "b", "c"];
-        var dataset = new (comb.define(DummyDataset, { instance: {
-            forEach: function () {
-                var ret = new comb.Promise().callback();
-                this.__columns = this.selectSql + arr[i++];
-                return ret;
+        var dataset = new (comb.define(DummyDataset, {
+            instance: {
+                forEach: function () {
+                    this.__columns = this.selectSql + arr[i++];
+                    return Promise.resolve();
+                }
             }
-        } }))().from("items");
+        }))().from("items");
 
 
         it.should("return the value of columns if columns is not null", function (next) {
             dataset.__columns = ["a", "b", "c"];
-            dataset.columns.chain(function (arr) {
+            dataset.columns.then(function (arr) {
                 assert.deepEqual(arr, ["a", "b", "c"]);
                 next();
             }, next);
@@ -1260,10 +1268,10 @@ it.describe("Dataset actions",function (it) {
 
         it.should("attempt to get a single record and return columns if columns is null", function (next) {
             dataset.__columns = null;
-            dataset.columns.chain(function (arr) {
+            dataset.columns.then(function (arr) {
                 assert.deepEqual(arr, 'SELECT * FROM items LIMIT 1a');
                 dataset.__opts.from = ["nana"];
-                dataset.columns.chain(function (arr) {
+                dataset.columns.then(function (arr) {
                     assert.deepEqual(arr, 'SELECT * FROM items LIMIT 1a');
                     next();
                 }, next);
@@ -1273,7 +1281,7 @@ it.describe("Dataset actions",function (it) {
         it.should("ignore any filters, orders, or DISTINCT clauses", function (next) {
             dataset = dataset.from("items").filter({b: 100}).order("b").distinct();
             dataset.__columns = null;
-            dataset.columns.chain(function (arr) {
+            dataset.columns.then(function (arr) {
                 assert.deepEqual(arr, 'SELECT * FROM items LIMIT 1b');
                 next();
             }, next);
@@ -1287,10 +1295,9 @@ it.describe("Dataset actions",function (it) {
                 sqls: null,
 
                 execute: function (sql, opts) {
-                    var ret = new comb.Promise().callback(sql);
                     this.sqls = this.sqls || [];
                     this.sqls.push(sql);
-                    return ret;
+                    return Promise.resolve(sql);
                 },
 
                 transaction: function (opts, cb) {
@@ -1300,15 +1307,13 @@ it.describe("Dataset actions",function (it) {
                     } else {
                         opts = opts || {};
                     }
-                    var ret = new comb.Promise();
                     this.sqls = this.sqls || [];
                     this.sqls.push("BEGIN");
                     if (cb) {
                         cb();
                     }
                     this.sqls.push("COMMIT");
-                    ret.callback();
-                    return ret;
+                    return Promise.resolve();
                 },
 
                 reset: function () {
@@ -1322,9 +1327,9 @@ it.describe("Dataset actions",function (it) {
             return serial([
                 function () {
                     return ds["import"](['x', 'y'], [
-                            [1, 2],
-                            [3, 4]
-                        ]).chain(function (res) {
+                        [1, 2],
+                        [3, 4]
+                    ]).then(function (res) {
                         assert.deepEqual(res, [
                             'INSERT INTO items (x, y) VALUES (1, 2)',
                             'INSERT INTO items (x, y) VALUES (3, 4)'
@@ -1357,7 +1362,7 @@ it.describe("Dataset actions",function (it) {
                                 "INSERT INTO items (x, y) VALUES (3, 4)",
                                 'COMMIT'
                             ]);
-                        }).chain(db.reset.bind(db));
+                        }).then(db.reset.bind(db));
                 }
             ]);
         });
@@ -1366,11 +1371,11 @@ it.describe("Dataset actions",function (it) {
             return serial([
                 function () {
                     return ds["import"](
-                            ["x", "y"],
-                            [
-                                [1, 2],
-                                [3, 4]
-                            ]).chain(function (res) {
+                        ["x", "y"],
+                        [
+                            [1, 2],
+                            [3, 4]
+                        ]).then(function (res) {
                             assert.deepEqual(res, [
                                 'INSERT INTO items (x, y) VALUES (1, 2)',
                                 'INSERT INTO items (x, y) VALUES (3, 4)'
@@ -1381,7 +1386,7 @@ it.describe("Dataset actions",function (it) {
                                 "INSERT INTO items (x, y) VALUES (3, 4)",
                                 'COMMIT'
                             ]);
-                        }).chain(db.reset.bind(db));
+                        }).then(db.reset.bind(db));
                 },
                 function () {
                     return ds["import"](
@@ -1402,7 +1407,7 @@ it.describe("Dataset actions",function (it) {
                                 "INSERT INTO items (x, y) VALUES (3, 4)",
                                 'COMMIT'
                             ]);
-                        }).chain(db.reset.bind(db));
+                        }).then(db.reset.bind(db));
                 }
             ]);
         });
@@ -1412,23 +1417,23 @@ it.describe("Dataset actions",function (it) {
 
             return serial([
                 function () {
-                    return ds["import"](["x", "y"], ds2).chain(function (res) {
+                    return ds["import"](["x", "y"], ds2).then(function (res) {
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
                             "INSERT INTO items (x, y) SELECT a, b FROM cats WHERE (purr IS TRUE)",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
-                    return ds["import"](["x", "y"], ds2,function (err) {
+                    return ds["import"](["x", "y"], ds2, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
                             "INSERT INTO items (x, y) SELECT a, b FROM cats WHERE (purr IS TRUE)",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 }
             ]);
         });
@@ -1444,7 +1449,7 @@ it.describe("Dataset actions",function (it) {
                             [5, 6]
                         ],
                         {commitEvery: 1}
-                    ).chain(function (res) {
+                    ).then(function (res) {
                             assert.deepEqual(res, [
                                 'INSERT INTO items (x, y) VALUES (1, 2)',
                                 'INSERT INTO items (x, y) VALUES (3, 4)',
@@ -1461,7 +1466,7 @@ it.describe("Dataset actions",function (it) {
                                 "INSERT INTO items (x, y) VALUES (5, 6)",
                                 'COMMIT'
                             ]);
-                        }).chain(db.reset.bind(db));
+                        }).then(db.reset.bind(db));
                 },
                 function () {
                     //with callback
@@ -1491,7 +1496,7 @@ it.describe("Dataset actions",function (it) {
                                 "INSERT INTO items (x, y) VALUES (5, 6)",
                                 'COMMIT'
                             ]);
-                        }).chain(db.reset.bind(db));
+                        }).then(db.reset.bind(db));
                 }
             ]);
         });
@@ -1507,7 +1512,7 @@ it.describe("Dataset actions",function (it) {
                             [5, 6]
                         ],
                         {slice: 2}
-                    ).chain(function (res) {
+                    ).then(function (res) {
                             assert.deepEqual(res, [
                                 'INSERT INTO items (x, y) VALUES (1, 2)',
                                 'INSERT INTO items (x, y) VALUES (3, 4)',
@@ -1522,7 +1527,7 @@ it.describe("Dataset actions",function (it) {
                                 "INSERT INTO items (x, y) VALUES (5, 6)",
                                 'COMMIT'
                             ]);
-                        }).chain(db.reset.bind(db));
+                        }).then(db.reset.bind(db));
                 },
                 function () {
                     return ds["import"](
@@ -1577,7 +1582,7 @@ it.describe("Dataset actions",function (it) {
                 db.execute = function (sql, opts) {
                     s = sql;
                     o = opts || {};
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 };
                 ds.remove();
                 db.execute = orig;
@@ -1591,7 +1596,7 @@ it.describe("Dataset actions",function (it) {
                 db.executeDui = function (sql, opts) {
                     s = sql;
                     o = opts || {};
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 };
                 ds.remove();
                 assert.equal(s, 'DELETE FROM items');
@@ -1608,7 +1613,7 @@ it.describe("Dataset actions",function (it) {
                 db.execute = function (sql, opts) {
                     s = sql;
                     o = opts || {};
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 };
                 ds.insert([]);
                 db.execute = orig;
@@ -1622,7 +1627,7 @@ it.describe("Dataset actions",function (it) {
                 db.executeDui = function (sql, opts) {
                     s = sql;
                     o = opts || {};
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 };
                 ds.insert([]);
                 assert.equal(s, 'INSERT INTO items DEFAULT VALUES');
@@ -1638,7 +1643,7 @@ it.describe("Dataset actions",function (it) {
                 db.execute = function (sql, opts) {
                     s = sql;
                     o = opts || {};
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 };
                 ds.update({number: 1});
                 db.execute = orig;
@@ -1652,7 +1657,7 @@ it.describe("Dataset actions",function (it) {
                 db.executeDui = function (sql, opts) {
                     s = sql;
                     o = opts || {};
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 };
                 ds.update({number: 1});
                 assert.equal(s, 'UPDATE items SET number = 1');
@@ -1668,7 +1673,7 @@ it.describe("Dataset actions",function (it) {
                 db.execute = function (sql, opts) {
                     s = sql;
                     o = opts || {};
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 };
                 ds.truncate();
                 db.execute = orig;
@@ -1682,7 +1687,7 @@ it.describe("Dataset actions",function (it) {
                 db.executeDui = function (sql, opts) {
                     s = sql;
                     o = opts || {};
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 };
                 ds.truncate();
                 assert.equal(s, 'TRUNCATE TABLE items');
@@ -1724,7 +1729,7 @@ it.describe("Dataset actions",function (it) {
 
                 execute: function (sql, opts) {
                     this.sqls.push(sql);
-                    return new comb.Promise().callback();
+                    return Promise.resolve();
                 },
 
                 executeDui: function () {
@@ -1738,14 +1743,12 @@ it.describe("Dataset actions",function (it) {
                     } else {
                         opts = opts || {};
                     }
-                    var ret = new comb.Promise();
                     this.sqls.push("BEGIN");
                     if (cb) {
                         cb();
                     }
                     this.sqls.push("COMMIT");
-                    ret.callback();
-                    return ret;
+                    return Promise.resolve();
                 }
 
             }
@@ -1760,7 +1763,7 @@ it.describe("Dataset actions",function (it) {
         it.should("issue multiple insert statements inside a transaction", function () {
             return serial([
                 function () {
-                    return ds.multiInsert(list).chain(function () {
+                    return ds.multiInsert(list).then(function () {
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
                             "INSERT INTO items (name) VALUES ('abc')",
@@ -1768,10 +1771,10 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO items (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
-                    return ds.multiInsert(list,function (err) {
+                    return ds.multiInsert(list, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
@@ -1780,7 +1783,7 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO items (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 }
             ]);
         });
@@ -1789,7 +1792,7 @@ it.describe("Dataset actions",function (it) {
 
             return serial([
                 function () {
-                    return ds.from("sch__tab").multiInsert(list).chain(function () {
+                    return ds.from("sch__tab").multiInsert(list).then(function () {
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
                             "INSERT INTO sch.tab (name) VALUES ('abc')",
@@ -1797,10 +1800,10 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO sch.tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
-                    return ds.from(sql.tab.qualify("sch")).multiInsert(list).chain(function () {
+                    return ds.from(sql.tab.qualify("sch")).multiInsert(list).then(function () {
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
                             "INSERT INTO sch.tab (name) VALUES ('abc')",
@@ -1808,10 +1811,10 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO sch.tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
-                    return ds.from(new Identifier("sch__tab")).multiInsert(list).chain(function () {
+                    return ds.from(new Identifier("sch__tab")).multiInsert(list).then(function () {
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
                             "INSERT INTO sch__tab (name) VALUES ('abc')",
@@ -1819,13 +1822,13 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO sch__tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
 
 
                     //with callback
-                    return ds.from("sch__tab").multiInsert(list,function (err) {
+                    return ds.from("sch__tab").multiInsert(list, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
@@ -1834,11 +1837,11 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO sch.tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
 
-                    return ds.from(sql.tab.qualify("sch")).multiInsert(list,function (err) {
+                    return ds.from(sql.tab.qualify("sch")).multiInsert(list, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
@@ -1847,10 +1850,10 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO sch.tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
-                    return ds.from(new Identifier("sch__tab")).multiInsert(list,function (err) {
+                    return ds.from(new Identifier("sch__tab")).multiInsert(list, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
@@ -1859,7 +1862,7 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO sch__tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 }
             ]);
         });
@@ -1868,7 +1871,7 @@ it.describe("Dataset actions",function (it) {
         it.should("accept the commitEvery option for committing every x records", function () {
             return serial([
                 function () {
-                    return ds.multiInsert(list, {commitEvery: 1}).chain(function () {
+                    return ds.multiInsert(list, {commitEvery: 1}).then(function () {
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
                             "INSERT INTO items (name) VALUES ('abc')",
@@ -1880,12 +1883,12 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO items (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
 
                     //with callback
-                    return ds.multiInsert(list, {commitEvery: 1},function (err) {
+                    return ds.multiInsert(list, {commitEvery: 1}, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
@@ -1898,7 +1901,7 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO items (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 }
             ]);
         });
@@ -1907,7 +1910,7 @@ it.describe("Dataset actions",function (it) {
         it.should("accept the slice option for committing every x records", function () {
             return serial([
                 function () {
-                    return ds.multiInsert(list, {slice: 2}).chain(function () {
+                    return ds.multiInsert(list, {slice: 2}).then(function () {
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
                             "INSERT INTO items (name) VALUES ('abc')",
@@ -1917,10 +1920,10 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO items (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 },
                 function () {
-                    return ds.multiInsert(list, {slice: 2},function (err) {
+                    return ds.multiInsert(list, {slice: 2}, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
                             'BEGIN',
@@ -1931,22 +1934,22 @@ it.describe("Dataset actions",function (it) {
                             "INSERT INTO items (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).chain(db.reset.bind(db));
+                    }).then(db.reset.bind(db));
                 }
             ]);
         });
 
 
         it.should("not do anything if no hashes are provided", function () {
-            return when(
-                ds.multiInsert([]).chain(function () {
+            return Promise.all([
+                ds.multiInsert([]).then(function () {
                     assert.deepEqual(db.sqls, []);
                 }),
                 ds.multiInsert([], function (err) {
                     assert.isNull(err);
                     assert.deepEqual(db.sqls, []);
                 })
-            );
+            ]);
         });
     });
 
@@ -1957,7 +1960,7 @@ it.describe("Dataset actions",function (it) {
                 data: [
                     {a: 1, b: 2, c: 3},
                     {a: 4, b: 5, c: 6},
-                    { a: 7, b: 8, c: 9}
+                    {a: 7, b: 8, c: 9}
                 ],
 
                 __columns: ["a", "b", "c"],
@@ -1973,27 +1976,27 @@ it.describe("Dataset actions",function (it) {
         }))().from("items");
 
         it.should("format a CSV representation of the records", function () {
-            return when(
-                ds.toCsv().chain(function (csv) {
+            return Promise.all([
+                ds.toCsv().then(function (csv) {
                     assert.equal(csv, "a, b, c\r\n1, 2, 3\r\n4, 5, 6\r\n7, 8, 9\r\n");
                 }),
                 ds.toCsv(function (err, csv) {
                     assert.isNull(err);
                     assert.equal(csv, "a, b, c\r\n1, 2, 3\r\n4, 5, 6\r\n7, 8, 9\r\n");
                 })
-            );
+            ]);
         });
 
         it.should("exclude column titles if so specified", function () {
-            return when(
-                ds.toCsv(false).chain(function (csv) {
+            return Promise.all([
+                ds.toCsv(false).then(function (csv) {
                     assert.equal(csv, "1, 2, 3\r\n4, 5, 6\r\n7, 8, 9\r\n");
                 }),
                 ds.toCsv(false, function (err, csv) {
                     assert.isNull(err);
                     assert.equal(csv, "1, 2, 3\r\n4, 5, 6\r\n7, 8, 9\r\n");
                 })
-            );
+            ]);
         });
     });
 
@@ -2012,8 +2015,8 @@ it.describe("Dataset actions",function (it) {
         }))().from("items");
 
         it.should("return an array with all records", function () {
-            return when(
-                ds.all().chain(function (ret) {
+            return Promise.all([
+                ds.all().then(function (ret) {
                     assert.deepEqual(ret, [
                         {x: 1, y: 2},
                         {x: 3, y: 4},
@@ -2029,7 +2032,7 @@ it.describe("Dataset actions",function (it) {
                         "SELECT * FROM items"
                     ]);
                 })
-            );
+            ]);
         });
 
         it.should("iterate over the array if a block is given", function () {
@@ -2039,7 +2042,7 @@ it.describe("Dataset actions",function (it) {
                     return ds.all(
                         function (r) {
                             a.push(comb.isHash(r) ? r.x : r);
-                        }).chain(function () {
+                        }).then(function () {
                             assert.deepEqual(a, [1, 3, "SELECT * FROM items"]);
                         });
                 },
@@ -2087,18 +2090,18 @@ it.describe("Dataset actions",function (it) {
 
             return serial([
                 function () {
-                    return ds.selectMap("a").chain(function (res) {
+                    return ds.selectMap("a").then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a FROM t']);
                         ds.db.reset();
                     });
                 },
                 function () {
-                    return ds.selectMap("a",function (err, res) {
+                    return ds.selectMap("a", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a FROM t']);
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
 
@@ -2107,18 +2110,18 @@ it.describe("Dataset actions",function (it) {
         it.should("handle implicit qualifiers in arguments", function () {
             return serial([
                 function () {
-                    return ds.selectMap("a__b").chain(function (res) {
+                    return ds.selectMap("a__b").then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t']);
                         ds.db.reset();
                     });
                 },
                 function () {
-                    return ds.selectMap("a__b",function (err, res) {
+                    return ds.selectMap("a__b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t']);
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2126,18 +2129,18 @@ it.describe("Dataset actions",function (it) {
         it.should("handle implicit aliases in arguments", function () {
             return serial([
                 function () {
-                    return ds.selectMap("a___b").chain(function (res) {
+                    return ds.selectMap("a___b").then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
                         ds.db.reset();
                     });
                 },
                 function () {
-                    return ds.selectMap("a___b",function (err, res) {
+                    return ds.selectMap("a___b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2145,18 +2148,18 @@ it.describe("Dataset actions",function (it) {
         it.should("handle other objects", function () {
             return serial([
                 function () {
-                    return ds.selectMap(sql.literal("a").as("b")).chain(function (res) {
+                    return ds.selectMap(sql.literal("a").as("b")).then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
                         ds.db.reset();
                     });
                 },
                 function () {
-                    return ds.selectMap(sql.literal("a").as("b"),function (err, res) {
+                    return ds.selectMap(sql.literal("a").as("b"), function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2166,7 +2169,7 @@ it.describe("Dataset actions",function (it) {
                 function () {
                     return ds.selectMap(function (t) {
                         return t.a(t.t__c);
-                    }).chain(function (res) {
+                    }).then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t']);
                         ds.db.reset();
@@ -2176,11 +2179,11 @@ it.describe("Dataset actions",function (it) {
                     return ds.selectMap(
                         function (t) {
                             return t.a(t.t__c);
-                        },function (err, res) {
+                        }, function (err, res) {
                             assert.isNull(err);
                             assert.deepEqual(res, [1, 2]);
                             assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t']);
-                        }).chain(ds.db.reset.bind(ds.db));
+                        }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2215,7 +2218,7 @@ it.describe("Dataset actions",function (it) {
         it.should("do select and map in one step", function () {
             return serial([
                 function () {
-                    return ds.selectOrderMap("a").chain(function (res) {
+                    return ds.selectOrderMap("a").then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a FROM t ORDER BY a']);
                         ds.db.reset();
@@ -2223,11 +2226,11 @@ it.describe("Dataset actions",function (it) {
                 },
                 function () {
                     //with callback
-                    return ds.selectOrderMap("a",function (err, res) {
+                    return ds.selectOrderMap("a", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a FROM t ORDER BY a']);
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2235,7 +2238,7 @@ it.describe("Dataset actions",function (it) {
         it.should("handle implicit qualifiers in arguments", function () {
             return serial([
                 function () {
-                    return ds.selectOrderMap("a__b").chain(function (res) {
+                    return ds.selectOrderMap("a__b").then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t ORDER BY a.b']);
                         ds.db.reset();
@@ -2243,19 +2246,19 @@ it.describe("Dataset actions",function (it) {
                 },
                 function () {
                     //with callback
-                    return ds.selectOrderMap("a__b",function (err, res) {
+                    return ds.selectOrderMap("a__b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t ORDER BY a.b']);
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
 
         it.should("handle implicit aliases in arguments", function () {
-            return when([
+            return serial([
                 function () {
-                    return ds.selectOrderMap("a___b").chain(function (res) {
+                    return ds.selectOrderMap("a___b").then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
                         ds.db.reset();
@@ -2263,11 +2266,11 @@ it.describe("Dataset actions",function (it) {
                 },
                 function () {
                     //with callback
-                    return ds.selectOrderMap("a___b",function (err, res) {
+                    return ds.selectOrderMap("a___b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2275,7 +2278,7 @@ it.describe("Dataset actions",function (it) {
         it.should("handle implicit qualifiers and aliases in arguments", function () {
             return serial([
                 function () {
-                    return ds.selectOrderMap("t__a___b").chain(function (res) {
+                    return ds.selectOrderMap("t__a___b").then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT t.a AS b FROM t ORDER BY t.a']);
                         ds.db.reset();
@@ -2283,11 +2286,11 @@ it.describe("Dataset actions",function (it) {
                 },
                 function () {
                     //with callback
-                    return ds.selectOrderMap("t__a___b",function (err, res) {
+                    return ds.selectOrderMap("t__a___b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT t.a AS b FROM t ORDER BY t.a']);
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2295,19 +2298,19 @@ it.describe("Dataset actions",function (it) {
         it.should("handle AliasedExpressions", function () {
             return serial([
                 function () {
-                    return ds.selectOrderMap(sql.literal("a").as("b")).chain(function (res) {
+                    return ds.selectOrderMap(sql.literal("a").as("b")).then(function (res) {
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
                         ds.db.reset();
                     });
                 },
                 function () {
-                    return  ds.selectOrderMap(sql.literal("a").as("b"),function (err, res) {
+                    return ds.selectOrderMap(sql.literal("a").as("b"), function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
                         ds.db.reset();
-                    }).chain(ds.db.reset.bind(ds.db));
+                    }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2318,7 +2321,7 @@ it.describe("Dataset actions",function (it) {
                     return ds.selectOrderMap(
                         function (t) {
                             return t.a(t.t__c);
-                        }).chain(function (res) {
+                        }).then(function (res) {
                             assert.deepEqual(res, [1, 2]);
                             assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t ORDER BY a(t.c)']);
                             ds.db.reset();
@@ -2334,7 +2337,7 @@ it.describe("Dataset actions",function (it) {
                             assert.deepEqual(res, [1, 2]);
                             assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t ORDER BY a(t.c)']);
 
-                        }).chain(ds.db.reset.bind(ds.db));
+                        }).then(ds.db.reset.bind(ds.db));
                 }
             ]);
         });
@@ -2370,7 +2373,7 @@ it.describe("Dataset actions",function (it) {
         it.should("do select and map in one step", function () {
             return serial([
                 function () {
-                    return ds.selectHash("a", "b").chain(function (ret) {
+                    return ds.selectHash("a", "b").then(function (ret) {
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT a, b FROM t']);
                         ds.db.reset();
@@ -2378,11 +2381,11 @@ it.describe("Dataset actions",function (it) {
                 },
                 function () {
                     //with callback
-                    return ds.selectHash("a", "b",function (err, ret) {
+                    return ds.selectHash("a", "b", function (err, ret) {
                         assert.isNull(err);
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT a, b FROM t']);
-                    }).chain(hitch(ds.db, "reset"));
+                    }).then(hitch(ds.db, "reset"));
                 }
             ]);
         });
@@ -2390,7 +2393,7 @@ it.describe("Dataset actions",function (it) {
         it.should("should handle implicit qualifiers in arguments", function () {
             return serial([
                 function () {
-                    return ds.selectHash("t__a", "t__b").chain(function (ret) {
+                    return ds.selectHash("t__a", "t__b").then(function (ret) {
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT t.a, t.b FROM t']);
                         ds.db.reset();
@@ -2398,11 +2401,11 @@ it.describe("Dataset actions",function (it) {
                 },
                 function () {
                     //with callback
-                    return ds.selectHash("t__a", "t__b",function (err, ret) {
+                    return ds.selectHash("t__a", "t__b", function (err, ret) {
                         assert.isNull(err);
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT t.a, t.b FROM t']);
-                    }).chain(hitch(ds.db, "reset"));
+                    }).then(hitch(ds.db, "reset"));
                 }
             ]);
         });
@@ -2410,7 +2413,7 @@ it.describe("Dataset actions",function (it) {
         it.should("should handle implicit aliases in arguments", function () {
             return serial([
                 function () {
-                    return ds.selectHash("c___a", "d___b").chain(function (ret) {
+                    return ds.selectHash("c___a", "d___b").then(function (ret) {
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT c AS a, d AS b FROM t']);
                         ds.db.reset();
@@ -2418,11 +2421,11 @@ it.describe("Dataset actions",function (it) {
                 },
                 function () {
                     //with callback
-                    return ds.selectHash("c___a", "d___b",function (err, ret) {
+                    return ds.selectHash("c___a", "d___b", function (err, ret) {
                         assert.isNull(err);
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT c AS a, d AS b FROM t']);
-                    }).chain(hitch(ds.db, "reset"));
+                    }).then(hitch(ds.db, "reset"));
                 }
             ]);
         });
@@ -2430,18 +2433,18 @@ it.describe("Dataset actions",function (it) {
         it.should("should handle implicit qualifiers and aliases in arguments", function () {
             return comb.serial([
                 function () {
-                    return ds.selectHash("t__c___a", "t__d___b").chain(function (ret) {
+                    return ds.selectHash("t__c___a", "t__d___b").then(function (ret) {
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT t.c AS a, t.d AS b FROM t']);
                         ds.db.reset();
                     });
                 },
                 function () {
-                    return ds.selectHash("t__c___a", "t__d___b",function (err, ret) {
+                    return ds.selectHash("t__c___a", "t__d___b", function (err, ret) {
                         assert.isNull(err);
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT t.c AS a, t.d AS b FROM t']);
-                    }).chain(hitch(ds.db, "reset"));
+                    }).then(hitch(ds.db, "reset"));
                 }
             ]);
         });

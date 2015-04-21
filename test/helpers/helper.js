@@ -45,25 +45,23 @@ var MockDB = comb.define(Database, {
             this.createdCount++;
             return {
                 query: function (sql) {
-                    return new comb.Promise().callback(sql);
+                    return Promise.resolve(sql);
                 }
             }
         },
 
         closeConnection: function () {
             this.closedCount++;
-            return new comb.Promise().callback();
+            return Promise.resolve();
         },
 
         validate: function () {
-            return new comb.Promise().callback(true);
+            return Promise.resolve(true);
         },
 
         execute: function (sql, opts) {
-            var ret = new comb.Promise();
             this.sqls.push(sql);
-            ret.callback();
-            return ret;
+            return Promise.resolve();
         },
 
         reset: function () {
@@ -95,10 +93,8 @@ comb.define(Database, {
         },
 
         execute: function (sql, opts) {
-            var ret = new comb.Promise();
             this.sqls.push(sql);
-            ret.callback();
-            return ret;
+            return Promise.resolve();
         }
     }
 }).as(exports, "SchemaDummyDatabase");

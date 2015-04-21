@@ -1,13 +1,9 @@
+"use strict";
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
-    sql = patio.SQL,
     comb = require("comb-proxy"),
-    config = require("../test.config.js"),
-    when = comb.when,
-    serial = comb.serial,
-    format = comb.string.format,
-    hitch = comb.hitch;
+    config = require("../test.config.js");
 
 it.describe("patio.adapters.Redshift", function (it) {
 
@@ -36,7 +32,7 @@ it.describe("patio.adapters.Redshift", function (it) {
         var origExecute = PG_DB.__logAndExecute;
         PG_DB.__logAndExecute = function (sql) {
             this.sqls.push(sql.trim());
-            return when([]);
+            return Promise.resolve([]);
         };
     });
 
@@ -47,7 +43,7 @@ it.describe("patio.adapters.Redshift", function (it) {
         it.should("use identity when using a primary key", function () {
             return PG_DB.createTable("testTable", function () {
                 this.primaryKey("id");
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(PG_DB.sqls, ["CREATE TABLE testTable (id bigint identity(0, 1) primary key)"]);
             });
         });
@@ -56,7 +52,7 @@ it.describe("patio.adapters.Redshift", function (it) {
             return PG_DB.createTable("testTable", function () {
                 this.primaryKey("id");
                 this.testCol(String, {distKey: true});
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(PG_DB.sqls, ["CREATE TABLE testTable (id bigint identity(0, 1) primary key, testCol text distkey)"]);
             });
         });
@@ -65,7 +61,7 @@ it.describe("patio.adapters.Redshift", function (it) {
             return PG_DB.createTable("testTable", function () {
                 this.primaryKey("id");
                 this.testCol(String, {sortKey: true});
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(PG_DB.sqls, ["CREATE TABLE testTable (id bigint identity(0, 1) primary key, testCol text sortkey)"]);
             });
         });
@@ -74,7 +70,7 @@ it.describe("patio.adapters.Redshift", function (it) {
             return PG_DB.createTable("testTable", {distStyle: "all"}, function () {
                 this.primaryKey("id");
                 this.testCol(String, {sortKey: true});
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(PG_DB.sqls, ["CREATE TABLE testTable (id bigint identity(0, 1) primary key, testCol text sortkey) diststyle all"]);
             });
         });
@@ -82,7 +78,7 @@ it.describe("patio.adapters.Redshift", function (it) {
     });
 
     it.should("not allow using returning statements", function () {
-        return PG_DB.from("test").returning("id").update({hello: "world"}).chain(function () {
+        return PG_DB.from("test").returning("id").update({hello: "world"}).then(function () {
             assert.deepEqual(PG_DB.sqls, ["UPDATE  test SET hello = 'world'"]);
         });
     });

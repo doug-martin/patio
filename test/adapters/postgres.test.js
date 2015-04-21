@@ -1,13 +1,11 @@
+"use strict";
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
     sql = patio.SQL,
     comb = require("comb-proxy"),
     config = require("../test.config.js"),
-    when = comb.when,
-    serial = comb.serial,
-    format = comb.string.format,
-    hitch = comb.hitch;
+    serial = comb.serial;
 
 if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
     it.describe("patio.adapters.Postgres", function (it) {
@@ -81,13 +79,13 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
         });
 
         it.should("provide the server version", function () {
-            return PG_DB.serverVersion().chain(function (version) {
+            return PG_DB.serverVersion().then(function (version) {
                 assert.isTrue(version > 70000);
             });
         });
 
         it.should("correctly parse the schema", function () {
-            return comb.when(PG_DB.schema("test3"), PG_DB.schema("test4")).chain(function (schemas) {
+            return Promise.all([PG_DB.schema("test3"), PG_DB.schema("test4")]).then(function (schemas) {
                 assert.deepEqual(schemas[0], {
                     "value": {
                         type: "integer",
@@ -139,7 +137,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
             var d;
             it.beforeEach(function () {
                 d = PG_DB.from("test");
-                return d.remove().chain(function () {
+                return d.remove().then(function () {
                     return resetDb();
                 });
             });
@@ -193,43 +191,43 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
             });
 
             it.should("support regular expressions", function () {
-                return comb.when(
+                return Promise.all([
                     d.insert({name: "abc", value: 1}),
                     d.insert({name: "bcd", value: 2})
-                ).chain(function () {
-                        return when(
-                            d.filter({name: /bc/}).count(),
-                            d.filter({name: /^bc/}).count()
-                        ).chain(function (res) {
-                                assert.equal(res[0], 2);
-                                assert.equal(res[1], 1);
-                            });
+                ]).then(function () {
+                    return Promise.all([
+                        d.filter({name: /bc/}).count(),
+                        d.filter({name: /^bc/}).count()
+                    ]).then(function (res) {
+                        assert.equal(res[0], 2);
+                        assert.equal(res[1], 1);
                     });
+                });
             });
 
             it.should("support NULLS FIRST and NULLS LAST", function () {
-                return comb.when(
+                return Promise.all([
                     d.insert({name: "abc"}),
                     d.insert({name: "bcd"}),
                     d.insert({name: "bcd", value: 2})
-                ).chain(function () {
-                        return when(
-                            d.order(sql.value.asc({nulls: "first"}), "name").selectMap("name"),
-                            d.order(sql.value.asc({nulls: "last"}), "name").selectMap("name"),
-                            d.order(sql.value.asc({nulls: "first"}), "name").reverse().selectMap("name")
-                        ).chain(function (res) {
-                                assert.deepEqual(res[0], ["abc", "bcd", "bcd"]);
-                                assert.deepEqual(res[1], ["bcd", "abc", "bcd"]);
-                                assert.deepEqual(res[2], ["bcd", "bcd", "abc"]);
-                            });
+                ]).then(function () {
+                    return Promise.all([
+                        d.order(sql.value.asc({nulls: "first"}), "name").selectMap("name"),
+                        d.order(sql.value.asc({nulls: "last"}), "name").selectMap("name"),
+                        d.order(sql.value.asc({nulls: "first"}), "name").reverse().selectMap("name")
+                    ]).then(function (res) {
+                        assert.deepEqual(res[0], ["abc", "bcd", "bcd"]);
+                        assert.deepEqual(res[1], ["bcd", "abc", "bcd"]);
+                        assert.deepEqual(res[2], ["bcd", "bcd", "abc"]);
                     });
+                });
             });
 
             it.describe("#lock", function (it) {
                 it.should("lock tables and yield if a block is given", function () {
                     return d.lock('EXCLUSIVE', function () {
                         return d.insert({name: 'a'});
-                    }).chain(function () {
+                    }).then(function () {
                         assert.deepEqual(PG_DB.sqls, ["BEGIN",
                             "LOCK TABLE  test IN EXCLUSIVE MODE",
                             "INSERT INTO test (name) VALUES ('a') RETURNING *",
@@ -243,7 +241,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                             d.lock.bind(d, 'EXCLUSIVE'),
                             d.insert.bind(d, {name: 'a'})
                         ]);
-                    }).chain(function () {
+                    }).then(function () {
                         assert.deepEqual(PG_DB.sqls, ["BEGIN",
                             "LOCK TABLE  test IN EXCLUSIVE MODE",
                             "INSERT INTO test (name) VALUES ('a') RETURNING *",
@@ -272,14 +270,14 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                         ds.insert.bind(ds, 20, 10),
                         ds.insert.bind(ds, 30, 10),
                         function () {
-                            return when(
+                            return Promise.all([
                                 ds.order("b", "a").distinct().map("a"),
                                 ds.order("b", sql.identifier("a").desc()).distinct().map("a"),
                                 ds.order("b", "a").distinct("b").map("a"),
                                 ds.order("b", sql.identifier("a").desc()).distinct("b").map("a")
-                            );
+                            ]);
                         }
-                    ]).chain(function (res) {
+                    ]).then(function (res) {
                         assert.deepEqual(res[2], [
                             [20, 30],
                             [30, 20],
@@ -299,8 +297,8 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
                 it.should("store milliseconds in the timestamp fields for Timestamp objects", function () {
                     var t = new sql.TimeStamp(new Date());
-                    return d.insert({value: 1, timestamp: t}).chain(function () {
-                        return d.filter({value: 1}).select("timestamp").returning("timestamp").first().chain(function (res) {
+                    return d.insert({value: 1, timestamp: t}).then(function () {
+                        return d.filter({value: 1}).select("timestamp").returning("timestamp").first().then(function (res) {
                             assert.equal(res.timestamp.getMilliseconds(), t.getMilliseconds());
                         });
                     });
@@ -308,8 +306,8 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
                 it.should("store milliseconds in the timestamp fields for DateTime objects", function () {
                     var t = new sql.DateTime(new Date());
-                    return d.insert({value: 1, timestamp: t}).chain(function () {
-                        return d.filter({value: 1}).select("timestamp").first().chain(function (res) {
+                    return d.insert({value: 1, timestamp: t}).then(function () {
+                        return d.filter({value: 1}).select("timestamp").first().then(function (res) {
                             assert.equal(res.timestamp.getMilliseconds(), t.getMilliseconds());
                         });
                     });
@@ -325,8 +323,8 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
                 it.should("store milliseconds in the time fields for Time objects", function () {
                     var t = new sql.Time(12, 12, 12, 12);
-                    return d.insert({value: 1, time: t}).chain(function () {
-                        return d.filter({value: 1}).select("time").returning("time").first().chain(function (res) {
+                    return d.insert({value: 1, time: t}).then(function () {
+                        return d.filter({value: 1}).select("time").returning("time").first().then(function (res) {
                             assert.equal(res.time.getHours(), 12);
                             assert.equal(res.time.getMinutes(), 12);
                             assert.equal(res.time.getSeconds(), 12);
@@ -351,8 +349,8 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
                 it.should("store json", function () {
                     var json = {test: "test\""};
-                    return d.insert({value: 1, json: sql.json(json)}).chain(function () {
-                        return d.filter({value: 1}).select("json").returning("json").first().chain(function (result) {
+                    return d.insert({value: 1, json: sql.json(json)}).then(function () {
+                        return d.filter({value: 1}).select("json").returning("json").first().then(function (result) {
                             assert.deepEqual({json: json}, result);
                             assert.instanceOf(result.json, patio.sql.Json);
                         });
@@ -361,8 +359,8 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
                 it.should("store json as an array", function () {
                     var json = [{test: "test\""}];
-                    return d.insert({value: 1, json: sql.json(json)}).chain(function () {
-                        return d.filter({value: 1}).select("json").returning("json").first().chain(function (result) {
+                    return d.insert({value: 1, json: sql.json(json)}).then(function () {
+                        return d.filter({value: 1}).select("json").returning("json").first().then(function (result) {
                             assert.instanceOf(result.json, patio.sql.JsonArray);
                         });
                     });
@@ -386,36 +384,36 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                 });
 
                 it.should("support streaming records", function (next) {
-                    comb.when(
+                    Promise.all([
                         d.insert({name: "hello", testName: "world", testValue: "!"}),
                         d.insert({name: "hello1", testName: "world1", testValue: "!1"})
-                    ).chain(function () {
-                            var called = 0;
-                            d.stream()
-                                .on("data", function (data) {
-                                    called++;
-                                })
-                                .on("error", next)
-                                .on("end", function () {
-                                    assert.equal(called, 2);
-                                    next();
-                                });
-                        }, next);
+                    ]).then(function () {
+                        var called = 0;
+                        d.stream()
+                            .on("data", function (data) {
+                                called++;
+                            })
+                            .on("error", next)
+                            .on("end", function () {
+                                assert.equal(called, 2);
+                                next();
+                            });
+                    }, next);
                 });
 
                 it.should("properly emit errors", function (next) {
-                    comb.when(
+                    Promise.all([
                         d.insert({name: "hello", testName: "world", testValue: "!"}),
                         d.insert({name: "hello1", testName: "world1", testValue: "!1"})
-                    ).chain(function () {
-                            d.filter({x: "y"})
-                                .stream()
-                                .on("data", assert.fail)
-                                .on("error", function (err) {
-                                    assert.equal(err.message, 'column "x" does not exist')
-                                    next();
-                                }).on("end", assert.fail);
-                        }, next);
+                    ]).then(function () {
+                        d.filter({x: "y"})
+                            .stream()
+                            .on("data", assert.fail)
+                            .on("error", function (err) {
+                                assert.equal(err.message, 'column "x" does not exist')
+                                next();
+                            }).on("end", assert.fail);
+                    }, next);
                 });
             });
         });
@@ -447,13 +445,13 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                         return db.from("test2").insert();
                     },
                     function () {
-                        return db.from("test2").columns.chain(function (columns) {
+                        return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value"]);
                         });
                     },
                     db.addColumn.bind(db, "test2", "xyz", "text", {"default": '000'}),
                     function () {
-                        return db.from("test2").columns.chain(function (columns) {
+                        return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value", "xyz"]);
                         });
                     },
@@ -461,18 +459,18 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                         return db.from("test2").insert({name: 'mmm', value: 111});
                     },
                     function () {
-                        return db.from("test2").first().chain(function (res) {
+                        return db.from("test2").first().then(function (res) {
                             assert.equal(res.xyz, '000');
                         });
                     },
                     function () {
-                        return db.from("test2").columns.chain(function (columns) {
+                        return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value", "xyz"]);
                         });
                     },
                     db.dropColumn.bind(db, "test2", "xyz"),
                     function () {
-                        return db.from("test2").columns.chain(function (columns) {
+                        return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value"]);
                         });
                     },
@@ -484,18 +482,18 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                         return db.from("test2").insert({name: 'mmm', value: 111, xyz: 'gggg'});
                     },
                     function () {
-                        return db.from("test2").columns.chain(function (columns) {
+                        return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value", "xyz"]);
                         });
                     },
                     db.renameColumn.bind(db, "test2", "xyz", "zyx"),
                     function () {
-                        return db.from("test2").columns.chain(function (columns) {
+                        return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value", "zyx"]);
                         });
                     },
                     function () {
-                        db.from("test2").first().chain(function (row) {
+                        db.from("test2").first().then(function (row) {
                             assert.equal(row.zyx, "gggg");
                         });
                     },
@@ -508,7 +506,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                     },
                     db.setColumnType.bind(db, "test2", "xyz", "integer"),
                     function () {
-                        return db.from("test2").first().chain(function (row) {
+                        return db.from("test2").first().then(function (row) {
                             assert.equal(row.xyz, 57);
                         });
                     }
@@ -518,7 +516,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
             it.should("return a dataset with locks when calling #lock ", function () {
                 assert.instanceOf(db.locks(), patio.Dataset);
-                return db.locks().all().chain(function (res) {
+                return db.locks().all().then(function (res) {
                     assert.isArray(res);
                 });
             });
@@ -529,7 +527,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                     function () {
                         return db.createTable("posts", function () {
                             this.primaryKey("a", {type: "integer"});
-                        }).chain(function () {
+                        }).then(function () {
                             assert.deepEqual(PG_DB.sqls, [
                                 "CREATE TABLE posts (a serial PRIMARY KEY)"
                             ]);
@@ -539,7 +537,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                     function () {
                         return db.forceCreateTable("posts", function () {
                             this.primaryKey("a", {type: "bigint"});
-                        }).chain(function () {
+                        }).then(function () {
                             assert.deepEqual(PG_DB.sqls, [
                                 "DROP TABLE posts",
                                 "CREATE TABLE posts (a bigserial PRIMARY KEY)"
@@ -556,7 +554,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                     this.userId("integer");
                     this.index("userId", {opclass: "int4_ops", type: "btree"});
                 })
-                    .chain(function () {
+                    .then(function () {
                         assert.deepEqual(db.sqls, [
                             'CREATE TABLE posts (title text, body text, user_id integer)',
                             'CREATE  INDEX posts_user_id_index ON posts USING btree (user_id int4_ops)'
@@ -581,35 +579,35 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                         ]);
                     },
                     function () {
-                        return when(
+                        return Promise.all([
                             ds.insert({title: "node js", body: "hello"}),
                             ds.insert({title: "patio", body: "orm"}),
                             ds.insert({title: "java script", body: "world"})
-                        );
+                        ]);
                     },
                     resetDb,
                     function () {
-                        return when(
+                        return Promise.all([
                             ds.fullTextSearch("title", "node").all(),
                             ds.fullTextSearch(["title", "body"], ["hello", "node"]).all(),
                             ds.fullTextSearch("title", 'script', {language: "french"}).all()
-                        ).chain(function (res) {
-                                var all1 = res[0], all2 = res[1], all3 = res[2];
-                                assert.deepEqual(all1, [
-                                    {title: "node js", body: "hello"}
-                                ]);
-                                assert.deepEqual(all2, [
-                                    {title: "node js", body: "hello"}
-                                ]);
-                                assert.deepEqual(all3, [
-                                    {title: "java script", body: "world"}
-                                ]);
-                                assert.deepEqual(db.sqls, [
-                                    "SELECT * FROM posts WHERE (to_tsvector('simple', (COALESCE(title, ''))) @@ to_tsquery('simple', 'node'))",
-                                    "SELECT * FROM posts WHERE (to_tsvector('simple', (COALESCE(title, '') || ' ' || COALESCE(body, ''))) @@ to_tsquery('simple', 'hello | node'))",
-                                    "SELECT * FROM posts WHERE (to_tsvector('french', (COALESCE(title, ''))) @@ to_tsquery('french', 'script'))"
-                                ]);
-                            });
+                        ]).then(function (res) {
+                            var all1 = res[0], all2 = res[1], all3 = res[2];
+                            assert.deepEqual(all1, [
+                                {title: "node js", body: "hello"}
+                            ]);
+                            assert.deepEqual(all2, [
+                                {title: "node js", body: "hello"}
+                            ]);
+                            assert.deepEqual(all3, [
+                                {title: "java script", body: "world"}
+                            ]);
+                            assert.deepEqual(db.sqls, [
+                                "SELECT * FROM posts WHERE (to_tsvector('simple', (COALESCE(title, ''))) @@ to_tsquery('simple', 'node'))",
+                                "SELECT * FROM posts WHERE (to_tsvector('simple', (COALESCE(title, '') || ' ' || COALESCE(body, ''))) @@ to_tsquery('simple', 'hello | node'))",
+                                "SELECT * FROM posts WHERE (to_tsvector('french', (COALESCE(title, ''))) @@ to_tsquery('french', 'script'))"
+                            ]);
+                        });
                     }
                 ]);
 
@@ -619,7 +617,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                 return db.createTable("posts", function () {
                     this.geom("box");
                     this.spatialIndex(["geom"]);
-                }).chain(function () {
+                }).then(function () {
                     assert.deepEqual(db.sqls, [
                         'CREATE TABLE posts (geom box)',
                         'CREATE  INDEX posts_geom_index ON posts USING gist (geom)'
@@ -631,7 +629,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                 return db.createTable("posts", function () {
                     this.title("varchar", {size: 5});
                     this.index("title", {type: 'hash'});
-                }).chain(function () {
+                }).then(function () {
                     assert.deepEqual(db.sqls, [
                         'CREATE TABLE posts (title varchar(5))',
                         'CREATE  INDEX posts_title_index ON posts USING hash (title)'
@@ -643,7 +641,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                 return db.createTable("posts", function () {
                     this.title("varchar", {size: 5});
                     this.index("title", {type: 'btree', unique: true});
-                }).chain(function () {
+                }).then(function () {
                     assert.deepEqual(db.sqls, [
                         'CREATE TABLE posts (title varchar(5))',
                         'CREATE UNIQUE INDEX posts_title_index ON posts USING btree (title)'
@@ -655,7 +653,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                 return db.createTable("posts", function () {
                     this.title("varchar", {size: 5});
                     this.index("title", {where: {title: '5'}});
-                }).chain(function () {
+                }).then(function () {
                     assert.deepEqual(db.sqls, [
                         'CREATE TABLE posts (title varchar(5))',
                         'CREATE  INDEX posts_title_index ON posts  (title) WHERE (title = \'5\')'
@@ -667,7 +665,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                 return db.createTable(sql.identifier("posts"), function () {
                     this.title("varchar", {size: 5});
                     this.index("title", {where: {title: '5'}});
-                }).chain(function () {
+                }).then(function () {
                     assert.deepEqual(db.sqls, [
                         'CREATE TABLE posts (title varchar(5))',
                         'CREATE  INDEX posts_title_index ON posts  (title) WHERE (title = \'5\')'
@@ -681,7 +679,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                         this.primaryKey("a");
                     }),
                     db.renameTable.bind(db, "posts1", "posts")
-                ]).chain(function () {
+                ]).then(function () {
                     assert.deepEqual(db.sqls, [
                         "CREATE TABLE posts_1 (a serial PRIMARY KEY)",
                         "ALTER TABLE posts_1 RENAME TO posts"
@@ -718,7 +716,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
                             assert.deepEqual(db.sqls, ['BEGIN', 'INSERT INTO test (x, y) VALUES (1, 2), (3, 4)', 'COMMIT']);
                         },
                         function () {
-                            return ds.all().chain(function (res) {
+                            return ds.all().then(function (res) {
                                 assert.deepEqual(res, [
                                     {x: 1, y: 2},
                                     {x: 3, y: 4}
@@ -732,7 +730,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
             it.describe("#createMaterializedView, #dropMaterializedView and #refreshMaterializedView", function (it) {
                 var shouldRun;
                 it.beforeAll(function () {
-                    return db.serverVersion().chain(function (v) {
+                    return db.serverVersion().then(function (v) {
                         shouldRun = v >= 90300;
                         if (shouldRun) {
                             return db.forceCreateTable("mtrTest", function () {
@@ -747,7 +745,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
                 it.should("create a materialized view", function () {
                     if (shouldRun) {
-                        return db.createMaterializedView("mtr", db.from("mtrTest").filter({a: "hello"})).chain(function () {
+                        return db.createMaterializedView("mtr", db.from("mtrTest").filter({a: "hello"})).then(function () {
                             assert.deepEqual(db.sqls, ["CREATE MATERIALIZED VIEW mtr AS SELECT * FROM mtr_test WHERE (a = 'hello')"]);
                         });
                     }
@@ -755,11 +753,11 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
                 it.should("refresh a materialized view", function () {
                     if (shouldRun) {
-                        return db.refreshMaterializedView("mtr").chain(function () {
+                        return db.refreshMaterializedView("mtr").then(function () {
                             assert.deepEqual(db.sqls, ["REFRESH MATERIALIZED VIEW mtr"]);
-                        }).chain(function () {
+                        }).then(function () {
                             db.sqls = [];
-                            return db.refreshMaterializedView("mtr", {noData: true}).chain(function () {
+                            return db.refreshMaterializedView("mtr", {noData: true}).then(function () {
                                 assert.deepEqual(db.sqls, ["REFRESH MATERIALIZED VIEW mtr WITH NO DATA"]);
                             });
                         });
@@ -768,7 +766,7 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
 
                 it.should("drop a materializedView", function () {
                     if (shouldRun) {
-                        return db.dropMaterializedView("mtr").chain(function () {
+                        return db.dropMaterializedView("mtr").then(function () {
                             assert.deepEqual(db.sqls, ["DROP MATERIALIZED VIEW mtr"]);
                         });
                     }
@@ -779,60 +777,62 @@ if (process.env.PATIO_DB === "pg" || process.env.NODE_ENV === 'test-coverage') {
             it.describe("#listen, #listenOnce, #notify, and #unListen", function (it) {
 
                 it.should("listen to a channel", function () {
-                    var ret = new comb.Promise();
-                    db.listen("myChannel", function (msg) {
-                        try {
-                            assert.deepEqual(msg, {msg: "hello"});
-                            db.unListen("myChannel").chain(function () {
-                                assert.deepEqual(db.sqls, ['LISTEN my_channel', "NOTIFY my_channel , '{\"msg\":\"hello\"}'", "UNLISTEN my_channel"]);
-                                assert.deepEqual(db.__listeners, {});
-                                ret.callback();
-                            }).addErrback(ret);
-                        } catch (e) {
-                            ret.errback(e);
-                        }
-                    }).chain(function () {
-                        assert.isTrue("my_channel" in db.__listeners);
-                        assert.deepEqual(db.sqls, ['LISTEN my_channel']);
-                        return db.notify("myChannel", {msg: "hello"});
-                    }).addErrback(ret);
-                    return ret;
+                    return new Promise(function (resolve, reject) {
+                        db.listen("myChannel", function (msg) {
+                            try {
+                                assert.deepEqual(msg, {msg: "hello"});
+                                db.unListen("myChannel").then(function () {
+                                    assert.deepEqual(db.sqls, ['LISTEN my_channel', "NOTIFY my_channel , '{\"msg\":\"hello\"}'", "UNLISTEN my_channel"]);
+                                    assert.deepEqual(db.__listeners, {});
+                                    resolve();
+                                }, reject);
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }).then(function () {
+                            assert.isTrue("my_channel" in db.__listeners);
+                            assert.deepEqual(db.sqls, ['LISTEN my_channel']);
+                            return db.notify("myChannel", {msg: "hello"});
+                        }, reject);
+                    });
                 });
 
                 it.should("listen once to an event", function () {
-                    var ret = new comb.Promise(), called = 0;
-                    db.listenOnce("myChannel").chain(function (payload) {
-                        assert.equal(payload, "hello1");
-                        called++;
-                        ret.callback();
+                    var called = 0;
+                    var promise = new Promise(function (resolve, reject) {
+                        db.listenOnce("myChannel").then(function (payload) {
+                            assert.equal(payload, "hello1");
+                            called++;
+                            resolve();
+                        }, reject);
                     });
-                    return when(
+                    return Promise.all([
                         db.notify("myChannel", "hello1"),
                         db.notify("myChannel", "hello2"),
                         db.notify("myChannel", "hello3"),
-                        ret
-                    ).chain(function () {
-                            assert.equal(called, 1);
-                            called = 0;
-                            db.listenOnce("myChannel").chain(function (payload) {
-                                assert.equal(payload, "hello1");
-                                called++;
-                            });
-                            return db.notify("myChannel", "hello1")
-                                .chain(function () {
-                                    return db.notify("myChannel", "hello2");
-                                })
-                                .chain(function () {
-                                    return db.notify("myChannel", "hello3");
-                                })
-                                .chain(function () {
-                                    assert.equal(called, 1);
-                                });
+                        promise
+                    ]).then(function () {
+                        assert.equal(called, 1);
+                        called = 0;
+                        db.listenOnce("myChannel").then(function (payload) {
+                            assert.equal(payload, "hello1");
+                            called++;
                         });
+                        return db.notify("myChannel", "hello1")
+                            .then(function () {
+                                return db.notify("myChannel", "hello2");
+                            })
+                            .then(function () {
+                                return db.notify("myChannel", "hello3");
+                            })
+                            .then(function () {
+                                assert.equal(called, 1);
+                            });
+                    });
                 });
 
                 it("unlisten should not error if the channel is not found", function () {
-                    return db.unListen("my_channel2").chain(function () {
+                    return db.unListen("my_channel2").then(function () {
                         assert.deepEqual(db.sqls, []);
                     });
                 });

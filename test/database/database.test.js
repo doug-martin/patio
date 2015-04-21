@@ -18,13 +18,14 @@ it.describe("Database", function (it) {
     var DummyDataset = comb.define(patio.Dataset, {
         instance: {
             first: function () {
-                var ret = new comb.Promise();
-                if (this.__opts.from[0].toString() === "a") {
-                    ret.errback();
-                } else {
-                    ret.callback();
-                }
-                return ret;
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    if (self.__opts.from[0].toString() === "a") {
+                        reject();
+                    } else {
+                        resolve();
+                    }
+                });
             }
         }
     });
@@ -38,15 +39,15 @@ it.describe("Database", function (it) {
             },
 
             execute: function (sql, opts) {
-                var ret = new comb.Promise().callback();
                 this.sqls.push(sql);
-                return ret;
+                return Promise.resolve();
             },
 
             executeError: function () {
-                var ret = new comb.Promise();
-                this.execute.apply(this, arguments).both(comb('errback').bind(ret));
-                return ret;
+                var p = this.execute.apply(this, arguments);
+                return new Promise(function (resolve, reject) {
+                    p.then(reject, reject);
+                });
             },
 
             reset: function () {
@@ -54,9 +55,8 @@ it.describe("Database", function (it) {
             },
 
             transaction: function (opts, cb) {
-                var ret = new comb.Promise().callback();
                 cb();
-                return ret;
+                return Promise.resolve();
             },
 
             getters: {
@@ -90,10 +90,14 @@ it.describe("Database", function (it) {
 
             execute: function (sql, opts) {
                 opts = opts || {};
-                var ret = new comb.Promise();
                 this.sqls.push(sql);
-                ret[opts.error ? "errback" : "callback"](opts.error ? "ERROR" : "");
-                return ret;
+                return new Promise(function (resolve, reject) {
+                    if (opts.error) {
+                        reject("ERROR");
+                    } else {
+                        resolve("");
+                    }
+                });
             },
 
             createConnection: function (options) {
@@ -107,19 +111,19 @@ it.describe("Database", function (it) {
             },
 
             retCommitSavePoint: function () {
-                return this.transaction(function (db, done) {
-                    this.transaction({savepoint: true}, function () {
+                return this.transaction(function () {
+                    return this.transaction({savepoint: true}, function () {
                         return this.execute('DROP TABLE test;');
-                    }).classic(done);
+                    });
                 });
             },
 
             closeConnection: function (conn) {
-                return new comb.Promise().callback();
+                return Promise.resolve();
             },
 
             validate: function (conn) {
-                return new comb.Promise().callback(true);
+                return Promise.resolve(true);
             },
 
             reset: function () {
@@ -198,12 +202,24 @@ it.describe("Database", function (it) {
         it.should("respect the quoteIndentifiersDefault method if patio.quoteIdentifiers = null", function () {
             patio.quoteIdentifiers = null;
             assert.isTrue(new Database().quoteIdentifiers);
-            var X = comb.define(Database, {instance: {getters: {quoteIdentifiersDefault: function () {
-                return false;
-            }}}});
-            var Y = comb.define(Database, {instance: {getters: {quoteIdentifiersDefault: function () {
-                return true;
-            }}}});
+            var X = comb.define(Database, {
+                instance: {
+                    getters: {
+                        quoteIdentifiersDefault: function () {
+                            return false;
+                        }
+                    }
+                }
+            });
+            var Y = comb.define(Database, {
+                instance: {
+                    getters: {
+                        quoteIdentifiersDefault: function () {
+                            return true;
+                        }
+                    }
+                }
+            });
             assert.isFalse(new X().quoteIdentifiers);
             assert.isTrue(new Y().quoteIdentifiers);
         });
@@ -211,12 +227,24 @@ it.describe("Database", function (it) {
         it.should("respect the identifierInputMethodDefault method if patio.identifierInputMethod = null", function () {
             patio.identifierInputMethod = undefined;
             assert.equal(new Database().identifierInputMethod, "toUpperCase");
-            var X = comb.define(Database, {instance: {getters: {identifierInputMethodDefault: function () {
-                return "toLowerCase";
-            }}}});
-            var Y = comb.define(Database, {instance: {getters: {identifierInputMethodDefault: function () {
-                return "toUpperCase";
-            }}}});
+            var X = comb.define(Database, {
+                instance: {
+                    getters: {
+                        identifierInputMethodDefault: function () {
+                            return "toLowerCase";
+                        }
+                    }
+                }
+            });
+            var Y = comb.define(Database, {
+                instance: {
+                    getters: {
+                        identifierInputMethodDefault: function () {
+                            return "toUpperCase";
+                        }
+                    }
+                }
+            });
             assert.equal(new X().identifierInputMethod, "toLowerCase");
             assert.equal(new Y().identifierInputMethod, "toUpperCase");
         });
@@ -224,12 +252,24 @@ it.describe("Database", function (it) {
         it.should("respect the identifierOutputMethodDefault method if patio.identifierOutputMethod = null", function () {
             patio.identifierOutputMethod = undefined;
             assert.equal(new Database().identifierOutputMethod, "toLowerCase");
-            var X = comb.define(Database, {instance: {getters: {identifierOutputMethodDefault: function () {
-                return "toLowerCase";
-            }}}});
-            var Y = comb.define(Database, {instance: {getters: {identifierOutputMethodDefault: function () {
-                return "toUpperCase";
-            }}}});
+            var X = comb.define(Database, {
+                instance: {
+                    getters: {
+                        identifierOutputMethodDefault: function () {
+                            return "toLowerCase";
+                        }
+                    }
+                }
+            });
+            var Y = comb.define(Database, {
+                instance: {
+                    getters: {
+                        identifierOutputMethodDefault: function () {
+                            return "toUpperCase";
+                        }
+                    }
+                }
+            });
             assert.equal(new X().identifierOutputMethod, "toLowerCase");
             assert.equal(new Y().identifierOutputMethod, "toUpperCase");
         });
@@ -275,9 +315,8 @@ it.describe("Database", function (it) {
             };
             var a = null;
             db.__logAndExecute("blah", function () {
-                var ret = new comb.Promise().callback();
                 a = 1;
-                return ret;
+                return Promise.resolve();
             });
             assert.equal(a, 1);
             console.log = orig;
@@ -398,10 +437,9 @@ it.describe("Database", function (it) {
                 },
 
                 executeDdl: function () {
-                    var ret = new comb.Promise().callback();
                     this.sqls.length = 0;
                     this.sqls = this.sqls.concat(comb.argsToArray(arguments));
-                    return ret;
+                    return Promise.resolve();
                 }
             }
         }))();
@@ -700,14 +738,14 @@ it.describe("Database", function (it) {
         });
         it.should("try to select the first record from the table's dataset", function () {
             var a, b;
-            return comb.when(
+            return Promise.all([
                 db.tableExists("a").chain(function (ret) {
                     assert.isFalse(ret);
                 }),
                 db.tableExists("b").chain(function (ret) {
                     assert.isTrue(ret);
                 })
-            );
+            ]);
 
         });
     });
@@ -764,54 +802,54 @@ it.describe("Database", function (it) {
 
         it.describe("isolated options", function (it) {
 
-            it.beforeAll(function(){
+            it.beforeAll(function () {
                 db.supportsTransactionIsolationLevels = false;
             });
 
             function createTransaction(db, table, timeout1, timeout2, opts) {
-                var ret = new comb.Promise();
-                setTimeout(function () {
-                    db.transaction(opts, function () {
-                        var ret = new comb.Promise();
-                        setTimeout(function () {
-                            db.run("DROP TABLE " + table).chain(ret.callback, ret.errback);
-                        }, timeout2)
-                        return ret;
-                    }).chain(ret.callback, ret.errback);
-                }, timeout1);
-                return ret;
+                return new Promise(function (resolve, reject) {
+                    setTimeout(function () {
+                        db.transaction(opts, function () {
+                            return new Promise(function (resolve, reject) {
+                                setTimeout(function () {
+                                    db.run("DROP TABLE " + table).then(resolve, reject);
+                                }, timeout2)
+                            });
+                        }).chain(resolve, reject);
+                    }, timeout1);
+                });
             }
 
             it.should("allow specifying a transaction as isolated", function () {
                 db.reset();
-                return comb.when(
+                return Promise.all([
                     createTransaction(db, "a", 0, 1000),
                     createTransaction(db, "b", 500, 0, {isolated: true}),
                     createTransaction(db, "c", 500, 0, {isolated: true}),
                     createTransaction(db, "d", 500, 0, {isolated: true})
-                ).chain(function () {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN', "DROP TABLE a", 'COMMIT',
-                            'BEGIN', "DROP TABLE b", 'COMMIT',
-                            'BEGIN', "DROP TABLE c", 'COMMIT',
-                            'BEGIN', "DROP TABLE d", 'COMMIT'
-                        ]);
-                    });
+                ]).then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN', "DROP TABLE a", 'COMMIT',
+                        'BEGIN', "DROP TABLE b", 'COMMIT',
+                        'BEGIN', "DROP TABLE c", 'COMMIT',
+                        'BEGIN', "DROP TABLE d", 'COMMIT'
+                    ]);
+                });
             });
 
             it.should("not isolate inner transaction unless specified", function () {
                 db.reset();
-                return comb.when(
+                return Promise.all([
                     createTransaction(db, "a", 0, 600, {isolated: true}),
                     createTransaction(db, "b", 500, 0),
                     createTransaction(db, "c", 0, 700, {isolated: true}),
                     createTransaction(db, "d", 800, 0)
-                ).chain(function () {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN', "DROP TABLE b", "DROP TABLE a", 'COMMIT',
-                            'BEGIN', "DROP TABLE d", "DROP TABLE c", 'COMMIT'
-                        ]);
-                    });
+                ]).then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN', "DROP TABLE b", "DROP TABLE a", 'COMMIT',
+                        'BEGIN', "DROP TABLE d", "DROP TABLE c", 'COMMIT'
+                    ]);
+                });
             });
 
             it.should("isolate transactions with isolated = true returned from an inner transaction", function () {
@@ -859,7 +897,7 @@ it.describe("Database", function (it) {
         it.should("raise database call errback if there is an error commiting", function () {
             var db = new Dummy3Database();
             db.__commitTransaction = function () {
-                return new comb.Promise().errback();
+                return Promise.reject();
             };
             return db.transaction(function (d) {
                 return d.run("DROP TABLE test");
@@ -993,7 +1031,7 @@ it.describe("Database", function (it) {
         it.should("raise database errors when commiting a transaction and error is thrown", function () {
             var orig = db.__commitTransaction;
             db.__commitTransaction = function () {
-                return new comb.Promise().errback("ERROR");
+                return Promise.reject("ERROR");
             };
             return db.transaction(function (db, done) {
                 done();
@@ -1017,7 +1055,7 @@ it.describe("Database", function (it) {
             instance: {
 
                 fetchRows: function (sql, cb) {
-                    return comb.async.array(new comb.Promise().callback({sql: sql}).addCallback(cb));
+                    return comb.async.array(Promise.resolve([{sql: sql}]).then(cb));
                 }
             }
         });
@@ -1041,14 +1079,14 @@ it.describe("Database", function (it) {
 
         it.should("format the given sql with any additional arguments", function () {
             var sql = null;
-            return comb.when(
+            return Promise.all([
                 db.fetch('select * from xyz where x = ? and y = ?', 15, 'abc', function (r) {
                     assert.equal(r.sql, "select * from xyz where x = 15 and y = 'abc'");
                 }),
                 db.fetch('select name from table where name = ? or id in ?', 'aman', [3, 4, 7], function (r) {
                     assert.equal(r.sql, "select name from table where name = 'aman' or id in (3, 4, 7)");
                 })
-            );
+            ]);
         });
 
         it.should("format the given sql with named arguments", function () {
@@ -1138,14 +1176,14 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return comb.when(
+            return Promise.all([
                 db.dropView("test"),
                 db.dropView(sql.identifier("test")),
                 db.dropView('sch__test'),
                 db.dropView(sql.test.qualify('sch'))
-            ).chain(function () {
-                    assert.deepEqual(db.sqls, ['DROP VIEW test', 'DROP VIEW test', 'DROP VIEW sch.test', 'DROP VIEW sch.test']);
-                }, console.log);
+            ]).then(function () {
+                assert.deepEqual(db.sqls, ['DROP VIEW test', 'DROP VIEW test', 'DROP VIEW sch.test', 'DROP VIEW sch.test']);
+            });
         });
     });
 
@@ -1157,7 +1195,9 @@ it.describe("Database", function (it) {
         });
 
         it.should("raise error for an invalid op", function () {
-            assert.throws(hitch(db, "__alterTableSql", "mau", {op: "blah"}));
+            return db.__alterTableSql("mau", {op: "blah"}).then(assert.fail, function (err) {
+                assert.equal(err.message, "Database error : Invalid alter table operator 'blah'");
+            })
         });
     });
 
@@ -1251,11 +1291,11 @@ it.describe("Database", function (it) {
             assert.equal(typeLiteral(String, {size: 25}), "varchar(25)");
             assert.equal(typeLiteral(Buffer), "blob");
             assert.equal(typeLiteral(Number), "numeric");
-            assert.equal(typeLiteral(Number, {size: 2 }), "numeric(2)");
+            assert.equal(typeLiteral(Number, {size: 2}), "numeric(2)");
             assert.equal(typeLiteral(Number, {isInt: true}), "integer");
-            assert.equal(typeLiteral(Number, {isDouble: true }), "double precision");
-            assert.equal(typeLiteral(sql.Float, {isDouble: true }), "double precision");
-            assert.equal(typeLiteral(sql.Decimal, {isDouble: true }), "double precision");
+            assert.equal(typeLiteral(Number, {isDouble: true}), "double precision");
+            assert.equal(typeLiteral(sql.Float, {isDouble: true}), "double precision");
+            assert.equal(typeLiteral(sql.Decimal, {isDouble: true}), "double precision");
             assert.equal(typeLiteral(Date), "date");
             assert.equal(typeLiteral(sql.Time), "time");
             assert.equal(typeLiteral(Date, {onlyTime: true}), "time");
@@ -1274,11 +1314,11 @@ it.describe("Database", function (it) {
             assert.equal(typeLiteral("string"), "varchar(255)");
             assert.equal(typeLiteral("buffer"), "blob");
             assert.equal(typeLiteral("number"), "numeric");
-            assert.equal(typeLiteral("number", {size: 2 }), "numeric(2)");
+            assert.equal(typeLiteral("number", {size: 2}), "numeric(2)");
             assert.equal(typeLiteral("number", {isInt: true}), "integer");
-            assert.equal(typeLiteral("number", {isDouble: true }), "double precision");
-            assert.equal(typeLiteral("float", {isDouble: true }), "double precision");
-            assert.equal(typeLiteral("decimal", {isDouble: true }), "double precision");
+            assert.equal(typeLiteral("number", {isDouble: true}), "double precision");
+            assert.equal(typeLiteral("float", {isDouble: true}), "double precision");
+            assert.equal(typeLiteral("decimal", {isDouble: true}), "double precision");
             assert.equal(typeLiteral("date"), "date");
             assert.equal(typeLiteral("time"), "time");
             assert.equal(typeLiteral("date", {onlyTime: true}), "time");
