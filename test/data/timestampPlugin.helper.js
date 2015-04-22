@@ -1,3 +1,5 @@
+"use strict";
+
 var patio = require("index"),
     config = require("../test.config.js"),
     comb = require("comb-proxy");

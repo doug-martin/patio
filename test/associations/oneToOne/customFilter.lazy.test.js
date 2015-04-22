@@ -1,9 +1,10 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/oneToOne.helper.js"),
     patio = require("index"),
     comb = require("comb"),
-    Promise = comb.Promise,
     hitch = comb.hitch;
 
 
@@ -47,10 +48,7 @@ it.describe("One To One lazy with custom filter", function (it) {
     it.describe("create a new model with association", function (it) {
 
         it.beforeAll(function () {
-            return comb.when(
-                Employee.remove(),
-                Works.remove()
-            );
+            return Promise.all([Employee.remove(), Works.remove()]);
         });
 
 
@@ -67,8 +65,8 @@ it.describe("One To One lazy with custom filter", function (it) {
                     salary: 100000
                 }
             });
-            return employee.save().chain(function () {
-                return employee.works.chain(function (works) {
+            return employee.save().then(function () {
+                return employee.works.then(function (works) {
                     assert.equal(works.companyName, "Google");
                     assert.equal(works.salary, 100000);
                 });
@@ -100,27 +98,29 @@ it.describe("One To One lazy with custom filter", function (it) {
         });
 
         it.should("load associations when querying", function () {
-            return comb.when(Employee.one(), Works.one()).chain(function (res) {
-                var emp = res[0], work = res[1];
-                var empWorks = emp.works, worksEmp = work.employee;
-                assert.isPromiseLike(empWorks);
-                assert.isPromiseLike(worksEmp);
-                return comb.when(empWorks, worksEmp).chain(function (res) {
-                    assert.instanceOf(res[1], Employee);
-                    assert.instanceOf(res[0], Works);
+            return Promise.all([Employee.one(), Works.one()])
+                .then(function (res) {
+                    var emp = res[0], work = res[1];
+                    var empWorks = emp.works, worksEmp = work.employee;
+                    assert.isPromiseLike(empWorks);
+                    assert.isPromiseLike(worksEmp);
+                    return Promise.all([empWorks, worksEmp])
+                        .then(function (res) {
+                            assert.instanceOf(res[1], Employee);
+                            assert.instanceOf(res[0], Works);
+                        });
                 });
-            });
         });
 
         it.should("allow the removing of associations", function () {
-            return Employee.one().chain(function (emp) {
+            return Employee.one().then(function (emp) {
                 emp.works = null;
-                return emp.save().chain(function (emp) {
-                    return emp.works.chain(function (works) {
+                return emp.save().then(function (emp) {
+                    return emp.works.then(function (works) {
                         assert.isNull(works);
-                        return Works.one().chain(function (works) {
+                        return Works.one().then(function (works) {
                             assert.isNotNull(works);
-                            return works.employee.chain(function (emp) {
+                            return works.employee.then(function () {
                                 assert.isNotNull(works.employee);
                             });
                         });
@@ -130,11 +130,11 @@ it.describe("One To One lazy with custom filter", function (it) {
         });
 
         it.should("apply the filter", function () {
-            return Employee.one().chain(function (emp) {
-                return emp.works.chain(function (works) {
-                    return works.save({salary: 10}).chain(function () {
-                        return emp.reload().chain(function () {
-                            return emp.works.chain(function (works) {
+            return Employee.one().then(function (emp) {
+                return emp.works.then(function (works) {
+                    return works.save({salary: 10}).then(function () {
+                        return emp.reload().then(function () {
+                            return emp.works.then(function (works) {
                                 assert.isNull(works);
                             });
                         });
@@ -147,10 +147,7 @@ it.describe("One To One lazy with custom filter", function (it) {
 
     it.context(function () {
         it.beforeEach(function () {
-            return comb.when(
-                Works.remove(),
-                Employee.remove()
-            );
+            return Promise.all([Works.remove(), Employee.remove()]);
         });
 
         it.should("allow the setting of associations", function () {
@@ -162,15 +159,15 @@ it.describe("One To One lazy with custom filter", function (it) {
                 street: "Street " + 1,
                 city: "City " + 1
             });
-            return emp.save().chain(function () {
-                return emp.works.chain(function (works) {
+            return emp.save().then(function () {
+                return emp.works.then(function (works) {
                     assert.isNull(works);
                     emp.works = {
                         companyName: "Google",
                         salary: 100000
                     };
-                    return emp.save().chain(function () {
-                        return emp.works.chain(function (works) {
+                    return emp.save().then(function () {
+                        return emp.works.then(function (works) {
                             assert.instanceOf(works, Works);
                         });
                     });
@@ -191,12 +188,13 @@ it.describe("One To One lazy with custom filter", function (it) {
                     salary: 100000
                 }
             });
-            return e.save().chain(function () {
-                return e.remove().chain(function () {
-                    return comb.when(Employee.all(), Works.all()).chain(function (res) {
-                        assert.lengthOf(res[0], 0);
-                        assert.lengthOf(res[1], 1);
-                    });
+            return e.save().then(function () {
+                return e.remove().then(function () {
+                    return Promise.all([Employee.all(), Works.all()])
+                        .then(function (res) {
+                            assert.lengthOf(res[0], 0);
+                            assert.lengthOf(res[1], 1);
+                        });
                 });
             });
         });

@@ -1,12 +1,12 @@
 "use strict";
+
 var patio = require("index"),
-    config = require("../test.config.js"),
-    comb = require("comb-proxy");
+    config = require("../test.config.js");
 
 module.exports = {
     createSchemaAndSync: createSchemaAndSync,
     dropModels: dropModels
-}
+};
 
 function createSchemaAndSync(underscore) {
     return createTables(underscore).then(function () {
@@ -29,7 +29,7 @@ function createTables(underscore) {
     DB = patio.connect(config.DB_URI + "/sandbox");
     return DB.forceDropTable(["employee", "company"])
         .then(function () {
-            return DB.createTable("company", function (table) {
+            return DB.createTable("company", function () {
                 this.primaryKey("id");
                 this[underscore ? "company_name" : "companyName"]("string", {size: 20, allowNull: false});
             });
@@ -47,7 +47,7 @@ function createTables(underscore) {
                 this.foreignKey(underscore ? "company_id" : "companyId", "company", {key: "id", onDelete: "cascade"});
             });
         });
-};
+}
 
 function dropTableAndDisconnect() {
     return DB.dropTable(["employee", "company"])
