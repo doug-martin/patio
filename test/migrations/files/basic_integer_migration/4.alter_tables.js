@@ -1,6 +1,9 @@
-var comb = require("comb");
+"use strict";
+
+var nodeify = require("../../../../lib/utils").nodeify;
+
 exports.up = function (db, next) {
-    comb.when(
+    nodeify(Promise.all([
         db.alterTable("test1", function () {
             this.renameColumn("column1", "column2");
         }),
@@ -13,11 +16,11 @@ exports.up = function (db, next) {
         db.alterTable("test4", function () {
             this.renameColumn("column4", "column5");
         })
-    ).classic(next);
+    ]), next);
 };
 
 exports.down = function (db) {
-    return comb.when(
+    return Promise.all([
         db.alterTable("test1", function () {
             this.renameColumn("column2", "column1");
         }),
@@ -30,5 +33,5 @@ exports.down = function (db) {
         db.alterTable("test4", function () {
             this.renameColumn("column5", "column4");
         })
-    );
-}
+    ]);
+};

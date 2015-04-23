@@ -12,7 +12,7 @@ module.exports = {
 };
 
 function createSchemaAndSync(underscore) {
-    return createTables(underscore).chain(comb.hitch(patio, "syncModels"));
+    return createTables(underscore).then(comb.hitch(patio, "syncModels"));
 }
 
 function dropModels() {

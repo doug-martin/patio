@@ -1,15 +1,12 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../data/mappedColumnPlugin.helper.js"),
     patio = require("index"),
-    sql = patio.sql,
-    comb = require("comb"),
-    Promise = comb.Promise,
-    hitch = comb.hitch;
-
+    sql = patio.sql;
 
 var gender = ["M", "F"];
-
 it.describe("patio.plugins.ColumnMapper", function (it) {
     var Works, Employee;
     it.beforeAll(function () {
@@ -35,8 +32,14 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
                     this.oneToOne("works", {fetchType: this.fetchType.EAGER});
                     this.mappedColumn("salary", "works", {employeeId: sql.identifier("id")});
                     this.mappedColumn("mySalary", "works", {employeeId: sql.identifier("id")}, {column: "salaryTwo"});
-                    this.mappedColumn("salaryInner", "works", {employeeId: sql.identifier("id")}, {joinType: "inner", column: "salaryInner"});
-                    this.mappedColumn("salaryOther", "works", {employeeId: sql.identifier("id")}, {joinType: "inner", column: "salaryThree"});
+                    this.mappedColumn("salaryInner", "works", {employeeId: sql.identifier("id")}, {
+                        joinType: "inner",
+                        column: "salaryInner"
+                    });
+                    this.mappedColumn("salaryOther", "works", {employeeId: sql.identifier("id")}, {
+                        joinType: "inner",
+                        column: "salaryThree"
+                    });
                 }
             }
         });
@@ -44,7 +47,7 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
     });
 
     it.afterEach(function () {
-        return comb.when(Employee.remove(), Works.remove());
+        return Promise.all([Employee.remove(), Works.remove()]);
     });
 
     it.should("throw an error if table is not provided", function () {
@@ -76,7 +79,12 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
                 salaryThree: 70000
             }
         });
-        return employee.save().chain(function () {
+        return employee.save().then(function () {
+            console.log('asdas');
+            //return Promise.all([Employee.all(), Works.all()]).then(function (res) {
+            //    assert.lengthOf(res[0], 0);
+            //    assert.lengthOf(res[1], 1);
+            //});
             assert.equal(employee.salary, 100000);
             assert.equal(employee.mySalary, 90000);
             assert.equal(employee.salaryInner, 80000);
@@ -100,7 +108,7 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
                 salaryThree: 70000
             }
         });
-        return employee.save(null, {reload: false}).chain(function () {
+        return employee.save(null, {reload: false}).then(function () {
             assert.isUndefined(employee.salary);
             assert.isUndefined(employee.mySalary);
             assert.isUndefined(employee.salaryInner);
@@ -124,7 +132,7 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
                 salaryThree: 70000
             }
         });
-        return employee.save(null, {reloadMapped: false}).chain(function () {
+        return employee.save(null, {reloadMapped: false}).then(function () {
             assert.isUndefined(employee.salary);
             assert.isUndefined(employee.mySalary);
             assert.isUndefined(employee.salaryInner);
@@ -149,7 +157,7 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
             }
         });
         Employee.reloadOnSave = false;
-        return employee.save(null).chain(function () {
+        return employee.save(null).then(function () {
             assert.isUndefined(employee.salary);
             assert.isUndefined(employee.mySalary);
             assert.isUndefined(employee.salaryInner);
@@ -174,20 +182,20 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
                 salaryThree: 70000
             }
         });
-        return employee.save().chain(function () {
+        return employee.save().then(function () {
             assert.equal(employee.salary, 100000);
             assert.equal(employee.mySalary, 90000);
             assert.equal(employee.salaryInner, 80000);
             assert.equal(employee.salaryOther, 70000);
             return employee.works.update({salary: 1000, salaryTwo: 900, salaryInner: 800, salaryThree: 700})
-                .chain(function () {
+                .then(function () {
                     assert.equal(employee.salary, 100000);
                     assert.equal(employee.mySalary, 90000);
                     assert.equal(employee.salaryInner, 80000);
                     assert.equal(employee.salaryOther, 70000);
                     return employee.update({firstName: "bob"});
                 })
-                .chain(function () {
+                .then(function () {
                     assert.equal(employee.salary, 1000);
                     assert.equal(employee.mySalary, 900);
                     assert.equal(employee.salaryInner, 800);
@@ -212,20 +220,20 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
                 salaryThree: 70000
             }
         });
-        return employee.save().chain(function () {
+        return employee.save().then(function () {
             assert.equal(employee.salary, 100000);
             assert.equal(employee.mySalary, 90000);
             assert.equal(employee.salaryInner, 80000);
             assert.equal(employee.salaryOther, 70000);
             return employee.works.update({salary: 1000, salaryTwo: 900, salaryInner: 800, salaryThree: 700})
-                .chain(function () {
+                .then(function () {
                     assert.equal(employee.salary, 100000);
                     assert.equal(employee.mySalary, 90000);
                     assert.equal(employee.salaryInner, 80000);
                     assert.equal(employee.salaryOther, 70000);
                     return employee.update({firstName: "bob"}, {reload: false});
                 })
-                .chain(function () {
+                .then(function () {
                     assert.equal(employee.salary, 100000);
                     assert.equal(employee.mySalary, 90000);
                     assert.equal(employee.salaryInner, 80000);
@@ -251,21 +259,21 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
             }
         });
         return employee.save()
-            .chain(function () {
+            .then(function () {
                 assert.equal(employee.salary, 100000);
                 assert.equal(employee.mySalary, 90000);
                 assert.equal(employee.salaryInner, 80000);
                 assert.equal(employee.salaryOther, 70000);
                 return employee.works.update({salary: 1000, salaryTwo: 900, salaryInner: 800, salaryThree: 700});
             })
-            .chain(function () {
+            .then(function () {
                 assert.equal(employee.salary, 100000);
                 assert.equal(employee.mySalary, 90000);
                 assert.equal(employee.salaryInner, 80000);
                 assert.equal(employee.salaryOther, 70000);
                 return employee.update({firstName: "bob"}, {reloadMapped: false});
             })
-            .chain(function () {
+            .then(function () {
                 assert.equal(employee.salary, 100000);
                 assert.equal(employee.mySalary, 90000);
                 assert.equal(employee.salaryInner, 80000);
@@ -290,7 +298,7 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
             }
         });
         return employee.save()
-            .chain(function () {
+            .then(function () {
                 Employee.reloadOnUpdate = false
                 assert.equal(employee.salary, 100000);
                 assert.equal(employee.mySalary, 90000);
@@ -298,14 +306,14 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
                 assert.equal(employee.salaryOther, 70000);
                 return employee.works.update({salary: 1000, salaryTwo: 900, salaryInner: 800, salaryThree: 700});
             })
-            .chain(function () {
+            .then(function () {
                 assert.equal(employee.salary, 100000);
                 assert.equal(employee.mySalary, 90000);
                 assert.equal(employee.salaryInner, 80000);
                 assert.equal(employee.salaryOther, 70000);
                 return employee.update({firstName: "bob"}, {reload: false});
             })
-            .chain(function () {
+            .then(function () {
                 assert.equal(employee.salary, 100000);
                 assert.equal(employee.mySalary, 90000);
                 assert.equal(employee.salaryInner, 80000);
@@ -331,21 +339,21 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
             }
         });
         return employee.save()
-            .chain(function () {
+            .then(function () {
                 assert.equal(employee.salary, 100000);
                 assert.equal(employee.mySalary, 90000);
                 assert.equal(employee.salaryInner, 80000);
                 assert.equal(employee.salaryOther, 70000);
                 return employee.works.update({salary: 1000, salaryTwo: 900, salaryInner: 800, salaryThree: 700});
             })
-            .chain(function () {
+            .then(function () {
                 assert.equal(employee.salary, 100000);
                 assert.equal(employee.mySalary, 90000);
                 assert.equal(employee.salaryInner, 80000);
                 assert.equal(employee.salaryOther, 70000);
                 return employee.reload();
             })
-            .chain(function () {
+            .then(function () {
                 assert.equal(employee.salary, 1000);
                 assert.equal(employee.mySalary, 900);
                 assert.equal(employee.salaryInner, 800);
@@ -357,4 +365,3 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
         return helper.dropModels();
     });
 });
-

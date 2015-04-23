@@ -1,3 +1,5 @@
+"use strict";
+
 exports.up = function(db){
     return db.createTable("test2", function(){
         this.column("column2", "integer");

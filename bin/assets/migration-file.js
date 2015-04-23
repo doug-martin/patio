@@ -1,9 +1,7 @@
-var patio = require("patio");
-
 module.exports = {
-    up : function(db, done){
+    up: function () {
     },
 
-    down : function(db, done){
+    down: function () {
     }
 };

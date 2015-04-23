@@ -1,5 +1,7 @@
-exports.up = function (db) {
-    return ret.errback("err");
+"use strict";
+
+exports.up = function () {
+    return Promise.reject();
 };
 
 exports.down = function (db) {

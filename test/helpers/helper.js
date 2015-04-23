@@ -1,3 +1,5 @@
+"use strict";
+
 var comb = require("comb"),
     patio = require("index"),
     Dataset = patio.Dataset,
@@ -15,7 +17,7 @@ var MockDataset = comb.define(Dataset, {
             return this.db.execute(this.updateSql.apply(this, arguments));
         },
 
-        fetchRows: function (sql, cb) {
+        fetchRows: function (sql) {
             this.db.execute(sql);
             return comb.async.array({id: 1, x: 1});
         },
@@ -47,7 +49,7 @@ var MockDB = comb.define(Database, {
                 query: function (sql) {
                     return Promise.resolve(sql);
                 }
-            }
+            };
         },
 
         closeConnection: function () {
@@ -59,7 +61,7 @@ var MockDB = comb.define(Database, {
             return Promise.resolve(true);
         },
 
-        execute: function (sql, opts) {
+        execute: function (sql) {
             this.sqls.push(sql);
             return Promise.resolve();
         },
@@ -69,7 +71,7 @@ var MockDB = comb.define(Database, {
         },
 
         transaction: function (opts, cb) {
-            return comb.when(cb());
+            return Promise.all([cb()]);
         },
 
         getters: {
@@ -92,7 +94,7 @@ comb.define(Database, {
             this.sqls = [];
         },
 
-        execute: function (sql, opts) {
+        execute: function (sql) {
             this.sqls.push(sql);
             return Promise.resolve();
         }

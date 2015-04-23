@@ -1,12 +1,11 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../data/validator.helper.js"),
     patio = require("index"),
     ValidatorPlugin = patio.plugins.ValidatorPlugin,
-    sql = patio.sql,
-    comb = require("comb"),
-    Promise = comb.Promise,
-    hitch = comb.hitch;
+    comb = require("comb");
 
 it.describe("patio.plugins.ValidatorPlugin", function (it) {
     var Model;
@@ -15,7 +14,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
     });
 
     it.afterEach(function () {
-        return comb.when(patio.defaultDatabase.from("validator").remove());
+        return Promise.all([patio.defaultDatabase.from("validator").remove()]);
     });
 
     it.describe("#isAfter", function (it) {
@@ -32,7 +31,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid", function () {
             var m = new Model({date: new Date(2005, 1, 1)});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.isTrue(!!err[0].message.match(/date must be after/));
             });
         });
@@ -60,7 +59,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid", function () {
             var m = new Model({date: new Date(2007, 1, 1)});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.isTrue(!!err[0].message.match(/date must be before/));
             });
         });
@@ -87,7 +86,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid", function () {
             var m = new Model();
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be defined.");
             });
         });
@@ -110,7 +109,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid", function () {
             var m = new Model({str: "HELLO"})
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str cannot be defined.");
             });
         });
@@ -133,7 +132,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid", function () {
             var m = new Model({str: null});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str cannot be null.");
             });
         });
@@ -154,7 +153,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid", function () {
             var m = new Model({str: "HELLO"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be null got HELLO.");
             });
         });
@@ -176,7 +175,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid", function () {
             var m = new Model({str: "HELL"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must === HELLO got HELL.");
             });
         });
@@ -184,7 +183,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with objects", function () {
             var m = new Model({str: "HELLO", date: new Date(2005, 1, 1)});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.isTrue(err[0].message.match(/date must ===/) !== null);
             });
         });
@@ -207,7 +206,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid", function () {
             var m = new Model({str: "HELLO"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must !== HELLO.");
             });
         });
@@ -215,7 +214,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with objects", function () {
             var m = new Model({str: "HELL", date: new Date(2006, 1, 1)})
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.isTrue(err[0].message.match(/date must !==/) !== null);
             });
         });
@@ -238,7 +237,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "HELL"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be like HELLO got HELL.");
             });
         });
@@ -246,7 +245,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with regexp", function () {
             var m = new Model({str2: "hell"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str2 must be like /HELLO/i got hell.");
             });
         });
@@ -273,7 +272,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "HELLO"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must not be like HELLO.");
             });
         });
@@ -281,7 +280,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with regexp", function () {
             var m = new Model({str2: "hello"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str2 must not be like /HELLO/i.");
             });
         });
@@ -307,7 +306,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({num: 10});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "num must be < 10 got 10.");
             });
         });
@@ -334,7 +333,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({num: 10});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "num must be > 10 got 10.");
             });
         });
@@ -360,7 +359,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({num: 11});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "num must be <= 10 got 11.");
             });
         });
@@ -386,7 +385,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({num: 9});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "num must be >= 10 got 9.");
             });
         });
@@ -418,7 +417,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "d"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be in a,b,c got d.");
             });
         });
@@ -451,7 +450,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "a"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str cannot be in a,b,c got a.");
             });
         });
@@ -478,16 +477,16 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({macAddress: "a"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "macAddress must be a valid MAC address got a.");
             });
         });
 
         it.should("not throw an error if valid", function () {
-            return comb.when(
+            return Promise.all([
                 new Model({macAddress: "00-00-00-00-00-00"}).save(),
                 new Model({macAddress: "00:00:00:00:00:00"}).save()
-            );
+            ]);
         });
 
         it.should("not throw an error if values are undefined", function () {
@@ -507,16 +506,16 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({ipAddress: "192.168.1.1.1.1.1"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "ipAddress must be a valid IPv4 or IPv6 address got 192.168.1.1.1.1.1.");
             });
         });
 
         it.should("not throw an error if valid", function () {
-            return comb.when(
+            return Promise.all([
                 new Model({ipAddress: "192.168.1.1"}).save(),
                 new Model({ipAddress: "2001:0db8:85a3:0000:0000:8a2e:0370:7334"}).save()
-            );
+            ]);
         });
 
         it.should("not throw an error if values are undefined", function () {
@@ -536,7 +535,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({ipAddress: "2001:0db8:85a3:0000:0000:8a2e:0370:7334"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "ipAddress must be a valid IPv4 address got 2001:0db8:85a3:0000:0000:8a2e:0370:7334.");
             });
         });
@@ -562,7 +561,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({ipAddress: "192.168.1.1"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "ipAddress must be a valid IPv6 address got 192.168.1.1.");
             });
         });
@@ -588,7 +587,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({uuid: "fa25a170-edb1-11e1-aff1-0800200c9a6"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "uuid must be a valid UUID got fa25a170-edb1-11e1-aff1-0800200c9a6");
             });
         });
@@ -615,7 +614,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "me@me"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be a valid Email Address got me@me");
             });
         });
@@ -643,7 +642,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "http://test"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be a valid url got http://test");
 
             });
@@ -671,7 +670,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "123Test"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be a only letters got 123Test");
             });
         });
@@ -698,7 +697,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "Test_"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be a alphanumeric got Test_");
             });
         });
@@ -726,7 +725,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "123456789"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must have a length between 10.");
             });
         });
@@ -734,7 +733,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if string not to long", function () {
             var m = new Model({str2: "1234567891111"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str2 must have a length between 7 and 10.");
             });
         });
@@ -762,7 +761,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "A"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be lowercase got A.");
             });
         });
@@ -789,7 +788,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "a"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be uppercase got a.");
             });
         });
@@ -816,7 +815,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: "A"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be empty got A.");
             });
         });
@@ -843,7 +842,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if invalid with string", function () {
             var m = new Model({str: ""});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must not be empty.");
             });
         });
@@ -869,7 +868,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if string is empty", function () {
             var m = new Model({str: ""});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must not be empty.");
             });
         });
@@ -877,7 +876,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if the string is not alpha", function () {
             var m = new Model({str: "1"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be a only letters got 1");
             });
         });
@@ -885,7 +884,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if the string is not like /hello/", function () {
             var m = new Model({str: "hell"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str must be like /hello/ got hell.");
             });
         });
@@ -903,7 +902,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         });
 
         it.should("not validate on update if validate is false", function () {
-            return Model.save(null).chain(function (model) {
+            return Model.save(null).then(function (model) {
                 model.str = "hell";
                 assert.isFalse(model.isValid());
                 return model.update(null, {validate: false});
@@ -930,7 +929,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("allow adding a check function", function () {
             var m = new Model({num: 1, num2: 2});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "num must be even got 1.");
             });
         });
@@ -938,7 +937,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("allow adding a check function", function () {
             var m = new Model({num2: null});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "num2 cannot be null.");
             });
         });
@@ -946,17 +945,17 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("allow adding a check function", function () {
             var m = new Model({num2: 1});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "num2 must be even got 1.");
             });
         });
 
         it.should("not throw an error if valid", function () {
-            return comb.when(
+            return Promise.all([
                 new Model({num: null, num2: 2}).save(),
                 new Model({num: 2, num2: 2}).save(),
                 new Model({num2: 2}).save()
-            );
+            ]);
         });
     });
 
@@ -982,30 +981,30 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 function () {
                     var m = new Model({num: 1, num2: 2});
                     assert.isFalse(m.isValid());
-                    return m.save().chain(assert.fail, function (err) {
+                    return m.save().then(assert.fail, function (err) {
                         assert.equal(err[0].message, "num must be even got 1.");
                     });
                 },
                 function () {
                     var m = new Model({num2: null});
                     assert.isFalse(m.isValid());
-                    return m.save().chain(assert.fail, function (err) {
+                    return m.save().then(assert.fail, function (err) {
                         assert.equal(err[0].message, "num2 cannot be null.");
                     });
                 },
                 function () {
                     var m = new Model({num2: 1});
                     assert.isFalse(m.isValid());
-                    return m.save().chain(assert.fail, function (err) {
+                    return m.save().then(assert.fail, function (err) {
                         assert.equal(err[0].message, "num2 must be even got 1.");
                     });
                 },
                 function () {
-                    return comb.when(
+                    return Promise.all([
                         new Model({num: null, num2: 2}).save(),
                         new Model({num: 2, num2: 2}).save(),
                         new Model({num2: 2}).save()
-                    );
+                    ]);
                 }
             ]);
         });
@@ -1026,7 +1025,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         it.should("throw an error if required field is null", function () {
             var m = new Model({col1: null, col2: "HELLO"});
             assert.isFalse(m.isValid());
-            return m.save().chain(assert.fail, function (err) {
+            return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "col1 must === HELLO got null.");
             });
         });

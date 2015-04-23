@@ -1,3 +1,5 @@
+"use strict";
+
 var it = require("it"),
     assert = require("assert"),
     comb = require("comb"),
@@ -32,22 +34,48 @@ it.describe("Model with cache plugin", function (it) {
         mockDb = new (comb.define(MockDB, {
             instance: {
                 schema: function () {
-                    return new comb.Promise().callback({
-                        id: {type: "integer", autoIncrement: true, allowNull: false, primaryKey: true, "default": null, jsDefault: null, dbType: "integer"},
-                        b: {type: "boolean", autoIncrement: false, allowNull: true, primaryKey: false, "default": null, jsDefault: null, dbType: "tinyint(1)"},
-                        i: {type: "integer", autoIncrement: false, allowNull: true, primaryKey: false, "default": null, jsDefault: null, dbType: "tinyint(4)"}
+                    return Promise.resolve({
+                        id: {
+                            type: "integer",
+                            autoIncrement: true,
+                            allowNull: false,
+                            primaryKey: true,
+                            "default": null,
+                            jsDefault: null,
+                            dbType: "integer"
+                        },
+                        b: {
+                            type: "boolean",
+                            autoIncrement: false,
+                            allowNull: true,
+                            primaryKey: false,
+                            "default": null,
+                            jsDefault: null,
+                            dbType: "tinyint(1)"
+                        },
+                        i: {
+                            type: "integer",
+                            autoIncrement: false,
+                            allowNull: true,
+                            primaryKey: false,
+                            "default": null,
+                            jsDefault: null,
+                            dbType: "tinyint(4)"
+                        }
                     });
                 },
 
-                execute: function (sql, opts) {
-                    var ret = new comb.Promise();
+                execute: function (sql) {
                     this.sqls.push(sql);
-                    if (sql.match(/select/i)) {
-                        ret.callback({id: 1, b: true, i: 1});
-                    } else {
-                        ret.callback();
-                    }
-                    return ret;
+
+                    return new Promise(function(resolve, reject) {
+
+                        if (sql.match(/select/i)) {
+                            resolve({id: 1, b: true, i: 1});
+                        } else {
+                            resolve();
+                        }
+                    });
                 },
 
                 getters: {
@@ -58,6 +86,7 @@ it.describe("Model with cache plugin", function (it) {
 
             }
         }))();
+
         Model = patio.addModel(mockDb.from("cache"), {
             plugins: [patio.plugins.CachePlugin]
         });
@@ -75,7 +104,7 @@ it.describe("Model with cache plugin", function (it) {
     });
 
     it.should("cache on load of model", function () {
-        return Model.one().chain(function (res) {
+        return Model.one().then(function (res) {
             var cachedModel = Model.cache.get(res.tableName + res.primaryKeyValue);
             assert.isNotNull(cachedModel);
             assert.strictEqual(res, cachedModel);
@@ -84,11 +113,11 @@ it.describe("Model with cache plugin", function (it) {
     });
 
     it.should("cache the model when using #findById", function () {
-        return Model.findById(1).chain(function (res) {
+        return Model.findById(1).then(function (res) {
             var cachedModel = Model.cache.get(res.tableName + res.primaryKeyValue);
             assert.deepEqual(mockDb.sqls, ["SELECT * FROM cache WHERE (id = 1) LIMIT 1"]);
             mockDb.reset();
-            return Model.findById(res.primaryKeyValue).chain(function (res) {
+            return Model.findById(res.primaryKeyValue).then(function (res) {
                 assert.strictEqual(res, cachedModel);
                 assert.deepEqual(mockDb.sqls, []);
             });
@@ -96,11 +125,11 @@ it.describe("Model with cache plugin", function (it) {
     });
 
     it.should("return cached value on when using #findById", function () {
-        return Model.one().chain(function (res) {
+        return Model.one().then(function (res) {
             var cachedModel = Model.cache.get(res.tableName + res.primaryKeyValue);
             assert.deepEqual(mockDb.sqls, ["SELECT * FROM cache LIMIT 1"]);
             mockDb.reset();
-            return Model.findById(res.primaryKeyValue).chain(function (res) {
+            return Model.findById(res.primaryKeyValue).then(function (res) {
                 assert.strictEqual(res, cachedModel);
                 assert.deepEqual(mockDb.sqls, []);
             });
@@ -108,11 +137,11 @@ it.describe("Model with cache plugin", function (it) {
     });
 
     it.should("cache new model on reload", function () {
-        return Model.one().chain(function (res) {
+        return Model.one().then(function (res) {
             var cachedModel = Model.cache.get(res.tableName + res.primaryKeyValue);
             assert.deepEqual(mockDb.sqls, ["SELECT * FROM cache LIMIT 1"]);
             mockDb.reset();
-            return res.reload().chain(function (res) {
+            return res.reload().then(function (res) {
                 assert.strictEqual(res, cachedModel);
                 assert.deepEqual(mockDb.sqls, ["SELECT * FROM cache WHERE (id = 1) LIMIT 1"]);
             });
@@ -120,11 +149,11 @@ it.describe("Model with cache plugin", function (it) {
     });
 
     it.should("cache new model on update", function () {
-        return Model.one().chain(function (res) {
+        return Model.one().then(function (res) {
             var cachedModel = Model.cache.get(res.tableName + res.primaryKeyValue);
             assert.deepEqual(mockDb.sqls, ["SELECT * FROM cache LIMIT 1"]);
             mockDb.reset();
-            return res.update({b: false}).chain(function (res, res2) {
+            return res.update({b: false}).then(function (res, res2) {
                 assert.strictEqual(res, cachedModel);
                 assert.deepEqual(mockDb.sqls, [
                     "UPDATE cache SET b = 'f' WHERE (id = 1)",
@@ -135,10 +164,10 @@ it.describe("Model with cache plugin", function (it) {
     });
 
     it.should("remove model from cache on remove", function () {
-        return Model.one().chain(function (res) {
+        return Model.one().then(function (res) {
             assert.deepEqual(mockDb.sqls, ["SELECT * FROM cache LIMIT 1"]);
             mockDb.reset();
-            return res.remove().chain(function (res) {
+            return res.remove().then(function (res) {
                 assert.isNull(Model.cache.get(res.tableName + res.primaryKeyValue));
                 assert.deepEqual(mockDb.sqls, ["DELETE FROM cache WHERE (id = 1)"]);
             });

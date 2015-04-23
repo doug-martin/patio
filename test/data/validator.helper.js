@@ -2,10 +2,31 @@
 
 var patio = require("index"),
     config = require("../test.config.js"),
-    comb = require("comb-proxy");
+    comb = require("comb-proxy"),
+    DB;
 
-var DB;
-var createTables = function () {
+module.exports = {
+    createSchemaAndSync: createSchemaAndSync,
+    dropModels: dropModels
+};
+
+function createSchemaAndSync(underscore) {
+    return createTables(underscore).then(comb.hitch(patio, "syncModels"));
+}
+
+function dropModels() {
+    return dropTableAndDisconnect();
+}
+
+function dropTableAndDisconnect() {
+    return comb.executeInOrder(patio, DB, function (patio, db) {
+        db.forceDropTable("validator");
+        patio.disconnect();
+        patio.resetIdentifierMethods();
+    });
+}
+
+function createTables() {
     patio.resetIdentifierMethods();
     DB = patio.connect(config.DB_URI + "/sandbox");
     return DB.forceCreateTable("validator", function () {
@@ -22,22 +43,5 @@ var createTables = function () {
         this.num2(Number);
         this.date(Date);
     });
-};
+}
 
-
-var dropTableAndDisconnect = function () {
-    return comb.executeInOrder(patio, DB, function (patio, db) {
-        db.forceDropTable("validator");
-        patio.disconnect();
-        patio.resetIdentifierMethods();
-    });
-};
-
-exports.createSchemaAndSync = function (underscore) {
-    return createTables(underscore).chain(comb.hitch(patio, "syncModels"));
-};
-
-
-exports.dropModels = function () {
-    return dropTableAndDisconnect();
-};

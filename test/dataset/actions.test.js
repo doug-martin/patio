@@ -1,3 +1,7 @@
+"use strict";
+
+/* jshint camelcase: false, unused: false */
+
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
@@ -5,20 +9,14 @@ var it = require('it'),
     Database = patio.Database,
     sql = patio.SQL,
     Identifier = sql.Identifier,
-    QualifiedIdentifier = sql.QualifiedIdentifier,
-    SQLFunction = sql.SQLFunction,
-    LiteralString = sql.LiteralString,
     helper = require("../helpers/helper"),
     MockDatabase = helper.MockDatabase,
-    SchemaDatabase = helper.SchemaDatabase,
     MockDataset = helper.MockDataset,
     comb = require("comb"),
-    when = comb.when,
     serial = comb.serial,
     hitch = comb.hitch;
 
 
-//var ret = (module.exports = new comb.Promise());
 it.describe("Dataset actions", function (it) {
 
     patio.identifierInputMethod = null;
@@ -62,7 +60,7 @@ it.describe("Dataset actions", function (it) {
                     // yield a hash with kind as the 1 bit of a number
                     var arr = [];
                     for (var i = 0; i < 10; i++) {
-                        arr.push({kind: i})
+                        arr.push({kind: i});
                     }
                     return comb.async.array(arr);
                 }
@@ -104,7 +102,7 @@ it.describe("Dataset actions", function (it) {
                 h.der = h.kind + 2;
                 return h;
             };
-            return dataset.filter({a: 1}).first().chain(function (r) {
+            return dataset.filter({a: 1}).first().then(function (r) {
                 assert.deepEqual(r, {kind: 0, der: 2});
             });
         });
@@ -121,8 +119,7 @@ it.describe("Dataset actions", function (it) {
             }).then(function (r) {
                 assert.deepEqual(r, [3, 7, 11]);
                 //with callback
-                return dataset.map(
-                    function (n) {
+                return dataset.map(function (n) {
                         return n.a + n.b;
                     },
                     function (err, r) {
@@ -137,7 +134,7 @@ it.describe("Dataset actions", function (it) {
         it.should("map using #[column name] if column name is given", function (next) {
             dataset.map(function (n) {
                 return n.a;
-            }).chain(function (r) {
+            }).then(function (r) {
                 assert.deepEqual(r, [1, 3, 5]);
                 //with callback
                 dataset.map(
@@ -2193,8 +2190,7 @@ it.describe("Dataset actions", function (it) {
     it.describe("#selectOrderMap", function (it) {
         var DS = comb.define(MockDataset, {
             instance: {
-                fetchRows: function (sql, cb) {
-                    var ret = this.db.run(sql);
+                fetchRows: function (sql) {
                     return comb.async.array([
                         {c: 1},
                         {c: 2}

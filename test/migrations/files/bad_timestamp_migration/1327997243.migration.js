@@ -1,9 +1,11 @@
-exports.up = function(db){
-    return db.createTable("test3", function(){
+"use strict";
+
+exports.up = function (db) {
+    return db.createTable("test3", function () {
         this.column("column3", "integer");
     });
 };
 
-exports.down = function(db){
+exports.down = function (db) {
     return db.dropTable("test3");
 };

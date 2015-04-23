@@ -1,6 +1,7 @@
-var comb = require("comb");
+"use strict";
+
 exports.up = function (db) {
-    return comb.when(
+    return Promise.all([
         db.alterTable("test1", function () {
             this.renameColumn("column1", "column2");
         }),
@@ -13,11 +14,11 @@ exports.up = function (db) {
         db.alterTable("test4", function () {
             this.renameColumn("column4", "column5");
         })
-    );
-}
+    ]);
+};
 
 exports.down = function (db) {
-    return comb.when(
+    return Promise.all([
         db.alterTable("test1", function () {
             this.renameColumn("column2", "column1");
         }),
@@ -30,5 +31,5 @@ exports.down = function (db) {
         db.alterTable("test4", function () {
             this.renameColumn("column5", "column4");
         })
-    );
-}
+    ]);
+};

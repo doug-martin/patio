@@ -1,9 +1,9 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
     ClassTableInheritance = patio.plugins.ClassTableInheritancePlugin,
-    comb = require("comb"),
-    hitch = comb.hitch,
     helper = require("../data/classTableInheritance.helper.js"),
     Employee, Staff, Manager, Executive;
 
@@ -56,55 +56,55 @@ it.describe("ClassTableInheritancePlugin", function (it) {
     });
 
     it.should("insert properly", function () {
-        return comb.when(
-                new Employee({name: "Bob"}).save(),
-                new Staff({name: "Greg"}).save(),
-                new Manager({name: "Jane"}).save(),
-                new Executive({name: "Sue"}).save()
-            ).chain(function (res) {
-                var bob = res[0], greg = res[1], jane = res[2], sue = res[3];
-                assert.instanceOf(bob, Employee);
-                assert.instanceOf(greg, Employee);
-                assert.instanceOf(greg, Staff);
-                assert.instanceOf(jane, Employee);
-                assert.instanceOf(jane, Manager);
-                assert.instanceOf(sue, Employee);
-                assert.instanceOf(sue, Manager);
-                assert.instanceOf(sue, Executive);
-            });
+        return Promise.all([
+            new Employee({name: "Bob"}).save(),
+            new Staff({name: "Greg"}).save(),
+            new Manager({name: "Jane"}).save(),
+            new Executive({name: "Sue"}).save()
+        ]).then(function (res) {
+            var bob = res[0], greg = res[1], jane = res[2], sue = res[3];
+            assert.instanceOf(bob, Employee);
+            assert.instanceOf(greg, Employee);
+            assert.instanceOf(greg, Staff);
+            assert.instanceOf(jane, Employee);
+            assert.instanceOf(jane, Manager);
+            assert.instanceOf(sue, Employee);
+            assert.instanceOf(sue, Manager);
+            assert.instanceOf(sue, Executive);
+        });
     });
 
     it.should("fetch properly", function () {
-        return comb.when(
-                Employee.all(),
-                Manager.all(),
-                Staff.all(),
-                Executive.all()
-            ).chain(function (res) {
-                var emps = res[0], managers = res[1], staff = res[2], executives = res[3];
-                assert.lengthOf(emps, 4);
-                emps.forEach(function (model) {
-                    assert.instanceOf(model, Employee);
-                });
-                assert.lengthOf(managers, 2);
-                managers.forEach(function (model) {
-                    assert.instanceOf(model, Employee);
-                    assert.instanceOf(model, Manager);
-                });
-
-                assert.lengthOf(staff, 1);
-                staff.forEach(function (model) {
-                    assert.instanceOf(model, Employee);
-                    assert.instanceOf(model, Staff);
-                });
-
-                assert.lengthOf(executives, 1);
-                executives.forEach(function (model) {
-                    assert.instanceOf(model, Employee);
-                    assert.instanceOf(model, Executive);
-                    assert.instanceOf(model, Manager);
-                });
+        return Promise.all([
+            Employee.all(),
+            Manager.all(),
+            Staff.all(),
+            Executive.all()
+        ]).then(function (res) {
+            var emps = res[0], managers = res[1], staff = res[2], executives = res[3];
+            assert.lengthOf(emps, 4);
+            emps.forEach(function (model) {
+                assert.instanceOf(model, Employee);
             });
+            assert.lengthOf(managers, 2);
+            managers.forEach(function (model) {
+                assert.instanceOf(model, Employee);
+                assert.instanceOf(model, Manager);
+            });
+
+            assert.lengthOf(staff, 1);
+            staff.forEach(function (model) {
+                assert.instanceOf(model, Employee);
+                assert.instanceOf(model, Staff);
+            });
+
+            assert.lengthOf(executives, 1);
+            executives.forEach(function (model) {
+                assert.instanceOf(model, Employee);
+                assert.instanceOf(model, Executive);
+                assert.instanceOf(model, Manager);
+            });
+        });
     });
 
 
@@ -113,8 +113,8 @@ it.describe("ClassTableInheritancePlugin", function (it) {
         return Manager.order('kind').forEach(
             function (manager) {
                 return manager.addStaff(new Staff({name: "Staff" + i++}));
-            }).chain(function () {
-                return Employee.order('kind', "id").all().chain(function (res) {
+            }).then(function () {
+                return Employee.order('kind', "id").all().then(function (res) {
                     assert.lengthOf(res, 6);
                     var employee = res[0], executive = res[1], manager = res[2], staff1 = res[3], staff2 = res[4], staff3 = res[5];
                     assert.isFalse(employee.hasAssociations);
@@ -146,10 +146,10 @@ it.describe("ClassTableInheritancePlugin", function (it) {
                 }
                 return emp.update();
             })
-            .chain(function () {
+            .then(function () {
                 return Manager.order('kind', "id").all();
             })
-            .chain(function (res) {
+            .then(function (res) {
                 assert.lengthOf(res, 2);
                 res.forEach(function (manager, i) {
                     assert.equal(manager.name, "Manager " + i);
@@ -163,19 +163,19 @@ it.describe("ClassTableInheritancePlugin", function (it) {
 
 
     it.should("remove properly", function () {
-        return Employee.remove().chain(function () {
+        return Employee.remove().then(function () {
             var db = patio.defaultDatabase;
-            return comb.when(
-                    db.from("employee").count(),
-                    db.from("staff").count(),
-                    db.from("manager").count(),
-                    db.from("executive").count()
-                ).chain(function (res) {
-                    assert.lengthOf(res, 4);
-                    res.forEach(function (i) {
-                        assert.equal(i, 0);
-                    });
+            return Promise.all([
+                db.from("employee").count(),
+                db.from("staff").count(),
+                db.from("manager").count(),
+                db.from("executive").count()
+            ]).then(function (res) {
+                assert.lengthOf(res, 4);
+                res.forEach(function (i) {
+                    assert.equal(i, 0);
                 });
+            });
         });
     });
 
