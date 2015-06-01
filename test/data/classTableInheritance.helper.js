@@ -37,7 +37,7 @@ function createTables(underscore) {
         patio.resetIdentifierMethods();
         patio.quoteIdentifiers = false;
     }
-    DB = patio.connect(config.DB_URI + "/sanDBox");
+    DB = patio.connect(config.DB_URI + "/sandbox");
 
     return DB.forceDropTable(["staff", "executive", "manager", "employee"])
         .then(function () {
