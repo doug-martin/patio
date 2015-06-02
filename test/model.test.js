@@ -4,7 +4,6 @@ var it = require('it'),
     patio = require("index"),
     sql = patio.SQL,
     comb = require("comb-proxy"),
-    EventEmitter = require("events").EventEmitter,
     hitch = comb.hitch,
     config = require("./test.config");
 
@@ -75,7 +74,7 @@ it.describe("patio.Model", function (it) {
             emp.jsontype = {a: "b"};
             emp.jsonarray = [{a: "b"}];
         }
-        return emp.save().chain(function () {
+        return emp.save().then(function () {
             assert.instanceOf(emp, Employee);
             assert.equal(emp.firstname, "doug");
             assert.equal(emp.lastname, "martin");
@@ -116,13 +115,13 @@ it.describe("patio.Model", function (it) {
             Employee.on(e, callback);
         });
         return emp.save()
-            .chain(function () {
+            .then(function () {
                 return emp.update({firstName: "ben"});
             })
-            .chain(function () {
+            .then(function () {
                 return emp.remove();
             })
-            .chain(function () {
+            .then(function () {
                 assert.equal(emitCount, 6);
                 events.forEach(function (e) {
                     emp.removeListener(e, callback);
@@ -145,10 +144,10 @@ it.describe("patio.Model", function (it) {
             });
         }
         return Employee.truncate()
-            .chain(function () {
+            .then(function () {
                 return Employee.save(emps);
             })
-            .chain(function (employees) {
+            .then(function (employees) {
                 assert.lengthOf(employees, 20);
                 employees.forEach(function (emp, i) {
                     assert.equal(emp.lastname, "last" + i);
@@ -159,7 +158,8 @@ it.describe("patio.Model", function (it) {
                     assert.equal(emp.city, "City " + i);
                 });
                 return Employee.count();
-            }).chain(function (count) {
+            })
+            .then(function (count) {
                 assert.equal(count, 20);
             });
     });
@@ -186,18 +186,17 @@ it.describe("patio.Model", function (it) {
                 }
                 emps.push(emp);
             }
-            return comb.executeInOrder(Employee, function (emp) {
-                emp.truncate();
-                emp.save(emps);
+            return Employee.truncate().then(function () {
+                return Employee.save(emps);
             });
         });
 
         it.should("should reload models", function () {
             return Employee.first()
-                .chain(function (emp) {
+                .then(function (emp) {
                     var orig = emp.lastname;
                     emp.lastname = "martin";
-                    return emp.reload().chain(function () {
+                    return emp.reload().then(function () {
                         assert.instanceOf(emp, Employee);
                         assert.equal(emp.lastname, orig);
                     });
@@ -205,7 +204,7 @@ it.describe("patio.Model", function (it) {
         });
 
         it.should("find models by id", function () {
-            return Employee.findById(emps[0].id).chain(function (emp) {
+            return Employee.findById(emps[0].id).then(function (emp) {
                 assert.instanceOf(emp, Employee);
                 assert.equal(emp.id, emps[0].id);
                 if (config.DB_TYPE === "pg") {
@@ -220,7 +219,7 @@ it.describe("patio.Model", function (it) {
                 return emp.id;
             });
             return Employee.filter({id: ids.slice(0, 6)}).all()
-                .chain(function (query1) {
+                .then(function (query1) {
                     var i = 0;
                     assert.lengthOf(query1, 6);
                     query1.forEach(function (t) {
@@ -229,13 +228,13 @@ it.describe("patio.Model", function (it) {
                     });
                     return Employee.filter(id.gt(ids[0]), id.lt(ids[5])).order("id").last();
                 })
-                .chain(function (query2) {
+                .then(function (query2) {
                     assert.equal(query2.id, ids[4]);
                     return Employee.filter(function () {
                         return this.firstname.like(/first1[1|2]*$/);
                     }).order("firstname").all();
                 })
-                .chain(function (query3) {
+                .then(function (query3) {
                     assert.lengthOf(query3, 3);
                     assert.instanceOf(query3[0], Employee);
                     assert.equal(query3[0].firstname, "first1");
@@ -245,7 +244,7 @@ it.describe("patio.Model", function (it) {
                     assert.equal(query3[2].firstname, "first12");
                     return Employee.filter({id: {between: [ids[0], ids[5]]}}).order("id").all();
                 })
-                .chain(function (query4) {
+                .then(function (query4) {
                     assert.deepEqual(query4.map(function (e) {
                         assert.instanceOf(e, Employee);
                         return e.id;
@@ -254,7 +253,7 @@ it.describe("patio.Model", function (it) {
                         return this.id.gt(ids[5]);
                     }).all();
                 })
-                .chain(function (query5) {
+                .then(function (query5) {
                     return assert.deepEqual(query5.map(function (e) {
                         assert.instanceOf(e, Employee);
                         return e.id;
@@ -263,7 +262,7 @@ it.describe("patio.Model", function (it) {
         });
 
         it.should("support custom query methods", function () {
-            return Employee.findByGender("F").chain(function (emps) {
+            return Employee.findByGender("F").then(function (emps) {
                 emps.forEach(function (emp) {
                     assert.instanceOf(emp, Employee);
                     assert.equal("F", emp.gender);
@@ -275,13 +274,13 @@ it.describe("patio.Model", function (it) {
         it.describe("dataset methods", function (it) {
 
             it.should("support count", function () {
-                return Employee.count().chain(function (count) {
+                return Employee.count().then(function (count) {
                     assert.equal(count, 20);
                 });
             });
 
             it.should("support all", function () {
-                return Employee.all().chain(function (emps) {
+                return Employee.all().then(function (emps) {
                     assert.lengthOf(emps, 20);
                     emps.forEach(function (e) {
                         assert.instanceOf(e, Employee);
@@ -294,13 +293,13 @@ it.describe("patio.Model", function (it) {
                 var ids = emps.map(function (emp) {
                     return emp.id;
                 });
-                return comb.when(
+                return Promise.all([
                     Employee.map("id"),
                     Employee.order("position").map(function (e) {
                         return e.firstname + " " + e.lastname;
                     })
-                )
-                    .chain(function (res) {
+                ])
+                    .then(function (res) {
                         assert.lengthOf(res[0], 20);
                         res[0].forEach(function (id, i) {
                             assert.equal(id, ids[i]);
@@ -316,7 +315,7 @@ it.describe("patio.Model", function (it) {
                 var ret = [];
                 return Employee.forEach(function (emp) {
                     ret.push(emp);
-                }).chain(function (topic) {
+                }).then(function (topic) {
                     assert.lengthOf(topic, 20);
                     ret.forEach(function (e) {
                         assert.instanceOf(e, Employee);
@@ -325,7 +324,7 @@ it.describe("patio.Model", function (it) {
             });
 
             it.should("support one", function () {
-                return Employee.one().chain(function (emp) {
+                return Employee.one().then(function (emp) {
                     assert.instanceOf(emp, Employee);
                 });
             });
@@ -334,18 +333,23 @@ it.describe("patio.Model", function (it) {
                 var id = sql.identifier("id"), ids = emps.map(function (emp) {
                     return emp.id;
                 });
-                return Employee.first(id.gt(ids[5]), id.lt(ids[11])).chain(function (emp) {
+                return Employee.first(id.gt(ids[5]), id.lt(ids[11])).then(function (emp) {
                     assert.instanceOf(emp, Employee);
-                    assert.equal(emp.id, ids[6])
+                    assert.equal(emp.id, ids[6]);
                 });
             });
 
             it.should("support last", function () {
-                return Employee.order("firstname").last().chain(function (emp) {
-                    assert.throws(hitch(Employee, "last"));
-                    assert.instanceOf(emp, Employee);
-                    assert.equal(emp.firstname, "first9");
-                });
+                return Employee.order("firstName").last()
+                    .then(function (emp) {
+                        assert.instanceOf(emp, Employee);
+                        assert.equal(emp.firstname, "first9");
+                    })
+                    .then(function () {
+                        return Employee.last().then(assert.fail, function (err) {
+                            assert.equal(err.message, "QueryError : No order specified");
+                        });
+                    });
             });
 
             it.should("support stream", function (next) {
@@ -371,7 +375,7 @@ it.describe("patio.Model", function (it) {
     it.context(function (it) {
         var emp;
         it.beforeEach(function () {
-            return Employee.remove().chain(function () {
+            return Employee.remove().then(function () {
                 var values = {
                     firstname: "doug",
                     lastname: "martin",
@@ -391,9 +395,9 @@ it.describe("patio.Model", function (it) {
 
         it.should("support updates", function () {
             emp.firstname = "douglas";
-            return emp.update().chain(function (e) {
+            return emp.update().then(function (e) {
                 assert.equal(e.firstname, "douglas");
-                return Employee.one({id: emp.id}).chain(function () {
+                return Employee.one({id: emp.id}).then(function () {
                     assert.isNumber(emp.id);
                     assert.equal(emp.firstname, "douglas");
                 });
@@ -403,15 +407,15 @@ it.describe("patio.Model", function (it) {
 
         it.should("support remove", function () {
             var id = emp.id;
-            return emp.remove().chain(function () {
-                return Employee.filter({id: id}).one().chain(function (e) {
+            return emp.remove().then(function () {
+                return Employee.filter({id: id}).one().then(function (e) {
                     assert.isNull(e);
                 });
             });
         });
 
         it.should("support support batch updates", function () {
-            return Employee.all().chain(function (records) {
+            return Employee.all().then(function (records) {
                 assert.lengthOf(records, 1);
                 records.forEach(function (r) {
                     assert.equal(r.firstname, "doug");
@@ -421,10 +425,10 @@ it.describe("patio.Model", function (it) {
 
         it.should("support filters on batch updates", function () {
             return Employee.update({firstname: "dougie"}, {id: emp.id})
-                .chain(function () {
+                .then(function () {
                     return Employee.filter({id: emp.id}).one();
                 })
-                .chain(function (emp) {
+                .then(function (emp) {
                     assert.instanceOf(emp, Employee);
                     assert.equal(emp.firstname, "dougie");
                 });

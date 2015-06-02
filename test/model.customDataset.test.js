@@ -1,8 +1,8 @@
+"use strict";
 var it = require('it'),
     assert = require('assert'),
     helper = require("./data/model.helper.js"),
-    patio = require("index"),
-    comb = require("comb-proxy");
+    patio = require("index");
 
 
 it.describe("A model with a custom dataset", function (it) {
@@ -26,7 +26,8 @@ it.describe("A model with a custom dataset", function (it) {
 
 
     it.should("Filter employees properly", function () {
-        return Employee.save([
+        return Employee
+            .save([
                 {
                     firstname: "Bob",
                     lastname: "Yukon",
@@ -51,10 +52,11 @@ it.describe("A model with a custom dataset", function (it) {
                     street: "Street",
                     city: "Omaha"
                 }
-            ]).chain(function () {
-                return CustomDataset.all().chain(function (emps) {
-                    assert.lengthOf(emps, 2);
-                });
+            ]).then(function () {
+                return CustomDataset.all();
+            })
+            .then(function (emps) {
+                assert.lengthOf(emps, 2);
             });
     });
 
@@ -62,6 +64,3 @@ it.describe("A model with a custom dataset", function (it) {
         return helper.dropModels();
     });
 });
-
-
-

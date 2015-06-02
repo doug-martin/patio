@@ -1,8 +1,8 @@
+"use strict";
 var it = require('it'),
     assert = require('assert'),
     helper = require("./data/model.helper.js"),
-    patio = require("index"),
-    comb = require("comb-proxy");
+    patio = require("index");
 
 
 it.describe("A model with custom accessors", function (it) {
@@ -53,10 +53,10 @@ it.describe("A model with custom accessors", function (it) {
             street: "Street",
             city: "City"
         }).save()
-            .chain(function () {
+            .then(function () {
                 return CustomGettersEmployee.first();
             })
-            .chain(function (emp) {
+            .then(function (emp) {
                 // Check getters
                 //console.log(emp);
                 assert.equal(emp.firstname, "leia");
@@ -73,8 +73,8 @@ it.describe("A model with custom accessors", function (it) {
             lastname: "Kenobi",
             street: "Street",
             city: "City"
-        }).save().chain(function () {
-                return CustomSettersEmployee.first().chain(function (emp) {
+        }).save().then(function () {
+                return CustomSettersEmployee.first().then(function (emp) {
                     assert.equal(emp.firstname, "O_b_i_-_W_a_n");
                     assert.equal(emp.lastname, "K#e#n#o#b#i");
                     // Raw values must be the same, as transformation was made within setters

@@ -22,7 +22,7 @@ it.describe("Migrators", function (it) {
 
     var DB, MockDB, MockDS;
     it.beforeAll(function () {
-        MockDS = comb.define(patio.Dataset, {
+        MockDS = patio.Dataset.extend({
             instance: {
 
                 fetchRows: function () {
@@ -59,7 +59,7 @@ it.describe("Migrators", function (it) {
             }
         });
 
-        MockDB = comb.define(patio.Database, {
+        MockDB = patio.Database.extend({
 
             instance: {
 
@@ -311,22 +311,21 @@ it.describe("Migrators", function (it) {
                 instance: {
 
                     fetchRows: function () {
-                        var from = this.__opts.from[0];
+                        var from = this.__opts.from[0], ret = Promise.resolve();
 
-                        return new Promise(function (resolve, reject) {
-                            if (from.toString() === "schema_info") {
-                                resolve({version: patioMigrationVersion});
-                            } else if (from.toString() === "schema_migrations") {
-                                sortMigrationFiles();
-                                resolve(patioMigrationFiles.map(function (f) {
-                                    return {filename: f};
-                                }));
-                            } else if (from.toString() === "sm") {
-                                resolve(patioMigrationFiles.map(function (f) {
-                                    return {fn: f};
-                                }));
-                            }
-                        });
+                        if (from.toString() === "schema_info") {
+                            ret = comb.async.array([{version: patioMigrationVersion}]);
+                        } else if (from.toString() === "schema_migrations") {
+                            sortMigrationFiles();
+                            ret = comb.async.array(patioMigrationFiles.map(function (f) {
+                                return {filename: f};
+                            }));
+                        } else if (from.toString() === "sm") {
+                            ret = comb.async.array(patioMigrationFiles.map(function (f) {
+                                return {fn: f};
+                            }));
+                        }
+                        return ret;
                     },
 
                     insert: function (values) {

@@ -52,14 +52,14 @@ it.describe("Many to Many camelize properties", function (it) {
                     }
                 ]
             });
-            return c1.save().chain(function () {
+            return c1.save().then(function () {
                 var emps = c1.employees;
                 assert.lengthOf(emps, 2);
             });
         });
 
         it.should("have child associations when queried", function () {
-            return Company.one().chain(function (company) {
+            return Company.one().then(function (company) {
                 var emps = company.employees;
                 assert.lengthOf(emps, 2);
                 var ids = [1, 2];
@@ -70,7 +70,7 @@ it.describe("Many to Many camelize properties", function (it) {
         });
 
         it.should("the child associations should also be associated to the parent ", function () {
-            return Employee.all().chain(function (emps) {
+            return Employee.all().then(function (emps) {
                 assert.lengthOf(emps, 2);
                 emps.forEach(function (emp) {
                     assert.lengthOf(emp.companies, 1);

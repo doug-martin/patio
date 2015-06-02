@@ -55,8 +55,8 @@ it.describe("Many to Many eager with filter", function (it) {
                 companyName: "Google",
                 employees: employees
             });
-            return c1.save().chain(function () {
-                return Company.one().chain(function (ret) {
+            return c1.save().then(function () {
+                return Company.one().then(function (ret) {
                     assert.lengthOf(ret.employees, 3);
                     assert.lengthOf(ret.omahaEmployees, 1);
                     assert.isTrue(ret.omahaEmployees.every(function (emp) {

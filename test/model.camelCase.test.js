@@ -313,11 +313,16 @@ it.describe("A model with camelized properites", function (it) {
             });
 
             it.should("support last", function () {
-                return Employee.order("firstName").last().then(function (emp) {
-                    assert.throws(hitch(Employee, "last"));
-                    assert.instanceOf(emp, Employee);
-                    assert.equal(emp.firstName, "first9");
-                });
+                return Employee.order("firstName").last()
+                    .then(function (emp) {
+                        assert.instanceOf(emp, Employee);
+                        assert.equal(emp.firstName, "first9");
+                    })
+                    .then(function () {
+                        return Employee.last().then(assert.fail, function (err) {
+                            assert.equal(err.message, "QueryError : No order specified");
+                        });
+                    });
             });
 
         });
@@ -389,6 +394,4 @@ it.describe("A model with camelized properites", function (it) {
     });
 
 });
-
-//it.run().both(process.exit);
 

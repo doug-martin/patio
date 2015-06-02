@@ -1,17 +1,13 @@
+"use strict";
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
-    events = require("events"),
-    sql = patio.SQL,
     config = require("./test.config.js"),
-    comb = require("comb-proxy"),
-    hitch = comb.hitch;
-
-var gender = ["M", "F"];
+    comb = require("comb-proxy");
 
 var DB1, DB2;
 var createTablesAndSync = function () {
-    return comb.when(
+    return Promise.all([
         DB1.forceCreateTable("employee", function () {
             this.primaryKey("id");
             this.firstname("string", {length: 20, allowNull: false});
@@ -32,18 +28,18 @@ var createTablesAndSync = function () {
             this.street("string", {length: 50, allowNull: false});
             this.city("string", {length: 20, allowNull: false});
         })
-    ).chain(patio.syncModels);
+    ]).then(patio.syncModels);
 };
 
 var dropTableAndDisconnect = function () {
     return DB1.forceDropTable("employee")
-        .chain(function () {
+        .then(function () {
             return DB2.forceDropTable("employee");
         })
-        .chain(function () {
+        .then(function () {
             return patio.disconnect();
         })
-        .chain(function () {
+        .then(function () {
             return patio.resetIdentifierMethods();
         });
 };
@@ -85,7 +81,8 @@ it.describe("Models from mutliple databases", function (it) {
             midinitial: null,
             gender: "M",
             street: "1 nowhere st.",
-            city: "NOWHERE"});
+            city: "NOWHERE"
+        });
         emp2 = new Employee2({
             firstname: "doug1",
             lastname: "martin1",
@@ -93,13 +90,14 @@ it.describe("Models from mutliple databases", function (it) {
             midinitial: null,
             gender: "F",
             street: "2 nowhere st.",
-            city: "NOWHERE2"});
+            city: "NOWHERE2"
+        });
         return comb.serial([
             function () {
-                return comb.when(Employee.remove(), Employee2.remove());
+                return Promise.all([Employee.remove(), Employee2.remove()]);
             },
             function () {
-                return comb.when(emp1.save(), emp2.save());
+                return Promise.all([emp1.save(), emp2.save()]);
             }]);
     });
 
@@ -108,8 +106,8 @@ it.describe("Models from mutliple databases", function (it) {
             // check for both methods of retrieving the model
             assert.strictEqual(patio.getModel(ds1), Employee);
             assert.strictEqual(patio.getModel(ds2), Employee2);
-            assert.strictEqual(patio.getModel("employee",DB1), Employee);
-            assert.strictEqual(patio.getModel("employee",DB2), Employee2);
+            assert.strictEqual(patio.getModel("employee", DB1), Employee);
+            assert.strictEqual(patio.getModel("employee", DB2), Employee2);
         });
     });
 
@@ -131,38 +129,38 @@ it.describe("Models from mutliple databases", function (it) {
         assert.equal("2 nowhere st.", emp2.street);
         assert.equal("NOWHERE2", emp2.city);
 
-        return comb.when(Employee.count(), Employee2.count()).chain(function (res) {
+        return Promise.all([Employee.count(), Employee2.count()]).then(function (res) {
             assert.equal(res[0], 1);
             assert.equal(res[1], 1);
         });
     });
 
     it.should("retrieve models from respective database", function () {
-        return comb.when(Employee.all(), Employee2.all()).chain(function (res) {
+        return Promise.all([Employee.all(), Employee2.all()]).then(function (res) {
             assert.lengthOf(res[0], 1);
             assert.lengthOf(res[1], 1);
         });
     });
 
     it.should("remove models from respective databases", function () {
-        return comb.when(Employee.all(), Employee2.all())
-            .chain(function (res) {
+        return Promise.all([Employee.all(), Employee2.all()])
+            .then(function (res) {
                 assert.lengthOf(res[0], 1);
                 assert.lengthOf(res[1], 1);
                 return Employee.remove();
             })
-            .chain(function () {
-                return comb.when(Employee.all(), Employee2.all());
+            .then(function () {
+                return Promise.all([Employee.all(), Employee2.all()]);
             })
-            .chain(function (res) {
+            .then(function (res) {
                 assert.lengthOf(res[0], 0);
                 assert.lengthOf(res[1], 1);
                 return Employee2.remove();
             })
-            .chain(function () {
-                return comb.when(Employee.all(), Employee2.all());
+            .then(function () {
+                return Promise.all([Employee.all(), Employee2.all()]);
             })
-            .chain(function (res) {
+            .then(function (res) {
                 assert.lengthOf(res[0], 0);
                 assert.lengthOf(res[1], 0);
             });

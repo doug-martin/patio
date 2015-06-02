@@ -2,14 +2,9 @@ var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
     Database = patio.Database,
-    ConnectionPool = require("ConnectionPool"),
     sql = patio.sql,
-    Identifier = sql.Identifier,
-    SQLFunction = sql.SQLFunction,
-    LiteralString = sql.LiteralString,
     helper = require("../helpers/helper"),
     MockDatabase = helper.MockDatabase,
-    MockDataset = helper.MockDataset,
     comb = require("comb"),
     hitch = comb.hitch;
 
@@ -141,7 +136,6 @@ it.describe("Database", function (it) {
         });
 
         it.should("create a connection pool", function () {
-            assert.instanceOf(db.pool, ConnectionPool);
             assert.equal(db.pool.maxObjects, 10);
             assert.equal(new Database({maxConnections: 4}).pool.maxObjects, 4);
         });
@@ -471,7 +465,7 @@ it.describe("Database", function (it) {
                         table.index("name", {unique: true});
                         table.check({name: "Bob"});
                         table.constraint("age", {age: {gt: 0}});
-                    }).chain(function () {
+                    }).then(function () {
                         assert.deepEqual(db.sqls, [
                             "CREATE TABLE test (id integer NOT NULL PRIMARY KEY AUTOINCREMENT, name text, image blob NOT NULL, age integer, CHECK (name = 'Bob'), CONSTRAINT age CHECK (age > 0))",
                             "CREATE UNIQUE INDEX test_name_index ON test (name)"
@@ -485,7 +479,7 @@ it.describe("Database", function (it) {
                         table.primaryKey("id", "integer", {"null": false});
                         table.column("name", "text");
                         table.index("name", {unique: true});
-                    }).chain(function () {
+                    }).then(function () {
                         assert.deepEqual(db.sqls, [
                             'CREATE TABLE "test" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" text)',
                             'CREATE UNIQUE INDEX "test_name_index" ON "test" ("name")'
@@ -506,7 +500,7 @@ it.describe("Database", function (it) {
                         table.primaryKey("id", "integer", {"null": false});
                         table.column("name", "text");
                         table.index("name", {unique: true});
-                    }).chain(function () {
+                    }).then(function () {
                         assert.deepEqual(db.sqls, [
                             'CREATE TEMPORARY TABLE "test" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" text)',
                             'CREATE UNIQUE INDEX "test_name_index" ON "test" ("name")'
@@ -520,7 +514,7 @@ it.describe("Database", function (it) {
                         table.primaryKey("id", "integer", {"null": false});
                         table.column("name", "text");
                         table.index("name", {unique: true});
-                    }).chain(function () {
+                    }).then(function () {
                         assert.deepEqual(db.sqls, [
                             'CREATE TEMPORARY TABLE test (id integer NOT NULL PRIMARY KEY AUTOINCREMENT, name text)',
                             'CREATE UNIQUE INDEX test_name_index ON test (name)'
@@ -554,7 +548,7 @@ it.describe("Database", function (it) {
                 table.addConstraint("other_valid_name", function () {
                     return sql.name2.like('A%');
                 });
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(db.sqls, [
                     'ALTER TABLE xyz ADD COLUMN aaa text UNIQUE NOT NULL',
                     'ALTER TABLE xyz DROP COLUMN bbb',
@@ -579,7 +573,7 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return db.addColumn("test", "name", "text", {unique: true}).chain(function () {
+            return db.addColumn("test", "name", "text", {unique: true}).then(function () {
                 assert.deepEqual(db.sqls, [
                     'ALTER TABLE test ADD COLUMN name text UNIQUE'
                 ]);
@@ -595,7 +589,7 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return db.dropColumn("test", "name").chain(function () {
+            return db.dropColumn("test", "name").then(function () {
                 assert.deepEqual(db.sqls, [
                     'ALTER TABLE test DROP COLUMN name'
                 ]);
@@ -611,7 +605,7 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return db.renameColumn("test", "abc", "def").chain(function () {
+            return db.renameColumn("test", "abc", "def").then(function () {
                 assert.deepEqual(db.sqls, [
                     'ALTER TABLE test RENAME COLUMN abc TO def'
                 ]);
@@ -627,7 +621,7 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return db.setColumnType("test", "name", "integer").chain(function () {
+            return db.setColumnType("test", "name", "integer").then(function () {
                 assert.deepEqual(db.sqls, [
                     'ALTER TABLE test ALTER COLUMN name TYPE integer'
                 ]);
@@ -643,7 +637,7 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return db.setColumnDefault("test", "name", 'zyx').chain(function () {
+            return db.setColumnDefault("test", "name", 'zyx').then(function () {
                 assert.deepEqual(db.sqls, [
                     "ALTER TABLE test ALTER COLUMN name SET DEFAULT 'zyx'"
                 ]);
@@ -659,7 +653,7 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return db.addIndex("test", "name", {unique: true}).chain(function () {
+            return db.addIndex("test", "name", {unique: true}).then(function () {
                 assert.deepEqual(db.sqls, [
                     'CREATE UNIQUE INDEX test_name_index ON test (name)'
                 ]);
@@ -668,7 +662,7 @@ it.describe("Database", function (it) {
 
         it.should("accept multiple columns", function () {
             db.reset();
-            return db.addIndex("test", ["one", "two"]).chain(function () {
+            return db.addIndex("test", ["one", "two"]).then(function () {
                 assert.deepEqual(db.sqls, [
                     'CREATE INDEX test_one_two_index ON test (one, two)'
                 ]);
@@ -684,7 +678,7 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return db.dropIndex("test", "name").chain(function () {
+            return db.dropIndex("test", "name").then(function () {
                 assert.deepEqual(db.sqls, [
                     'DROP INDEX test_name_index'
                 ]);
@@ -699,14 +693,14 @@ it.describe("Database", function (it) {
 
 
         it.should("construct proper SQL", function () {
-            return db.dropTable("test").chain(function () {
+            return db.dropTable("test").then(function () {
                 assert.deepEqual(db.sqls, ['DROP TABLE test']);
             });
         });
 
         it.should("accept multiple table names", function () {
             db.reset();
-            return db.dropTable("a", "bb", "ccc").chain(function () {
+            return db.dropTable("a", "bb", "ccc").then(function () {
                 assert.deepEqual(db.sqls, [
                     'DROP TABLE a',
                     'DROP TABLE bb',
@@ -724,7 +718,7 @@ it.describe("Database", function (it) {
         });
 
         it.should("construct proper SQL", function () {
-            return db.renameTable("abc", "xyz").chain(function () {
+            return db.renameTable("abc", "xyz").then(function () {
                 assert.deepEqual(db.sqls, ['ALTER TABLE abc RENAME TO xyz']);
             });
         });
@@ -739,10 +733,10 @@ it.describe("Database", function (it) {
         it.should("try to select the first record from the table's dataset", function () {
             var a, b;
             return Promise.all([
-                db.tableExists("a").chain(function (ret) {
+                db.tableExists("a").then(function (ret) {
                     assert.isFalse(ret);
                 }),
-                db.tableExists("b").chain(function (ret) {
+                db.tableExists("b").then(function (ret) {
                     assert.isTrue(ret);
                 })
             ]);
@@ -762,7 +756,7 @@ it.describe("Database", function (it) {
             db.reset();
             return db.transaction(function (d) {
                 return d.execute('DROP TABLE test;');
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test;', 'COMMIT']);
             });
         });
@@ -774,7 +768,7 @@ it.describe("Database", function (it) {
                 return db.transaction({isolation: level}, function (d) {
                     return d.run("DROP TABLE " + level);
                 });
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED', 'DROP TABLE uncommitted', 'COMMIT',
                     'BEGIN', 'SET TRANSACTION ISOLATION LEVEL READ COMMITTED', 'DROP TABLE committed', 'COMMIT',
                     'BEGIN', 'SET TRANSACTION ISOLATION LEVEL REPEATABLE READ', 'DROP TABLE repeatable', 'COMMIT',
@@ -791,7 +785,7 @@ it.describe("Database", function (it) {
                 return db.transaction(function (d) {
                     return d.run("DROP TABLE " + level);
                 });
-            }, 1).chain(function () {
+            }, 1).then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED', 'DROP TABLE uncommitted', 'COMMIT',
                     'BEGIN', 'SET TRANSACTION ISOLATION LEVEL READ COMMITTED', 'DROP TABLE committed', 'COMMIT',
                     'BEGIN', 'SET TRANSACTION ISOLATION LEVEL REPEATABLE READ', 'DROP TABLE repeatable', 'COMMIT',
@@ -815,7 +809,7 @@ it.describe("Database", function (it) {
                                     db.run("DROP TABLE " + table).then(resolve, reject);
                                 }, timeout2)
                             });
-                        }).chain(resolve, reject);
+                        }).then(resolve, reject);
                     }, timeout1);
                 });
             }
@@ -855,10 +849,10 @@ it.describe("Database", function (it) {
             it.should("isolate transactions with isolated = true returned from an inner transaction", function () {
                 db.reset();
                 return db.transaction(function () {
-                    return db.run("DROP TABLE a").chain(function () {
+                    return db.run("DROP TABLE a").then(function () {
                         db.transaction({isolated: true}, function () {
                             return db.run("DROP TABLE b");
-                        }).chain(function () {
+                        }).then(function () {
                             assert.deepEqual(db.sqls, [
                                 'BEGIN', "DROP TABLE a", 'COMMIT',
                                 'BEGIN', "DROP TABLE b", 'COMMIT'
@@ -876,16 +870,16 @@ it.describe("Database", function (it) {
             return db.transaction(function (d) {
                 d.execute('DROP TABLE test');
                 throw "Error";
-            }).chain(assert.fail, function () {
+            }).then(assert.fail, function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test', 'ROLLBACK']);
                 db.reset();
                 return db.transaction(function (d) {
                     return d.execute('DROP TABLE test', {error: true});
-                }).chain(assert.fail, function () {
+                }).then(assert.fail, function () {
                     assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test', 'ROLLBACK']);
                     return db.transaction(function (d) {
                         throw "Error";
-                    }).chain(assert.fail, function () {
+                    }).then(assert.fail, function () {
                         return true;
                     });
                 });
@@ -901,7 +895,7 @@ it.describe("Database", function (it) {
             };
             return db.transaction(function (d) {
                 return d.run("DROP TABLE test");
-            }).chain(assert.fail, function () {
+            }).then(assert.fail, function () {
                 return true;
             });
         });
@@ -916,7 +910,7 @@ it.describe("Database", function (it) {
         it.should("wrap the supplied block with BEGIN + COMMIT statements", function () {
             return db.transaction(function () {
                 return db.execute("DROP TABLE test;");
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test;', 'COMMIT']);
             });
         });
@@ -927,7 +921,7 @@ it.describe("Database", function (it) {
                 return db.transaction({savepoint: true}, function () {
                     return db.execute('DROP TABLE test;');
                 });
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'SAVEPOINT autopoint_1', 'DROP TABLE test;', 'RELEASE SAVEPOINT autopoint_1', 'COMMIT']);
             });
         });
@@ -936,7 +930,7 @@ it.describe("Database", function (it) {
             db.reset();
             return db.transaction({savepoint: true}, function (d) {
                 return d.execute('DROP TABLE test;');
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test;', 'COMMIT']);
             });
         });
@@ -947,21 +941,21 @@ it.describe("Database", function (it) {
                 return d.transaction(function (d2) {
                     return d2.execute('DROP TABLE test;');
                 });
-            }).chain(function () {
+            }).then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test;', 'COMMIT']);
             });
         });
 
         it.should("handle returning inside of the block by committing", function () {
             db.reset();
-            return db.retCommit().chain(function () {
+            return db.retCommit().then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test;', 'COMMIT']);
             });
         });
 
         it.should("handle returning inside of a savepoint by committing", function () {
             db.reset();
-            return db.retCommitSavePoint().chain(function () {
+            return db.retCommitSavePoint().then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'SAVEPOINT autopoint_1', 'DROP TABLE test;', 'RELEASE SAVEPOINT autopoint_1', 'COMMIT']);
             });
         });
@@ -971,16 +965,16 @@ it.describe("Database", function (it) {
             return db.transaction(function (d) {
                 d.execute('DROP TABLE test');
                 throw "Error";
-            }).chain(assert.fail, function () {
+            }).then(assert.fail, function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test', 'ROLLBACK']);
                 db.reset();
                 return db.transaction(function (d) {
                     return d.execute('DROP TABLE test', {error: true});
-                }).chain(assert.fail, function () {
+                }).then(assert.fail, function () {
                     assert.deepEqual(db.sqls, ['BEGIN', 'DROP TABLE test', 'ROLLBACK']);
                     return db.transaction(function (d) {
                         throw "Error";
-                    }).chain(assert.fail, function () {
+                    }).then(assert.fail, function () {
                         return true;
                     });
                 });
@@ -994,20 +988,20 @@ it.describe("Database", function (it) {
                     db.execute('DROP TABLE test');
                     throw new Error("Error");
                 });
-            }).chain(assert.fail, function () {
+            }).then(assert.fail, function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'SAVEPOINT autopoint_1', 'DROP TABLE test', 'ROLLBACK TO SAVEPOINT autopoint_1', 'ROLLBACK']);
                 db.reset();
                 return db.transaction(function (d) {
                     return db.transaction({savepoint: true}, function () {
                         return db.execute('DROP TABLE test', {error: true});
                     });
-                }).chain(assert.fail, function () {
+                }).then(assert.fail, function () {
                     assert.deepEqual(db.sqls, ['BEGIN', 'SAVEPOINT autopoint_1', 'DROP TABLE test', 'ROLLBACK TO SAVEPOINT autopoint_1', 'ROLLBACK']);
                     return db.transaction(function (d) {
                         return db.transaction({savepoint: true}, function () {
                             throw "ERROR";
                         });
-                    }).chain(assert.fail, function () {
+                    }).then(assert.fail, function () {
                         return true;
                     });
                 });
@@ -1018,11 +1012,11 @@ it.describe("Database", function (it) {
             db.reset();
             return db.transaction(function () {
                 return db.transaction({savepoint: true}, function () {
-                    return db.dropTable("a").chain(function () {
+                    return db.dropTable("a").then(function () {
                         throw "ROLLBACK";
                     });
-                }).chain(comb(db).bindIgnore("dropTable", "b"));
-            }).chain(function () {
+                }).then(comb(db).bindIgnore("dropTable", "b"));
+            }).then(function () {
                 assert.deepEqual(db.sqls, ['BEGIN', 'SAVEPOINT autopoint_1', 'DROP TABLE a', 'ROLLBACK TO SAVEPOINT autopoint_1', "DROP TABLE b", 'COMMIT']);
             });
         });
@@ -1035,12 +1029,12 @@ it.describe("Database", function (it) {
             };
             return db.transaction(function (db, done) {
                 done();
-            }).chain(assert.fail, function () {
+            }).then(assert.fail, function () {
                 return db.transaction(function () {
                     return db.transaction({savepoint: true}, function (db, done) {
                         done();
                     });
-                }).chain(assert.fail, function () {
+                }).then(assert.fail, function () {
                     db.__commitTransaction = orig;
                 });
             });
@@ -1101,7 +1095,7 @@ it.describe("Database", function (it) {
             return db.fetch('select a from b').map(
                 function (r) {
                     return r.sql;
-                }).chain(function (r) {
+                }).then(function (r) {
                     assert.deepEqual(r, ['select a from b']);
                 });
         });

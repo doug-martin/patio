@@ -1,3 +1,4 @@
+"use strict";
 /*global module:false*/
 module.exports = function (grunt) {
     // Project configuration.

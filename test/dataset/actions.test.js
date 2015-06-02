@@ -2191,10 +2191,12 @@ it.describe("Dataset actions", function (it) {
         var DS = comb.define(MockDataset, {
             instance: {
                 fetchRows: function (sql) {
-                    return comb.async.array([
-                        {c: 1},
-                        {c: 2}
-                    ]);
+                    return this.db.run(sql).then(function () {
+                        return comb.async.array([
+                            {c: 1},
+                            {c: 2}
+                        ]);
+                    });
                 }
             }
         });
@@ -2212,23 +2214,18 @@ it.describe("Dataset actions", function (it) {
 
 
         it.should("do select and map in one step", function () {
-            return serial([
-                function () {
-                    return ds.selectOrderMap("a").then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a FROM t ORDER BY a']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
-                    //with callback
-                    return ds.selectOrderMap("a", function (err, res) {
-                        assert.isNull(err);
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a FROM t ORDER BY a']);
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+            return ds.selectOrderMap("a").then(function (res) {
+                assert.deepEqual(res, [1, 2]);
+                assert.deepEqual(ds.db.sqls, ['SELECT a FROM t ORDER BY a']);
+                ds.db.reset();
+            }).then(function () {
+                //with callback
+                return ds.selectOrderMap("a", function (err, res) {
+                    assert.isNull(err);
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a FROM t ORDER BY a']);
+                }).then(ds.db.reset.bind(ds.db));
+            });
         });
 
         it.should("handle implicit qualifiers in arguments", function () {

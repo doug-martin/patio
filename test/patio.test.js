@@ -7,13 +7,9 @@ var it = require('it'),
     Constant = sql.Constant,
     BooleanConstant = sql.BooleanConstant,
     NegativeBooleanConstant = sql.NegativeBooleanConstant,
-    Identifier = sql.Identifier,
-    SQLFunction = sql.SQLFunction,
-    LiteralString = sql.LiteralString,
     comb = require("comb"),
-    Promise = comb.Promise,
-    Model = require("model").Model,
-    hitch = comb.hitch;
+    Model = require("model").Model;
+
 patio.DATABASES.length = 0;
 patio.quoteIdentifiers = true;
 
@@ -32,7 +28,7 @@ it.describe("patio", function (it) {
 
     var DummyDataset, DummyDatabase;
     it.beforeAll(function () {
-        return patio.disconnect().chain(function () {
+        return patio.disconnect().then(function () {
             DummyDataset = comb.define(patio.Dataset, {
                 instance: {
                     first: function () {
@@ -57,33 +53,33 @@ it.describe("patio", function (it) {
 
                     createConnection: function (options) {
                         this.connected = true;
-                        return new comb.Promise().callback({});
+                        return Promise.resolve({});
                     },
 
                     closeConnection: function (conn) {
                         this.connected = false;
-                        return new comb.Promise().callback();
+                        return Promise.resolve();
                     },
 
                     validate: function (conn) {
-                        return new Promise().callback(true);
+                        return Promise.resolve(true);
                     },
 
-                    execute: function (sql, opts) {
-                        this.pool.getConnection();
-                        var ret = new comb.Promise();
-                        this.sqls.push(sql);
-                        ret.callback();
-                        return ret;
+                    execute: function (sql) {
+                        var self = this;
+                        return this.pool.getConnection().then(function (conn) {
+                            self.sqls.push(sql);
+                            self.pool.returnConnection(conn);
+                        });
                     },
 
                     executeError: function () {
-                        return this.execute.apply(this, arguments).chain(
+                        return this.execute.apply(this, arguments).then(
                             function () {
                                 throw new Error();
                             }, function () {
                                 throw new Error();
-                            })
+                            });
                     },
 
                     reset: function () {
@@ -135,35 +131,20 @@ it.describe("patio", function (it) {
         assert.isTrue(DB1 === patio.defaultDatabase);
         var DB2 = patio.createConnection("dummyDB://test:testpass@localhost/dummySchema");
         assert.instanceOf(DB2, DummyDatabase);
-        var DB3;
-        return patio.connectAndExecute("dummyDB://test:testpass@localhost/dummySchema",
-            function (db) {
-                db.dropTable("test");
-                db.createTable("test", function () {
-                    this.primaryKey("id");
-                    this.name(String);
-                    this.age(Number);
-                });
-            }).chain(function (db) {
-                DB3 = db;
-                assert.instanceOf(db, DummyDatabase);
-                assert.isTrue(db.connected);
-                assert.deepEqual(db.sqls, [ 'DROP TABLE "test"', 'CREATE TABLE "test" ("id" integer PRIMARY KEY AUTOINCREMENT, "name" varchar(255), "age" numeric)' ]);
-                assert.deepEqual(patio.DATABASES, [DB1, DB2, DB3]);
-            });
     });
 
     it.should("disconnect from a db", function () {
         var DB = patio.connect("dummyDB://test:testpass@localhost/dummySchema");
-        return DB.createTable("test",function () {
+        return DB.createTable("test", function () {
             this.primaryKey("id");
             this.name(String);
             this.age(Number);
-        }).chain(function () {
-                assert.isTrue(DB.connected);
-                patio.disconnect();
+        }).then(function () {
+            assert.isTrue(DB.connected);
+            return patio.disconnect().then(function () {
                 assert.isFalse(DB.connected);
             });
+        });
     });
 
     it.should("expose core classes", function () {
