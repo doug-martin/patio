@@ -1,7 +1,7 @@
 {
   "name": "patio",
   "description": "Patio query engine and ORM",
-  "version": "0.9.3",
+  "version": "1.0.0",
   "keywords": [
     "ORM",
     "object relation mapper",
@@ -58,6 +58,6 @@
     "patio": "./bin/patio"
   },
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=0.12.0"
   }
 }
