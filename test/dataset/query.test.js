@@ -1,3 +1,5 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),

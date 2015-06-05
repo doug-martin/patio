@@ -1,4 +1,5 @@
 "use strict";
+
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
@@ -6,6 +7,7 @@ var it = require('it'),
     comb = require("comb-proxy"),
     config = require("../test.config.js"),
     hitch = comb.hitch;
+
 if (process.env.PATIO_DB === "mysql" || process.env.NODE_ENV === 'test-coverage') {
     it.describe("patio.adapters.Mysql", function (it) {
 

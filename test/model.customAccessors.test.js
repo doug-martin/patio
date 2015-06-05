@@ -58,7 +58,6 @@ it.describe("A model with custom accessors", function (it) {
             })
             .then(function (emp) {
                 // Check getters
-                //console.log(emp);
                 assert.equal(emp.firstname, "leia");
                 assert.equal(emp.lastname, "SKYWALKER");
                 // And the actual (raw) value

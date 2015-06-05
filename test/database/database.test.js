@@ -1,3 +1,5 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
@@ -807,7 +809,7 @@ it.describe("Database", function (it) {
                             return new Promise(function (resolve, reject) {
                                 setTimeout(function () {
                                     db.run("DROP TABLE " + table).then(resolve, reject);
-                                }, timeout2)
+                                }, timeout2);
                             });
                         }).then(resolve, reject);
                     }, timeout1);
@@ -1191,7 +1193,7 @@ it.describe("Database", function (it) {
         it.should("raise error for an invalid op", function () {
             return db.__alterTableSql("mau", {op: "blah"}).then(assert.fail, function (err) {
                 assert.equal(err.message, "Database error : Invalid alter table operator 'blah'");
-            })
+            });
         });
     });
 

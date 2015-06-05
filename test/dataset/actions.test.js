@@ -1,6 +1,6 @@
 "use strict";
 
-/* jshint camelcase: false, unused: false */
+/* jshint camelcase: false */
 
 var it = require('it'),
     assert = require('assert'),

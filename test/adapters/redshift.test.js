@@ -1,4 +1,5 @@
 "use strict";
+
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
@@ -25,7 +26,8 @@ it.describe("patio.adapters.Redshift", function (it) {
         });
 
         PG_DB["__defineSetter__"]("sqls", function (sql) {
-            return this.__sqls = sql;
+            this.__sqls = sql;
+            return this.__sqls;
         });
 
 

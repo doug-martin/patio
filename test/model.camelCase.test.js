@@ -1,10 +1,10 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("./data/model.helper.js"),
     patio = require("index"),
-    sql = patio.SQL,
-    comb = require("comb-proxy"),
-    hitch = comb.hitch;
+    sql = patio.SQL;
 
 var gender = ["M", "F"];
 
@@ -130,20 +130,22 @@ it.describe("A model with camelized properites", function (it) {
                 city: "City " + i
             });
         }
-        return Employee.truncate().then(function () {
-            return Employee.save(emps)
-        }).then(function (employees) {
-            assert.lengthOf(employees, 20);
-            employees.forEach(function (emp, i) {
-                assert.equal(emp.lastName, "last" + i);
-                assert.equal(emp.firstName, "first" + i);
-                assert.equal(emp.midInitial, "m");
-                assert.equal(emp.gender, gender[i % 2]);
-                assert.equal(emp.street, "Street " + i);
-                assert.equal(emp.city, "City " + i);
-            });
-            return Employee.count();
-        })
+        return Employee.truncate()
+            .then(function () {
+                return Employee.save(emps);
+            })
+            .then(function (employees) {
+                assert.lengthOf(employees, 20);
+                employees.forEach(function (emp, i) {
+                    assert.equal(emp.lastName, "last" + i);
+                    assert.equal(emp.firstName, "first" + i);
+                    assert.equal(emp.midInitial, "m");
+                    assert.equal(emp.gender, gender[i % 2]);
+                    assert.equal(emp.street, "Street " + i);
+                    assert.equal(emp.city, "City " + i);
+                });
+                return Employee.count();
+            })
             .then(function (count) {
                 assert.equal(count, 20);
             });
@@ -308,7 +310,7 @@ it.describe("A model with camelized properites", function (it) {
                 });
                 return Employee.first(id.gt(ids[5]), id.lt(ids[11])).then(function (emp) {
                     assert.instanceOf(emp, Employee);
-                    assert.equal(emp.id, ids[6])
+                    assert.equal(emp.id, ids[6]);
                 });
             });
 
@@ -329,11 +331,10 @@ it.describe("A model with camelized properites", function (it) {
     });
 
 
-    it.context(function (it) {
-        var emp;
+    it.describe("have CRUD operations", function (it) {
         it.beforeEach(function () {
             return Employee.remove().then(function () {
-                return (emp = Employee.create({
+                return Employee.create({
                     firstName: "doug",
                     lastName: "martin",
                     position: 21,
@@ -341,33 +342,42 @@ it.describe("A model with camelized properites", function (it) {
                     gender: "M",
                     street: "1 nowhere st.",
                     city: "NOWHERE"
-                })).save();
+                }).save();
             });
         });
 
         it.should("support updates", function () {
-            emp.firstName = "douglas";
-            return emp.update().then(function (e) {
-                assert.equal(e.firstName, "douglas");
-                return Employee.one({id: emp.id}).then(function () {
-                    assert.isNumber(emp.id);
-                    assert.equal(emp.firstName, "douglas");
+            return Employee.one()
+                .then(function (employee) {
+                    return employee.update({firstName: "douglas"});
+                })
+                .then(function (employee) {
+                    assert.equal(employee.firstName, "douglas");
+                    return Employee.filter({id: employee.id}).one()
+                        .then(function (updatedEmployee) {
+                            assert.isNumber(updatedEmployee.id);
+                            assert.equal(updatedEmployee.id, employee.id);
+                            assert.equal(updatedEmployee.firstName, "douglas");
+                        });
                 });
-            });
         });
 
-
         it.should("support remove", function () {
-            var id = emp.id;
-            return emp.remove().then(function () {
-                return Employee.filter({id: id}).one().then(function (e) {
-                    assert.isNull(e);
+            return Employee.one().then(function (employee) {
+                return employee.remove().then(function () {
+                    return Promise.all([
+                        Employee.filter({id: employee.id}).one(),
+                        Employee.count()
+                    ]).then(function (ret) {
+                        assert.isNull(ret[0]);
+                        assert.equal(ret[1], 0);
+                    });
                 });
             });
         });
 
         it.should("support support batch updates", function () {
-            return Employee.all().then(function (records) {
+            return Employee.update({firstName: "dougie"}).then(function (records) {
                 assert.lengthOf(records, 1);
                 records.forEach(function (r) {
                     assert.equal(r.firstName, "doug");
@@ -376,14 +386,13 @@ it.describe("A model with camelized properites", function (it) {
         });
 
         it.should("support filters on batch updates", function () {
-            return Employee.update({firstName: "dougie"}, {id: emp.id})
-                .then(function () {
-                    return Employee.filter({id: emp.id}).one();
-                })
-                .then(function (emp) {
-                    assert.instanceOf(emp, Employee);
-                    assert.equal(emp.firstName, "dougie");
+            return Employee.one().then(function (employee) {
+                return Employee.update({firstName: "dougie"}, {id: employee.id}).then(function () {
+                    return Employee.filter({id: employee.id}).one().then(function (updatedEmployee) {
+                        assert.equal(updatedEmployee.firstName, "dougie");
+                    });
                 });
+            });
         });
 
 
@@ -392,6 +401,4 @@ it.describe("A model with camelized properites", function (it) {
     it.afterAll(function () {
         return helper.dropModels();
     });
-
 });
-

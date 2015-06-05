@@ -1,4 +1,5 @@
 "use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/manyToMany.helper.js"),
@@ -16,7 +17,7 @@ it.describe("Many to Many camelize properties", function (it) {
                 identifierOutputMethod: "camelize",
                 identifierInputMethod: "underscore"
             }
-        }).manyToMany("employees")
+        }).manyToMany("employees");
         Employee = patio.addModel("employee", {
             "static": {
                 identifierOutputMethod: "camelize",
