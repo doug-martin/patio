@@ -2,12 +2,12 @@
 
 var it = require('it'),
     assert = require('assert'),
-    helper = require("./data/model.helper.js"),
+    helper = require("./../data/model.helper.js"),
     patio = require("index"),
     sql = patio.SQL,
     comb = require("comb-proxy"),
     hitch = comb.hitch,
-    config = require("./test.config");
+    config = require("./../test.config.js");
 
 var gender = ["M", "F"];
 

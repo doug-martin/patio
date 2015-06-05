@@ -1,8 +1,9 @@
 "use strict";
+
 var it = require('it'),
     assert = require('assert'),
     patio = require("index"),
-    config = require("./test.config.js"),
+    config = require("./../test.config.js"),
     comb = require("comb-proxy");
 
 var DB1, DB2;
@@ -164,7 +165,6 @@ it.describe("Models from mutliple databases", function (it) {
                 assert.lengthOf(res[0], 0);
                 assert.lengthOf(res[1], 0);
             });
-        ;
     });
 
     it.afterAll(dropTableAndDisconnect);

@@ -1,7 +1,7 @@
 "use strict";
 var it = require('it'),
     assert = require('assert'),
-    helper = require("./data/model.helper.js"),
+    helper = require("./../data/model.helper.js"),
     patio = require("index");
 
 
