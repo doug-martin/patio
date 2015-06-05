@@ -6,7 +6,7 @@ var patio = require("index"),
 
 module.exports = {
     createSchemaAndSync: createSchemaAndSync,
-    dropModelsfunction: dropModelsfunction
+    dropModels: dropModels
 };
 
 function createSchemaAndSync(underscore) {
@@ -16,7 +16,7 @@ function createSchemaAndSync(underscore) {
 }
 
 
-function dropModelsfunction() {
+function dropModels() {
     return dropTableAndDisconnect();
 }
 
@@ -32,13 +32,14 @@ function dropTableAndDisconnect() {
 
 function createTables(underscore) {
     underscore = underscore === true;
+
     if (underscore) {
         patio.camelize = underscore;
     } else {
         patio.resetIdentifierMethods();
     }
-    DB = patio.connect(config.DB_URI + "/sandbox");
 
+    DB = patio.connect(config.DB_URI + "/sandbox");
     return DB.forceDropTable(["companiesEmployees", "employee", "buyerVendor", "company"]).then(function () {
         return Promise.all([
             DB.createTable("company", function () {

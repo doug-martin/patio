@@ -3,12 +3,10 @@
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/oneToOne.helper.js"),
-    patio = require("index"),
-    comb = require("comb"),
-    hitch = comb.hitch;
-
+    patio = require("index");
 
 var gender = ["M", "F"];
+
 it.describe("One To One with camelize option", function (it) {
     var Works, Employee;
     it.beforeAll(function () {
@@ -50,7 +48,10 @@ it.describe("One To One with camelize option", function (it) {
     it.describe("create a new model with association", function (it) {
 
         it.beforeAll(function () {
-            return Promise.all([Employee.remove(), Works.remove()]);
+            return Promise.all([
+                Employee.remove(),
+                Works.remove()
+            ]);
         });
 
 
@@ -77,26 +78,19 @@ it.describe("One To One with camelize option", function (it) {
     });
 
     it.context(function (it) {
-
         it.beforeEach(function () {
-            return comb.serial([
-                hitch(Employee, "remove"),
-                hitch(Works, "remove"),
-                function () {
-                    return new Employee({
-                        lastName: "last" + 1,
-                        firstName: "first" + 1,
-                        midInitial: "m",
-                        gender: gender[1 % 2],
-                        street: "Street " + 1,
-                        city: "City " + 1,
-                        works: {
-                            companyName: "Google",
-                            salary: 100000
-                        }
-                    }).save();
+            return new Employee({
+                lastName: "last" + 1,
+                firstName: "first" + 1,
+                midInitial: "m",
+                gender: gender[1 % 2],
+                street: "Street " + 1,
+                city: "City " + 1,
+                works: {
+                    companyName: "Google",
+                    salary: 100000
                 }
-            ]);
+            }).save();
         });
 
         it.should("not load associations when querying", function () {
@@ -134,7 +128,10 @@ it.describe("One To One with camelize option", function (it) {
 
     it.context(function () {
         it.beforeEach(function () {
-            return Promise.all([Works.remove(), Employee.remove()]);
+            return Promise.all([
+                Works.remove(),
+                Employee.remove()
+            ]);
         });
 
         it.should("allow the setting of associations", function () {

@@ -7,27 +7,13 @@ var it = require('it'),
     comb = require("comb"),
     hitch = comb.hitch;
 
-
 var gender = ["M", "F"];
+
 it.describe("One To One eager", function (it) {
     var Works, Employee;
     it.beforeAll(function () {
-        Works = patio.addModel("works", {
-            "static": {
-                init: function () {
-                    this._super(arguments);
-                    this.manyToOne("employee", {fetchType: this.fetchType.EAGER});
-                }
-            }
-        });
-        Employee = patio.addModel("employee", {
-            "static": {
-                init: function () {
-                    this._super(arguments);
-                    this.oneToOne("works", {fetchType: this.fetchType.EAGER});
-                }
-            }
-        });
+        Works = patio.addModel("works").manyToOne("employee", {fetchType: patio.fetchTypes.EAGER});
+        Employee = patio.addModel("employee").oneToOne("works", {fetchType: patio.fetchTypes.EAGER});
         return helper.createSchemaAndSync(true);
     });
 

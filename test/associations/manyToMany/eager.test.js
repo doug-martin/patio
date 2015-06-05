@@ -12,8 +12,8 @@ it.describe("Many to Many camelize properties", function (it) {
 
     var Company, Employee;
     it.beforeAll(function () {
-        Company = patio.addModel("company").manyToMany("employees", {fetchType: this.fetchType.EAGER})
-        Employee = patio.addModel("employee").manyToMany("companies", {fetchType: this.fetchType.EAGER})
+        Company = patio.addModel("company").manyToMany("employees", {fetchType: patio.fetchTypes.EAGER})
+        Employee = patio.addModel("employee").manyToMany("companies", {fetchType: patio.fetchTypes.EAGER})
         return helper.createSchemaAndSync(true);
     });
 

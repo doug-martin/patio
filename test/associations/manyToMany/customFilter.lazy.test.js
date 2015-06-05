@@ -10,8 +10,6 @@ var gender = ["M", "F"];
 var cities = ["Omaha", "Lincoln", "Kearney"];
 
 it.describe("Many to Many lazy with filter", function (it) {
-
-
     var Company, Employee;
     it.beforeAll(function () {
         Company = patio.addModel("company")
@@ -24,7 +22,10 @@ it.describe("Many to Many lazy with filter", function (it) {
             .manyToMany("lincolnEmployees", {model: "employee"}, function (ds) {
                 return ds.filter(sql.identifier("city").ilike("lincoln"));
             });
-        Employee = patio.addModel("employee").manyToMany("companies");
+
+        Employee = patio.addModel("employee")
+            .manyToMany("companies");
+
         return helper.createSchemaAndSync();
     });
 

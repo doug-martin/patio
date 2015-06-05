@@ -13,15 +13,17 @@ it.describe("Many to one camelize properties", function (it) {
         Company = patio.addModel("company", {
             "static": {
                 identifierOutputMethod: "camelize",
-                identifierInputMethod: "underscore",
+                identifierInputMethod: "underscore"
             }
-        }).oneToMany("employees")
+        }).oneToMany("employees");
+
         Employee = patio.addModel("employee", {
             "static": {
                 identifierOutputMethod: "camelize",
                 identifierInputMethod: "underscore"
             }
-        }).manyToOne("company")
+        }).manyToOne("company");
+
         return helper.createSchemaAndSync(true);
     });
 

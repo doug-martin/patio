@@ -12,25 +12,11 @@ var gender = ["M", "F"];
 it.describe("One To One lazy with custom filter", function (it) {
     var Works, Employee;
     it.beforeAll(function () {
-        Works = patio.addModel("works", {
-            "static": {
-                init: function () {
-                    this._super(arguments);
-                    this.manyToOne("employee");
-                }
-            }
-        });
-        Employee = patio.addModel("employee", {
-            "static": {
-                init: function () {
-                    this._super(arguments);
-                    this.oneToOne("works", function (ds) {
-                        return ds.filter(function () {
-                            return this.salary.gte(100000.00);
-                        });
-                    });
-                }
-            }
+        Works = patio.addModel("works").manyToOne("employee");
+        Employee = patio.addModel("employee").oneToOne("works", function (ds) {
+            return ds.filter(function () {
+                return this.salary.gte(100000.00);
+            });
         });
         return helper.createSchemaAndSync(true);
     });

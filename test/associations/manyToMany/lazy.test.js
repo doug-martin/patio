@@ -13,7 +13,7 @@ it.describe("Many to Many camelize properties", function (it) {
     var Company, Employee;
     it.beforeAll(function () {
         Company = patio.addModel("company").manyToMany("employees");
-        Employee = patio.addModel("employee").manyToMany("companies")
+        Employee = patio.addModel("employee").manyToMany("companies");
         return helper.createSchemaAndSync(true);
     });
 
@@ -247,5 +247,4 @@ it.describe("Many to Many camelize properties", function (it) {
     it.afterAll(function () {
         return helper.dropModels();
     });
-
 });

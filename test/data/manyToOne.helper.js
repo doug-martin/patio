@@ -1,7 +1,8 @@
 "use strict";
 
 var patio = require("index"),
-    config = require("../test.config.js");
+    config = require("../test.config.js"),
+    DB;
 
 module.exports = {
     createSchemaAndSync: createSchemaAndSync,
@@ -19,13 +20,15 @@ function dropModels() {
     return dropTableAndDisconnect();
 }
 
-var DB;
 function createTables(underscore) {
-    underscore = !!underscore;
-    patio.resetIdentifierMethods();
+    underscore = underscore === true;
+
     if (underscore) {
         patio.camelize = underscore;
+    } else {
+        patio.resetIdentifierMethods();
     }
+
     DB = patio.connect(config.DB_URI + "/sandbox");
     return DB.forceDropTable(["employee", "company"])
         .then(function () {

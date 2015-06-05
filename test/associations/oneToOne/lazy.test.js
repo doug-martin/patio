@@ -7,28 +7,14 @@ var it = require('it'),
     comb = require("comb"),
     hitch = comb.hitch;
 
-
 var gender = ["M", "F"];
+
 it.describe("One To One lazy", function (it) {
 
     var Works, Employee;
     it.beforeAll(function () {
-        Works = patio.addModel("works", {
-            "static": {
-                init: function () {
-                    this._super(arguments);
-                    this.manyToOne("employee");
-                }
-            }
-        });
-        Employee = patio.addModel("employee", {
-            "static": {
-                init: function () {
-                    this._super(arguments);
-                    this.oneToOne("works");
-                }
-            }
-        });
+        Works = patio.addModel("works").manyToOne("employee");
+        Employee = patio.addModel("employee").oneToOne("works");
         return helper.createSchemaAndSync(true);
     });
 

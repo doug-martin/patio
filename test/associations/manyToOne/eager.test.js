@@ -1,4 +1,5 @@
 "use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/manyToOne.helper.js"),
@@ -11,8 +12,8 @@ it.describe("Many to one eager", function (it) {
 
     var Company, Employee;
     it.beforeAll(function () {
-        Company = patio.addModel("company").oneToMany("employees", {fetchType: this.fetchType.EAGER})
-        Employee = patio.addModel("employee").manyToOne("company", {fetchType: this.fetchType.EAGER});
+        Company = patio.addModel("company").oneToMany("employees", {fetchType: patio.fetchTypes.EAGER});
+        Employee = patio.addModel("employee").manyToOne("company", {fetchType: patio.fetchTypes.EAGER});
         return helper.createSchemaAndSync(true);
     });
 
@@ -66,7 +67,7 @@ it.describe("Many to one eager", function (it) {
 
         it.should("have child associations when queried", function () {
             return Company.one().then(function (company) {
-                var emps = company.employees
+                var emps = company.employees;
                 assert.lengthOf(emps, 2);
                 var ids = [1, 2];
                 emps.forEach(function (emp, i) {
@@ -189,19 +190,17 @@ it.describe("Many to one eager", function (it) {
                     city: "City " + i
                 });
             }
-            return comb.executeInOrder(Company, function (Company) {
-                var company = Company.one();
-                company.addEmployees(employees);
-                return company;
-            }).then(function (company) {
-                var emps = company.employees;
-                assert.lengthOf(emps, 3);
-                emps.forEach(function (emp) {
-                    assert.instanceOf(emp, Employee);
+
+            return Company.one().then(function(company) {
+                return company.addEmployees(employees).then(function (company) {
+                    var emps = company.employees;
+                    assert.lengthOf(emps, 3);
+                    emps.forEach(function (emp) {
+                        assert.instanceOf(emp, Employee);
+                    });
                 });
             });
         });
-
     });
 
     it.describe("remove methods", function (it) {
@@ -217,19 +216,22 @@ it.describe("Many to one eager", function (it) {
             });
         }
         it.beforeEach(function () {
-            return comb.executeInOrder(Company, Employee, function (Company, Employee) {
-                Company.remove();
-                Employee.remove();
+            return Promise.all([
+                Company.remove(),
+                Employee.remove()
+            ]).then(function () {
                 new Company({companyName: "Google", employees: employees}).save();
             });
         });
 
-        it.should("the removing of associations and deleting them", function () {
-            return comb.executeInOrder(Company, Employee, function (Company, Employee) {
-                var company = Company.one();
+        it.should("allow the removing of associations and deleting them", function () {
+            return Company.one().then(function (company) {
                 var emps = company.employees;
-                company.removeEmployee(emps[0], true);
-                return {company: company, empCount: Employee.count()};
+                return company.removeEmployee(emps[0], true).then(function () {
+                    return Employee.count().then(function (count) {
+                        return {company: company, empCount: count};
+                    });
+                });
             }).then(function (ret) {
                 var company = ret.company, emps = company.employees;
                 assert.lengthOf(emps, 2);
@@ -238,11 +240,13 @@ it.describe("Many to one eager", function (it) {
         });
 
         it.should("allow the removing of associations without deleting", function () {
-            return comb.executeInOrder(Company, Employee, function (Company, Employee) {
-                var company = Company.one();
+            return Company.one().then(function (company) {
                 var emps = company.employees;
-                company.removeEmployee(emps[0]);
-                return {company: company, empCount: Employee.count()};
+                return company.removeEmployee(emps[0]).then(function () {
+                    return Employee.count().then(function (count) {
+                        return {company: company, empCount: count};
+                    });
+                });
             }).then(function (ret) {
                 var company = ret.company, emps = company.employees;
                 assert.lengthOf(emps, 2);
@@ -251,11 +255,13 @@ it.describe("Many to one eager", function (it) {
         });
 
         it.should("allow the removal of multiple associations and deleting them", function () {
-            return comb.executeInOrder(Company, Employee, function (Company, Employee) {
-                var company = Company.one();
+            return Company.one().then(function (company) {
                 var emps = company.employees;
-                company.removeEmployees(emps, true);
-                return {company: company, empCount: Employee.count()};
+                return company.removeEmployees(emps, true).then(function () {
+                    return Employee.count().then(function (count) {
+                        return {company: company, empCount: count};
+                    });
+                });
             }).then(function (ret) {
                 var company = ret.company, emps = company.employees;
                 assert.lengthOf(emps, 0);
@@ -264,11 +270,13 @@ it.describe("Many to one eager", function (it) {
         });
 
         it.should("allow the removal of multiple associations and not deleting them", function () {
-            return comb.executeInOrder(Company, Employee, function (Company, Employee) {
-                var company = Company.one();
+            return Company.one().then(function (company) {
                 var emps = company.employees;
-                company.removeEmployees(emps);
-                return {company: company, empCount: Employee.count()};
+                return company.removeEmployees(emps).then(function () {
+                    return Employee.count().then(function (count) {
+                        return {company: company, empCount: count};
+                    });
+                });
             }).then(function (ret) {
                 var company = ret.company, emps = company.employees;
                 assert.lengthOf(emps, 0);
@@ -277,9 +285,12 @@ it.describe("Many to one eager", function (it) {
         });
 
         it.should("allow the removal of all associations and deleting them", function () {
-            return comb.executeInOrder(Company, Employee, function (Company, Employee) {
-                var company = Company.one().removeAllEmployees(true).reload();
-                return {company: company, empCount: Employee.count()};
+            return Company.one().then(function (company) {
+                return company.removeAllEmployees(true).then(function (company) {
+                    return Employee.count().then(function (count) {
+                        return {company: company, empCount: count};
+                    });
+                });
             }).then(function (ret) {
                 assert.lengthOf(ret.company.employees, 0);
                 assert.equal(ret.empCount, 0);
@@ -287,9 +298,12 @@ it.describe("Many to one eager", function (it) {
         });
 
         it.should("allow the removal of all associations and not deleting them", function () {
-            return comb.executeInOrder(Company, Employee, function (Company, Employee) {
-                var company = Company.one().removeAllEmployees().reload();
-                return {company: company, empCount: Employee.count()};
+            return Company.one().then(function (company) {
+                return company.removeAllEmployees().then(function (company) {
+                    return Employee.count().then(function (count) {
+                        return {company: company, empCount: count};
+                    });
+                });
             }).then(function (ret) {
                 assert.lengthOf(ret.company.employees, 0);
                 assert.equal(ret.empCount, 3);
@@ -298,12 +312,14 @@ it.describe("Many to one eager", function (it) {
     });
 
     it.should("should not delete associations when deleting", function () {
-        return comb.executeInOrder(Company, Employee, function (Company, Employee) {
-            var company = Company.one();
-            company.remove();
-            return Employee.count();
-        }).then(function (count) {
-            assert.equal(count, 3);
+        return Company.one().then(function (company) {
+            return company.remove()
+                .then(function () {
+                    return Employee.count();
+                })
+                .then(function (ret) {
+                    assert.equal(ret, 3);
+                });
         });
     });
 

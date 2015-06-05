@@ -1,13 +1,13 @@
 "use strict";
+
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/manyToMany.helper.js"),
     patio = require("index"),
     sql = patio.sql;
 
-
-var gender = ["M", "F"];
-var cities = ["Omaha", "Lincoln", "Kearney"];
+var gender = ["M", "F"],
+    cities = ["Omaha", "Lincoln", "Kearney"];
 
 
 it.describe("Many to Many eager with filter", function (it) {
@@ -15,14 +15,17 @@ it.describe("Many to Many eager with filter", function (it) {
     var Company, Employee;
     it.beforeAll(function () {
         Company = patio.addModel("company")
-            .manyToMany("employees", {fetchType: this.fetchType.EAGER})
-            .manyToMany("omahaEmployees", {model: "employee", fetchType: this.fetchType.EAGER}, function (ds) {
+            .manyToMany("employees", {fetchType: patio.fetchTypes.EAGER})
+            .manyToMany("omahaEmployees", {model: "employee", fetchType: patio.fetchTypes.EAGER}, function (ds) {
                 return ds.filter(sql.identifier("city").ilike("omaha"));
             })
-            .manyToMany("lincolnEmployees", {model: "employee", fetchType: this.fetchType.EAGER}, function (ds) {
+            .manyToMany("lincolnEmployees", {model: "employee", fetchType: patio.fetchTypes.EAGER}, function (ds) {
                 return ds.filter(sql.identifier("city").ilike("lincoln"));
             });
-        Employee = patio.addModel("employee").manyToMany("companies", {fetchType: this.fetchType.EAGER})
+
+        Employee = patio.addModel("employee")
+            .manyToMany("companies", {fetchType: patio.fetchTypes.EAGER});
+
         return helper.createSchemaAndSync(true);
     });
 
@@ -238,7 +241,7 @@ it.describe("Many to Many eager with filter", function (it) {
             return Company.one().then(function (company) {
                 return Promise.all([
                     company.removeOmahaEmployees(company.omahaEmployees),
-                    company.removeLincolnEmployees(company.lincolnEmployees),
+                    company.removeLincolnEmployees(company.lincolnEmployees)
                 ])
                     .then(function () {
                         return Employee.count();
@@ -255,5 +258,4 @@ it.describe("Many to Many eager with filter", function (it) {
     it.afterAll(function () {
         return helper.dropModels();
     });
-
 });

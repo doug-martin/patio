@@ -7,28 +7,14 @@ var it = require('it'),
     comb = require("comb"),
     hitch = comb.hitch;
 
-
 var gender = ["M", "F"];
+
 it.describe("One To One with a hash as the key", function (it) {
 
     var Works, Employee;
     it.beforeAll(function () {
-        Works = patio.addModel("works", {
-            "static": {
-                init: function () {
-                    this._super(arguments);
-                    this.manyToOne("employee", {key: {employeeId: "id"}});
-                }
-            }
-        });
-        Employee = patio.addModel("employee", {
-            "static": {
-                init: function () {
-                    this._super(arguments);
-                    this.oneToOne("works", {key: {id: "employeeId"}});
-                }
-            }
-        });
+        Works = patio.addModel("works").manyToOne("employee", {key: {employeeId: "id"}});
+        Employee = patio.addModel("employee").oneToOne("works", {key: {id: "employeeId"}});
         return helper.createSchemaAndSync(true);
     });
 
