@@ -1,3 +1,5 @@
+"use strict";
+
 var patio = require("../../index"),
     sql = patio.sql,
     comb = require("comb"),
@@ -79,48 +81,56 @@ var createTables = function () {
 var createData = function () {
     return comb.when(
         BiologicalFather.save([
-            {name: "Fred", children: [
+            {
+                name: "Fred", children: [
                 {name: "Bobby"},
                 {name: "Alice"},
                 {name: "Susan"}
-            ]},
+            ]
+            },
             {name: "Ben"},
             {name: "Bob"},
-            {name: "Scott", children: [
+            {
+                name: "Scott", children: [
                 {name: "Brad"}
-            ]}
+            ]
+            }
         ]),
         //you could associate the children directly but we wont for this example
         StepFather.save([
-            {name: "Fred", children: [
+            {
+                name: "Fred", children: [
                 {name: "Bobby"},
                 {name: "Alice"},
                 {name: "Susan"}
-            ]},
+            ]
+            },
             {name: "Ben"},
             {name: "Bob"},
-            {name: "Scott", children: [
+            {
+                name: "Scott", children: [
                 {name: "Brad"}
-            ]}
+            ]
+            }
         ])
     );
-}
+};
 
 
 createTables()
-    .chain(createData)
-    .chain(function () {
+    .then(createData)
+    .then(function () {
         return comb.serial([
             function () {
                 return BiologicalFather.forEach(function (father) {
                     //you use a promise now because this is not an
                     //executeInOrderBlock
-                    return father.children.chain(function (children) {
+                    return father.children.then(function (children) {
                         console.log("Father " + father.name + " has " + children.length + " children");
                         if (children.length) {
                             console.log("The children's names are " + children.map(function (child) {
-                                return child.name;
-                            }));
+                                    return child.name;
+                                }));
                         }
                     });
                 });
@@ -129,23 +139,23 @@ createTables()
                 return StepFather.forEach(function (father) {
                     //you use a promise now because this is not an
                     //executeInOrderBlock
-                    return father.children.chain(function (children) {
+                    return father.children.then(function (children) {
                         console.log("Step father " + father.name + " has " + children.length + " children");
                         if (children.length) {
                             console.log("The children's names are " + children.map(function (child) {
-                                return child.name;
-                            }));
+                                    return child.name;
+                                }));
                         }
                     });
                 });
             },
             function () {
-                return Child.findById(1).chain(function (child) {
-                    return child.biologicalFather.chain(function (father) {
+                return Child.findById(1).then(function (child) {
+                    return child.biologicalFather.then(function (father) {
                         console.log("%s biological father is %s", child.name, father.name);
                     });
                 });
             }
         ]);
     })
-    .chain(disconnect, disconnectError);
+    .then(disconnect, disconnectError);

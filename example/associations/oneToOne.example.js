@@ -1,3 +1,5 @@
+"use strict";
+
 var patio = require("../../index"),
     sql = patio.sql,
     comb = require("comb"),
@@ -22,14 +24,7 @@ var State = patio.addModel("state", {
         }
     }
 });
-var Capital = patio.addModel("capital", {
-    static: {
-        init: function () {
-            this._super(arguments);
-            this.manyToOne("state");
-        }
-    }
-});
+var Capital = patio.addModel("capital").manyToOne("state");
 
 var createTables = function () {
     return comb.serial([
@@ -39,7 +34,7 @@ var createTables = function () {
         function () {
             return DB.createTable("state", function () {
                 this.primaryKey("id");
-                this.name(String)
+                this.name(String);
                 this.population("integer");
                 this.founded(Date);
                 this.climate(String);
@@ -88,25 +83,25 @@ var createData = function () {
 
 
 createTables()
-    .chain(createData)
-    .chain(function () {
+    .then(createData)
+    .then(function () {
         return State.order("name").forEach(function (state) {
             //if you return a promise here it will prevent the foreach from
             //resolving until all inner processing has finished.
-            return state.capital.chain(function (capital) {
+            return state.capital.then(function (capital) {
                 console.log(comb.string.format("%s's capital is %s.", state.name, capital.name));
             });
-        })
+        });
     })
-    .chain(function () {
+    .then(function () {
         return Capital.order("name").forEach(function (capital) {
             //if you return a promise here it will prevent the foreach from
             //resolving until all inner processing has finished.
-            return capital.state.chain(function (state) {
+            return capital.state.then(function (state) {
                 console.log(comb.string.format("%s is the capital of %s.", capital.name, state.name));
             });
         });
     })
-    .chain(disconnect, disconnectError);
+    .then(disconnect, disconnectError);
 
 

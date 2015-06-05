@@ -1,4 +1,9 @@
-var patio = require("../../index"), sql = patio.sql, comb = require("comb"), format = comb.string.format;
+"use strict";
+
+var patio = require("../../index"),
+    sql = patio.sql,
+    comb = require("comb"),
+    format = comb.string.format;
 
 patio.camelize = true;
 patio.configureLogging({patio: {level: "ERROR"}});
@@ -15,8 +20,12 @@ var Class = patio.addModel("class", {
         init: function () {
             this._super(arguments);
             this.manyToMany("students",
-                {fetchType: this.fetchType.EAGER, joinTable: "studentsClasses", order: [sql.firstName.desc(), sql.lastName.desc()]});
-            this.manyToMany("aboveAverageStudents", {model: "student", joinTable: "studentsClasses" }, function (ds) {
+                {
+                    fetchType: this.fetchType.EAGER,
+                    joinTable: "studentsClasses",
+                    order: [sql.firstName.desc(), sql.lastName.desc()]
+                });
+            this.manyToMany("aboveAverageStudents", {model: "student", joinTable: "studentsClasses"}, function (ds) {
                 return ds.filter({gpa: {gte: 3.5}});
             });
             this.manyToMany("averageStudents", {model: "student", joinTable: "studentsClasses"}, function (ds) {
@@ -43,7 +52,11 @@ var Student = patio.addModel("student", {
     static: {
         init: function () {
             this._super(arguments);
-            this.manyToMany("classes", {fetchType: this.fetchType.EAGER, joinTable: "studentsClasses", order: sql.name.desc()});
+            this.manyToMany("classes", {
+                fetchType: this.fetchType.EAGER,
+                joinTable: "studentsClasses",
+                order: sql.name.desc()
+            });
         }
     }
 });
@@ -99,27 +112,27 @@ var createData = function () {
             semester: "FALL",
             name: "Pricipals Of Programming Languages",
             subject: "Computer Science",
-            description: "Definition of programming languages. Global properties of algorithmic languages including "
-                + "scope of declaration, storage allocation, grouping of statements, binding time. Subroutines, "
-                + "coroutines and tasks. Comparison of several languages."
+            description: "Definition of programming languages. Global properties of algorithmic languages including " +
+            "scope of declaration, storage allocation, grouping of statements, binding time. Subroutines, " +
+            "coroutines and tasks. Comparison of several languages."
         },
         {
             semester: "FALL",
             name: "Theory Of Computation",
             subject: "Computer Science",
-            description: "The course is intended to introduce the students to the theory of computation in a fashion "
-                + "that emphasizes breadth and away from detailed analysis found in a normal undergraduate automata "
-                + "course. The topics covered in the course include methods of proofs, finite automata, non-determinism,"
-                + " regular expressions, context-free grammars, pushdown automata, no-context free languages, "
-                + "Church-Turing Thesis, decidability, reducibility, and space and time complexity.."
+            description: "The course is intended to introduce the students to the theory of computation in a fashion " +
+            "that emphasizes breadth and away from detailed analysis found in a normal undergraduate automata " +
+            "course. The topics covered in the course include methods of proofs, finite automata, non-determinism," +
+            " regular expressions, context-free grammars, pushdown automata, no-context free languages, " +
+            "Church-Turing Thesis, decidability, reducibility, and space and time complexity.."
         },
         {
             semester: "SPRING",
             name: "Compiler Construction",
             subject: "Computer Science",
-            description: "Assemblers, interpreters and compilers. Compilation of simple expressions and statements. "
-                + "Analysis of regular expressions. Organization of a compiler, including compile-time and run-time "
-                + "symbol tables, lexical scan, syntax scan, object code generation and error diagnostics."
+            description: "Assemblers, interpreters and compilers. Compilation of simple expressions and statements. " +
+            "Analysis of regular expressions. Organization of a compiler, including compile-time and run-time " +
+            "symbol tables, lexical scan, syntax scan, object code generation and error diagnostics."
         }
     ]);
     var studentInsertPromise = Student.save([
@@ -172,39 +185,39 @@ var printResults = function (studentDs, classDs) {
             !classes.length ? " no classes!" : "\n\t-" + classes.map(function (clas) {
                 return clas.name;
             }).join("\n\t-")));
-    }).chain(comb.hitch(classDs, "forEach", function (cls) {
-            console.log(format('"%s" has the following students enrolled: \n\t-%s', cls.name, cls.students.map(function (student) {
-                return format("%s %s", student.firstName, student.lastName);
-            }).join("\n\t-")));
-            return comb.when(cls.aboveAverageStudents, cls.averageStudents, cls.belowAverageStudents).chain(function (res) {
-                var aboveAverage = res[0].map(
-                        function (student) {
-                            return format("%s %s", student.firstName, student.lastName);
-                        }).join("\n\t-"),
-                    average = res[1].map(
-                        function (student) {
-                            return format("%s %s", student.firstName, student.lastName);
-                        }).join("\n\t-"),
-                    belowAverage = res[2].map(
-                        function (student) {
-                            return format("%s %s", student.firstName, student.lastName);
-                        }).join("\n\t-");
+    }).then(comb.hitch(classDs, "forEach", function (cls) {
+        console.log(format('"%s" has the following students enrolled: \n\t-%s', cls.name, cls.students.map(function (student) {
+            return format("%s %s", student.firstName, student.lastName);
+        }).join("\n\t-")));
+        return comb.when(cls.aboveAverageStudents, cls.averageStudents, cls.belowAverageStudents).then(function (res) {
+            var aboveAverage = res[0].map(
+                    function (student) {
+                        return format("%s %s", student.firstName, student.lastName);
+                    }).join("\n\t-"),
+                average = res[1].map(
+                    function (student) {
+                        return format("%s %s", student.firstName, student.lastName);
+                    }).join("\n\t-"),
+                belowAverage = res[2].map(
+                    function (student) {
+                        return format("%s %s", student.firstName, student.lastName);
+                    }).join("\n\t-");
 
-                console.log(format('"%s" has the following above average students enrolled: \n\t-%s', cls.name, aboveAverage));
-                console.log(format('"%s" has the following average students enrolled: \n\t-%s', cls.name, average));
-                console.log(format('"%s" has the following below average students enrolled: \n\t-%s', cls.name, belowAverage));
-            });
-        })).chain(disconnect, disconnectError);
+            console.log(format('"%s" has the following above average students enrolled: \n\t-%s', cls.name, aboveAverage));
+            console.log(format('"%s" has the following average students enrolled: \n\t-%s', cls.name, average));
+            console.log(format('"%s" has the following below average students enrolled: \n\t-%s', cls.name, belowAverage));
+        });
+    })).then(disconnect, disconnectError);
 };
 
 
 createTables()
-    .chain(createData)
-    .chain(function () {
+    .then(createData)
+    .then(function () {
         var classDs = Class.order("name"), studentDs = Student.order("firstName", "lastName");
 
         //Retrieve All classes and students
-        return comb.when(classDs.all(), studentDs.all()).chain(function (results) {
+        return comb.when(classDs.all(), studentDs.all()).then(function (results) {
             //enroll the students
             var classes = results[0], students = results[1];
             return comb.async.array(students)
@@ -215,7 +228,7 @@ createTables()
                         return student.enroll(classes.slice(i));
                     }
                 })
-                .chain(function () {
+                .then(function () {
                     return Student.save({
                         firstName: "Zach",
                         lastName: "Igor",
@@ -226,9 +239,9 @@ createTables()
                                 semester: "FALL",
                                 name: "Compiler Construction 2",
                                 subject: "Computer Science",
-                                description: "More Assemblers, interpreters and compilers. Compilation of simple expressions and statements. "
-                                    + "Analysis of regular expressions. Organization of a compiler, including compile-time and run-time "
-                                    + "symbol tables, lexical scan, syntax scan, object code generation and error diagnostics."
+                                description: "More Assemblers, interpreters and compilers. Compilation of simple expressions and statements. " +
+                                "Analysis of regular expressions. Organization of a compiler, including compile-time and run-time " +
+                                "symbol tables, lexical scan, syntax scan, object code generation and error diagnostics."
                             },
 
                             {
@@ -240,6 +253,6 @@ createTables()
                     });
                 });
         })
-            .chain(comb.partial(printResults, studentDs, classDs));
-    })
+            .then(comb.partial(printResults, studentDs, classDs));
+    });
 
