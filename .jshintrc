@@ -27,7 +27,7 @@
     "quotmark": false,
     "regexp": false,
     "undef": true,
-    "unused": true,
+    "unused": false,
     "strict": true,
     "trailing": true,
     "white": false,
