@@ -448,7 +448,7 @@ Created by <a href='./patio_Dataset.html#'> patio.Dataset</a> join methods.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
     
@@ -459,7 +459,7 @@ function (joinType,table,tableAlias){
    this.__joinType = joinType;
    this.__table = table;
    this.__tableAlias = tableAlias || null;
-           
+               
 }
             </pre>
       
@@ -482,7 +482,7 @@ function (joinType,table,tableAlias){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the <a href='./patio_sql_JoinClause.html#'> patio.sql.JoinClause</a> to a string.</p>
 </p>
@@ -512,10 +512,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.joinClauseSql(this);
-           
+               
 }
     </pre>
     

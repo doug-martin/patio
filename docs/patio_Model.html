@@ -889,7 +889,7 @@ This applies to the model associations also.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined model.js</em>
+    <em>Defined model/index.js</em>
     
     
     
@@ -900,7 +900,7 @@ function (options,fromDb){
    if (this.synced) {
        this.__emitter = new EventEmitter();
        this._super(arguments);
-       this.patio = patio || require(&quot;./index&quot;);
+       this.patio = patio || require(&quot;../index&quot;);
        fromDb = isBoolean(fromDb) ? fromDb : false;
        this.__changed = {};
        this.__values = {};
@@ -943,7 +943,7 @@ function (options,fromDb){
    </h3>
 
 <hr/>
-<em>Defined plugins/association.js</em>
+<em>Defined model/plugins/association.js</em>
 
 <p><p>Associates a related model with the current model. The following types are
 supported:</p>
@@ -1092,7 +1092,7 @@ function (type,name,options,filter){
    </h3>
 
 <hr/>
-<em>Defined model.js</em>
+<em>Defined model/index.js</em>
 
 <p><p>Create a new model initialized with the specified values.</p>
 </p>
@@ -1148,7 +1148,7 @@ function (values){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Finds a single model according to the supplied filter.
 See <a href='./patio_Dataset.html#filter'> patio.Dataset#filter</a> for filter options.</p>
@@ -1168,7 +1168,7 @@ See <a href='./patio_Dataset.html#filter'> patio.Dataset#filter</a> for filter o
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (id){
+function (){
    return this.filter.apply(this, arguments).first();
            
 }
@@ -1194,7 +1194,7 @@ function (id){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Retrieves a record by the primaryKey/s of a table.</p>
 </p>
@@ -1203,12 +1203,12 @@ function (id){
         <pre class="prettyprint linenums lang-js">
 var User = patio.getModel(&quot;user&quot;);
 
-User.findById(1).chain(function(userOne){
+User.findById(1).then(function(userOne){
 
 });
 
 //assume the primary key is a compostie of first_name and last_name
-User.findById([&quot;greg&quot;, &quot;yukon&quot;]).chain(function(userOne){
+User.findById([&quot;greg&quot;, &quot;yukon&quot;]).then(function(userOne){
 
 });
         </pre>
@@ -1276,7 +1276,7 @@ function (id){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Finds a single model according to the supplied filter.
 See <a href='./patio_Dataset.html#filter'> patio.Dataset#filter</a> for filter options. If the model
@@ -1299,7 +1299,7 @@ does not exist then a new one is created as passed back.</p>
     <pre class="prettyprint linenums lang-js">
 function (q){
    var self = this;
-   return this.find(q).chain(function (res) {
+   return this.find(q).then(function (res) {
        return res || self.create(q);
    });
            
@@ -1326,7 +1326,7 @@ function (q){
    </h3>
 
 <hr/>
-<em>Defined model.js</em>
+<em>Defined model/index.js</em>
 
 <p><p>Stub for plugins to notified of model inheritance</p>
 </p>
@@ -1335,7 +1335,7 @@ function (q){
     <em>Arguments</em>
     <ul>
     
-        <li> <em>model</em>  : <p>a model class to inherit from</p>
+        <li> <em>model</em> <code>patio.Model</code> : <p>a model class to inherit from</p>
 </li>
     
      </ul>
@@ -1346,7 +1346,7 @@ function (q){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (model){
+function (){
    
 }
     </pre>
@@ -1371,7 +1371,7 @@ function (model){
    </h3>
 
 <hr/>
-<em>Defined plugins/association.js</em>
+<em>Defined model/plugins/association.js</em>
 
 <p><p>Creates a MANY_TO_MANY relationship between models.
 See <a href='./patio_plugins_AssociationPlugin.html#.associate'> patio.plugins.AssociationPlugin.associate</a> for options.</p>
@@ -1450,7 +1450,7 @@ function (name,options,filter){
    </h3>
 
 <hr/>
-<em>Defined plugins/association.js</em>
+<em>Defined model/plugins/association.js</em>
 
 <p><p>Creates a MANY_TO_ONE association.
 See <a href='./patio_plugins_AssociationPlugin.html#.oneToMany'> patio.plugins.AssociationPlugin.oneToMany</a>.
@@ -1501,7 +1501,7 @@ function (name,options,filter){
    </h3>
 
 <hr/>
-<em>Defined plugins/association.js</em>
+<em>Defined model/plugins/association.js</em>
 
 <p><p>Creates a ONE_TO_MANY association.
 See <a href='./patio_plugins_AssociationPlugin.html#.associate'> patio.plugins.AssociationPlugin.associate</a> for options.</p>
@@ -1575,7 +1575,7 @@ function (name,options,filter){
    </h3>
 
 <hr/>
-<em>Defined plugins/association.js</em>
+<em>Defined model/plugins/association.js</em>
 
 <p><p>Creates a ONE_TO_ONE relationship between models.
 See <a href='./patio_plugins_AssociationPlugin.html#.associate'> patio.plugins.AssociationPlugin.associate</a> for options.</p>
@@ -1646,7 +1646,7 @@ function (name,options,filter){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Remove(delete) models. This can be used to do a mass delete of models.</p>
 </p>
@@ -1738,7 +1738,7 @@ function (q,options){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Similar to remove but takes an id or an array for a composite key.</p>
 </p>
@@ -1781,7 +1781,7 @@ removing the model.</p>
 function (id,options){
    var self = this;
    return this._checkTransaction(options, function () {
-       return self.findById(id).chain(function (model) {
+       return self.findById(id).then(function (model) {
            return model ? model.remove(options) : null;
        });
    });
@@ -1809,7 +1809,7 @@ function (id,options){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Save either a new model or list of models to the database.</p>
 </p>
@@ -1854,7 +1854,7 @@ Student.save([
          gpa:1.9,
          classYear:&quot;Freshman&quot;
      }
-]).chain(function(users){
+]).then(function(users){
     //work with the users
 });
 
@@ -1905,7 +1905,7 @@ function (items,options){
                }
                return o.save(null, options);
            })
-           .chain(function (res) {
+           .then(function (res) {
                return isArr ? res : res[0];
            });
    });
@@ -1933,7 +1933,7 @@ function (items,options){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Update multiple rows with a set of values.</p>
 </p>
@@ -1999,7 +1999,9 @@ function (vals,/*?object*/query,options){
        if (!isUndefined(query)) {
            dataset = dataset.filter(query);
        }
-       return dataset.update(vals);
+       return dataset.map(function(row){
+           return row.update(vals);
+       }, 1);
    });
            
 }
@@ -2023,7 +2025,7 @@ function (vals,/*?object*/query,options){
    </h3>
 
 <hr/>
-<em>Defined model.js</em>
+<em>Defined model/index.js</em>
 
 <p></p>
 
@@ -2066,7 +2068,7 @@ function (opts){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Forces the reload of the data for a particular model instance.  The Promise returned is resolved with the
 model.</p>
@@ -2074,7 +2076,7 @@ model.</p>
 
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
-myModel.reload().chain(function(model){
+myModel.reload().then(function(model){
    //model === myModel
 });
         </pre>
@@ -2097,12 +2099,12 @@ myModel.reload().chain(function(model){
 function (){
    if (!this.__isNew) {
        var self = this;
-       return this.dataset.naked().filter(this._getPrimaryKeyQuery()).one().chain(function (values) {
+       return this.dataset.naked().filter(this._getPrimaryKeyQuery()).one().then(function (values) {
            self.__setFromDb(values, true);
            return self;
        });
    } else {
-       return when(this);
+       return Promise.resolve(this);
    }
            
 }
@@ -2124,7 +2126,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p></p>
 
@@ -2145,7 +2147,7 @@ function (){
 function (options){
    options || (options = {});
    var reload = isBoolean(options.reload) ? options.reload : this._static.reloadOnSave;
-   return reload ? this.__reload() : when(this);
+   return reload ? this.__reload() : Promise.resolve(this);
            
 }
     </pre>
@@ -2166,7 +2168,7 @@ function (options){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p></p>
 
@@ -2188,7 +2190,7 @@ function (options){
    options = options || {};
    options || (options = {});
    var reload = isBoolean(options.reload) ? options.reload : this._static.reloadOnUpdate;
-   return reload ? this.__reload() : when(this);
+   return reload ? this.__reload() : Promise.resolve(this);
            
 }
     </pre>
@@ -2211,7 +2213,7 @@ function (options){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>This method removes the instance of the model. If the model <a href='./patio_Model.html#isNew'> patio.Model#isNew</a> then the promise is
 resolved with a 0 indicating no rows were affected. Otherwise the model is removed, primary keys are cleared
@@ -2220,13 +2222,13 @@ and the model&#39;s isNew flag is set to true.</p>
 
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
-myModel.remove().chain(function(){
+myModel.remove().then(function(){
     //model is deleted
     assert.isTrue(myModel.isNew);
 });
 
 //dont use a transaction to remove this model
-myModel.remove({transaction : false}).chain(function(){
+myModel.remove({transaction : false}).then(function(){
     //model is deleted
     assert.isTrue(myModel.isNew);
 });
@@ -2267,7 +2269,7 @@ function (options){
                return self.__callHooks(&quot;remove&quot;, [options], function () {
                    return self._remove(options);
                })
-                   .chain(function () {
+                   .then(function () {
                        self._clearPrimaryKeys();
                        self.__isNew = true;
                        if (self._static.emitOnRemove) {
@@ -2275,12 +2277,12 @@ function (options){
                            self._static.emit(&quot;remove&quot;, this);
                        }
                    })
-                   .chain(function () {
+                   .then(function () {
                        return self;
                    });
            });
        } else {
-           return when(0);
+           return Promise.resolve(0);
        }
    } else {
        throw new ModelError(&quot;Model &quot; + this.tableName + &quot; has not been synced&quot;);
@@ -2307,7 +2309,7 @@ function (options){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Saves a model. This action checks if the model is new and values have changed.
 If the model is not new then the <a href='./patio_Model.html#update'> patio.Model#update</a> action is called.</p>
@@ -2319,7 +2321,7 @@ someModel.save({
      myVal1 : "newValue1",
      myVal2 : "newValue2",
      myVal3 : "newValue3"
-}).chain(function(){
+}).then(function(){
      //do something
 }, errorHandler);
 
@@ -2335,7 +2337,7 @@ someModel.myVal2 = "newValue2";
 someModel.myVal3 = "newValue3";
 
 //update model with current values
-someModel.save().chain(function(){
+someModel.save().then(function(){
     //do something
 });
 
@@ -2405,16 +2407,16 @@ function (vals,options){
                return self.__callHooks(&quot;save&quot;, [options], function () {
                    return self._save(options);
                })
-                   .chain(function () {
+                   .then(function () {
                        return self._saveReload(options);
                    })
-                   .chain(function () {
+                   .then(function () {
                        if (self._static.emitOnSave) {
                            self.emit(&quot;save&quot;, self);
                            self._static.emit(&quot;save&quot;, self);
                        }
                    })
-                   .chain(function () {
+                   .then(function () {
                        return self;
                    });
            });
@@ -2446,7 +2448,7 @@ function (vals,options){
    </h3>
 
 <hr/>
-<em>Defined model.js</em>
+<em>Defined model/index.js</em>
 
 <p><p>Set multiple values at once. Useful if you have a hash of properties that you want to set.</p>
 <p><b>NOTE:</b> This method will use the static restrictedColumns property of the model.</p>
@@ -2508,7 +2510,7 @@ function (values){
    </h3>
 
 <hr/>
-<em>Defined model.js</em>
+<em>Defined model/index.js</em>
 
 <p><p>Convert this model to JSON, containing column, value pairs.</p>
 </p>
@@ -2552,7 +2554,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined model.js</em>
+<em>Defined model/index.js</em>
 
 <p><p>Convert this model to an object, containing column, value pairs.</p>
 </p>
@@ -2596,7 +2598,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined model.js</em>
+<em>Defined model/index.js</em>
 
 <p><p>Convert this model to a string, containing column, value pairs.</p>
 </p>
@@ -2640,7 +2642,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined plugins/query.js</em>
+<em>Defined model/plugins/query.js</em>
 
 <p><p>Updates a model. This action checks if the model is not new and values have changed.
 If the model is new then the <a href='./patio_Model.html#save'> patio.Model#save</a> action is called.</p>
@@ -2652,7 +2654,7 @@ someModel.update({
      myVal1 : "newValue1",
      myVal2 : "newValue2",
      myVal3 : "newValue3"
-}).chain(function(){
+}).then(function(){
      //do something
 }, errorHandler);
 
@@ -2668,7 +2670,7 @@ someModel.myVal2 = "newValue2";
 someModel.myVal3 = "newValue3";
 
 //update model with current values
-someModel.update().chain(function(){
+someModel.update().then(function(){
     //do something
 });
 
@@ -2738,23 +2740,23 @@ function (vals,options){
                return self.__callHooks(&quot;update&quot;, [options], function () {
                    return saveChange ? self._update(options) : null;
                })
-                   .chain(function () {
+                   .then(function () {
                        return self._updateReload(options);
                    })
-                   .chain(function () {
+                   .then(function () {
                        if (self._static.emitOnUpdate) {
                            self.emit(&quot;update&quot;, self);
                            self._static.emit(&quot;update&quot;, self);
                        }
                    })
-                   .chain(function () {
+                   .then(function () {
                        return self;
                    });
            });
        } else if (this.__isNew &amp;&amp; this.__isChanged) {
            return this.save(vals, options);
        } else {
-           return when(this);
+           return Promise.resolve(this);
        }
    } else {
        throw new ModelError(&quot;Model &quot; + this.tableName + &quot; has not been synced&quot;);
@@ -2781,7 +2783,7 @@ function (vals,options){
    </h3>
 
 <hr/>
-<em>Defined model.js</em>
+<em>Defined model/index.js</em>
 
 <p><p>Convert this model to a string, containing column, value pairs.</p>
 </p>

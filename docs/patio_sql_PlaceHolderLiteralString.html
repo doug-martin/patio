@@ -450,7 +450,7 @@ literalization.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
     
@@ -463,7 +463,7 @@ function (str,args,parens){
    this.__str = str;
    this.__args = isArray(args) &amp;&amp; args.length === 1 &amp;&amp; isHash((v = args[0])) ? v : args;
    this.__parens = parens;
-           
+               
 }
             </pre>
       
@@ -486,7 +486,7 @@ function (str,args,parens){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the <a href='./patio_sql_PlaceHolderLiteralString.html#'> patio.sql.PlaceHolderLiteralString</a> to a string.</p>
 </p>
@@ -516,10 +516,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.placeholderLiteralStringSql(this);
-           
+               
 }
     </pre>
     

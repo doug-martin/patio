@@ -446,14 +446,14 @@ Its just documented for reference.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined associations/oneToMany.js</em>
+    <em>Defined model/associations/oneToMany.js</em>
     
     
     
         
             <em>Source</em>
             <pre class="prettyprint linenums lang-js">
-define(_Association, {
+_Association.extend({
             </pre>
       
     
@@ -473,7 +473,7 @@ define(_Association, {
    </h3>
 
 <hr/>
-<em>Defined associations/oneToMany.js</em>
+<em>Defined model/associations/oneToMany.js</em>
 
 <p><p>Middleware called before a model is removed.
 </br>
@@ -501,7 +501,7 @@ define(_Association, {
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (next,model){
-   this.removeAllItems(model).classic(next);
+   nodeify(this.removeAllItems(model), next);
            
 }
     </pre>

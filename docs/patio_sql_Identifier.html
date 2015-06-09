@@ -449,7 +449,7 @@ split, or for creating an implicit identifier without using a String.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
     
@@ -458,7 +458,7 @@ split, or for creating an implicit identifier without using a String.</p>
             <pre class="prettyprint linenums lang-js">
 function (value){
    this.__value = value;
-           
+               
 }
             </pre>
       
@@ -481,7 +481,7 @@ function (value){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the <a href='./patio_sql_Identifier.html#'> patio.sql.Identifier</a> to a string.</p>
 </p>
@@ -511,10 +511,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.quoteIdentifier(this);
-           
+               
 }
     </pre>
     

@@ -445,7 +445,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
     
@@ -454,7 +454,7 @@
             <pre class="prettyprint linenums lang-js">
 function (constant){
    this.__constant = constant;
-           
+               
 }
             </pre>
       
@@ -477,7 +477,7 @@ function (constant){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the <a href='./patio_sql_Constant.html#'> patio.sql.Constant</a> to a string.</p>
 </p>
@@ -507,10 +507,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.constantSql(this.__constant);
-           
+               
 }
     </pre>
     

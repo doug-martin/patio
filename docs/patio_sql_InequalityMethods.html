@@ -509,7 +509,7 @@ sql.a.eq(&quot;b&quot;) //=&gt; a = &quot;b&quot;
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/methods.js</em>
     
     
     
@@ -536,7 +536,7 @@ define({
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p></p>
 
@@ -570,8 +570,8 @@ sql.x.between([1,2]).invert() =&gt; //=&gt; WHERE ((x &lt; 1) OR (x &gt; 10))
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (items){
-   return new BooleanExpression(&quot;AND&quot;, new BooleanExpression(&quot;gte&quot;, this, items[0]), new BooleanExpression(&quot;lte&quot;, this, items[1]));
-           
+   return new sql.BooleanExpression(&quot;AND&quot;, new sql.BooleanExpression(&quot;gte&quot;, this, items[0]), new sql.BooleanExpression(&quot;lte&quot;, this, items[1]));
+               
 }
     </pre>
     
@@ -593,7 +593,7 @@ function (items){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p></p>
 
@@ -637,7 +637,7 @@ inequalityMethod(&quot;eq&quot;)
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p></p>
 
@@ -681,7 +681,7 @@ inequalityMethod(&quot;gt&quot;)
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p></p>
 
@@ -725,7 +725,7 @@ inequalityMethod(&quot;gte&quot;)
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p></p>
 
@@ -769,7 +769,7 @@ inequalityMethod(&quot;lt&quot;)
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p></p>
 

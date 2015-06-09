@@ -431,7 +431,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/methods.js</em>
     
     
     
@@ -460,7 +460,7 @@ define(null, {
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p> Create an SQL alias <a href='./patio_sql_AliasedExpression.html#'> patio.sql.AliasedExpression</a> of the receiving column or expression
  to the given alias.</p>
@@ -496,8 +496,8 @@ sql.identifier(&quot;column&quot;).as(&quot;alias&quot;);
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (alias){
-   return new AliasedExpression(this, alias);
-           
+   return new sql.AliasedExpression(this, alias);
+               
 }
     </pre>
     

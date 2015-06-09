@@ -17,7 +17,7 @@ var it = require('it'),
     hitch = comb.hitch;
 
 
-it.describe("Dataset actions", function (it) {
+it.describe("patio.Dataset actions", function (it) {
 
     patio.identifierInputMethod = null;
     patio.identifierOutputMethod = null;
@@ -2466,4 +2466,4 @@ it.describe("Dataset actions", function (it) {
     it.afterAll(function () {
         return patio.disconnect();
     });
-}).as(module);
+});

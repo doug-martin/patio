@@ -446,7 +446,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
     
@@ -455,10 +455,10 @@
             <pre class="prettyprint linenums lang-js">
 function (f){
    var args = argsToArray(arguments).slice(1);
-   this.__f = isInstanceOf(f, Identifier) ? f.value : f, this.__args = args.map(function (a) {
+   this.__f = isInstanceOf(f, sql.Identifier) ? f.value : f, this.__args = args.map(function (a) {
        return isString(a) ? sql.stringToIdentifier(a) : a;
    });
-           
+               
 }
             </pre>
       
@@ -481,7 +481,7 @@ function (f){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the <a href='./patio_sql_SQLFunction.html#'> patio.sql.SQLFunction</a> to a string.</p>
 </p>
@@ -511,10 +511,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.functionSql(this);
-           
+               
 }
     </pre>
     

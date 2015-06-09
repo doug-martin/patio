@@ -439,20 +439,6 @@
 
                             </a></li>
                             
-                            <li><a href="./patio.html#connectAndExecute">
-                                
-                                
-                                <span class="label label-label">F</span>
-                                
-                                
-                                
-                                <span class="label label-success">P</span>
-                                
-                                
-                                connectAndExecute
-
-                            </a></li>
-                            
                             <li><a href="./patio.html#createConnection">
                                 
                                 
@@ -675,7 +661,7 @@ patio.createModel(&quot;my_table&quot;);
     
         <a name="staticProperties"></a>
         <em>Static Properties</em>
-        <table class='table table-bordered table-striped'><tr><td>Property</td><td>Type</td><td>Default Value</td><td>Description</td></tr><tr><td>patio.Time</td><td></td><td></td><td><p>Mixin that provides time formatting/coversion functions.</p>
+        <table class='table table-bordered table-striped'><tr><td>Property</td><td>Type</td><td>Default Value</td><td>Description</td></tr><tr><td><em>patio.Time</em></td><td>property</td><td><code>define(null, {</code></td><td><p>Mixin that provides time formatting/coversion functions.</p>
 </td><tr></table>
     
     
@@ -837,16 +823,14 @@ var Flight = patio.addModel(&quot;flight&quot;, {
     <em>Arguments</em>
     <ul>
     
-        <li> <em>table</em>  : <p>the table to use as the base for the model.</p>
-</li>
-    
-        <li> <em>supers</em>  : </li>
-    
-        <li> <em>proto?</em>  : <p>an object to be used as the prototype for the model. See
-<a href="http://c2fo.github.com/comb/symbols/comb.html#.define">comb.define</a>.</p>
+        <li> <em>table</em> <code>String|patio.Dataset</code> : <p>the table to use as the base for the model.</p>
 </li>
     
         <li> <em>Parent</em> <code>patio.Model|patio.Model[]</code> : <p>models of this model.                  See <a href='./patio_plugins_ClassTableInheritancePlugin.html#'> patio.plugins.ClassTableInheritancePlugin</a>.</p>
+</li>
+    
+        <li> <em>proto?</em> <code>Object</code> : <p>an object to be used as the prototype for the model. See
+<a href="http://c2fo.github.com/comb/symbols/comb.html#.define">comb.define</a>.</p>
 </li>
     
         <li> <em>Object[]?</em>  : <p>[proto.plugins] this can be used to specify additional plugins to use such as.</p>
@@ -863,7 +847,7 @@ var Flight = patio.addModel(&quot;flight&quot;, {
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (table,supers,proto){
+function (){
    return model.create.apply(model, arguments);
            
 }
@@ -978,86 +962,6 @@ function (){
 
 
   
-    <a name="connectAndExecute"></a>
-    <h3>
-        connectAndExecute
-        
-        
-        <span class="label label-label">Function</span>
-        
-        
-                
-         <span class="label label-success">Public</span>
-                
-        
-   </h3>
-
-<hr/>
-<em>Defined index.js</em>
-
-<p><p>This method allows one to connect to a database and immediately execute code.
-For connection options </p>
-</p>
-
-    <em>Example</em>
-        <pre class="prettyprint linenums lang-js">
-var DB;
-var CONNECT_STRING = &quot;dummyDB://test:testpass@localhost/dummySchema&quot;;
-var connectPromise = patio.connectAndExecute(CONNECT_STRING, function (db) {
-     db.dropTable(&quot;test&quot;);
-     db.createTable(&quot;test&quot;, function () {
-         this.primaryKey(&quot;id&quot;);
-         this.name(String);
-         this.age(Number);
-     });
-});
-
-connectPromise.chain(function (db) {
-     //do more stuff!
- });
-        </pre>
-
-
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>options</em>  : </li>
-    
-        <li> <em>cb</em>  : <p>the function to callback once connected.</p>
-</li>
-    
-     </ul>
-
-
-    <em>Returns</em>
-    <ul>
-    
-        <li> <code>comb.Promise</code> <p>a promise that is resolved once the database execution has finished.</p>
-</li>
-    
-    </ul>
-
-
-
-    
-    <em>Source</em>
-    <pre class="prettyprint linenums lang-js">
-function (options,cb){
-   if (!isFunction(cb)) {
-       throw new PatioError(&quot;callback must be a function&quot;);
-   }
-   var db = this.createConnection.apply(this, arguments);
-   return executeInOrder(db, patio, function (db, patio) {
-       cb(db, patio);
-       return db;
-   });
-           
-}
-    </pre>
-    
-
-
-  
     <a name="createConnection"></a>
     <h3>
         createConnection
@@ -1108,7 +1012,7 @@ var DB = patio.createConnection(CONNECT_STRING);
 DB.createTable(&quot;myTable&quot;, function(){
    this.name(&quot;text&quot;);
    this.value(&quot;integer&quot;);
-}).chain(function(){
+}).then(function(){
     //tables created!!!
 });
         </pre>
@@ -1201,15 +1105,14 @@ function (options){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   var ret = Database.disconnect(cb), self = this;
-   ret.classic(function (err) {
-       if (err) {
-           self.emit(&quot;error&quot;, err);
-       } else {
+   var self = this;
+   return Database.disconnect(cb)
+       .then(function () {
            self.emit(&quot;disconnect&quot;);
-       }
-   });
-   return ret.promise();
+       }, function (err) {
+           self.emit(&quot;error&quot;, err);
+           throw err;
+       });
            
 }
     </pre>
@@ -1257,7 +1160,7 @@ var Test1 = patio.addModel(DB1.from("test");
 var Test2 = patio.addModel(DB2.from("test");
 
 //sync the models
-patio.syncModels().chain(function(){
+patio.syncModels().then(function(){
      //now you can use them
      var test1Model = new Test1();
      var test2Model = new Test2();
@@ -1617,7 +1520,7 @@ In order to run a migraton all one has to do is call patio.migrate(DB, directory
 
 <pre class="code">
  var DB = patio.connect(&quot;my://connection/string&quot;);
- patio.migrate(DB, __dirname + &quot;/migrations&quot;).chain(function(){
+ patio.migrate(DB, __dirname + &quot;/migrations&quot;).then(function(){
      console.log(&quot;migrations finished&quot;);
  });
 </pre>
@@ -1730,7 +1633,7 @@ var User = patio.addModel(&quot;user&quot;);
 var Blog = patio.addModel(&quot;blog&quot;);
 
 //using promise api
-patio.syncModels().chain(function(){
+patio.syncModels().then(function(){
     var user = new User();
 }, function(error){
    console.log(err);

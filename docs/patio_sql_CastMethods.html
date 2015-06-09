@@ -459,7 +459,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/methods.js</em>
     
     
     
@@ -488,7 +488,7 @@ define({
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Cast the reciever to the given SQL type.</p>
 </p>
@@ -522,8 +522,8 @@ sql.a.cast(String) //=&gt; CAST(a AS varchar(255))
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (type){
-   return new Cast(this, type);
-           
+   return new sql.Cast(this, type);
+               
 }
     </pre>
     
@@ -545,7 +545,7 @@ function (type){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Cast the reciever to the given SQL type (or the database&#39;s default Number type if none given.</p>
 </p>
@@ -581,7 +581,7 @@ sql.a.castNumeric(&quot;double&quot;) //=&gt; CAST(a AS double precision)
     <pre class="prettyprint linenums lang-js">
 function (type){
    return this.cast(type || &quot;integer&quot;).sqlNumber;
-           
+               
 }
     </pre>
     
@@ -603,7 +603,7 @@ function (type){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Cast the reciever to the given SQL type (or the database&#39;s default String type if none given),
 and return the result as a <a href='./patio_sql_StringExpression.html#'> patio.sql.StringExpression</a>.</p>
@@ -640,7 +640,7 @@ sql.a.castString() //=&gt; CAST(a AS varchar(255))
     <pre class="prettyprint linenums lang-js">
 function (type){
    return this.cast(type || String).sqlString;
-           
+               
 }
     </pre>
     

@@ -603,7 +603,7 @@ function (){
        def = defQueue.dequeue();
        var conn = this.getObject();
        if (conn) {
-           def.callback(conn);
+           def.resolve(conn);
        } else {
            throw new Error(&quot;UNEXPECTED ERROR&quot;);
        }
@@ -741,8 +741,8 @@ function (){
     <pre class="prettyprint linenums lang-js">
 function (){
    this.__ending = true;
-   var conn, fQueue = this.__freeObjects, count = this.count, ps = [];
-   while ((conn = this.__freeObjects.dequeue()) !== undefined) {
+   var conn, fQueue = this.__freeObjects, ps = [];
+   while ((conn = fQueue.dequeue()) !== undefined) {
        ps.push(this.closeConnection(conn));
    }
    var inUse = this.__inUseObjects;
@@ -750,7 +750,7 @@ function (){
        ps.push(this.closeConnection(inUse[i]));
    }
    this.__inUseObjects.length = 0;
-   return new PromiseList(ps).promise();
+   return Promise.all(ps);
            
 }
     </pre>
@@ -794,23 +794,26 @@ function (){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (){
-   var ret = new Promise(), conn;
-   if (this.count &gt; this.__maxObjects) {
-       this.__deferredQueue.enqueue(ret);
-   } else {
-       //todo override getObject to make async so creating a connetion can execute setup sql
-       conn = this.getObject();
-       if (!conn) {
-           //we need to deffer it
-           this.__deferredQueue.enqueue(ret);
+   var self = this;
+   return new Promise(function (resolve, reject) {
+       var conn,
+           ret = {resolve: resolve, reject: reject};
+       if (self.count &gt; self.__maxObjects) {
+           self.__deferredQueue.enqueue(ret);
        } else {
-           ret.callback(conn);
+           //todo override getObject to make async so creating a connetion can execute setup sql
+           conn = self.getObject();
+           if (!conn) {
+               //we need to deffer it
+               self.__deferredQueue.enqueue(ret);
+           } else {
+               resolve(conn);
+           }
        }
-   }
-   if (this.count &gt; this.__maxObjects &amp;&amp; !conn) {
-       ret.errback(new Error(&quot;Unexpected ConnectionPool error&quot;));
-   }
-   return ret.promise();
+       if (self.count &gt; self.__maxObjects &amp;&amp; !conn) {
+           reject(new Error(&quot;Unexpected ConnectionPool error&quot;));
+       }
+   });
            
 }
     </pre>
@@ -954,7 +957,7 @@ pools to do any calls to reset a connection if it needs to be done.</p>
     <pre class="prettyprint linenums lang-js">
 function (obj){
    var self = this;
-   this.validate(obj).chain(function (valid) {
+   this.validate(obj).then(function (valid) {
        var index;
        if (self.count &amp;lt;= self.__maxObjects &amp;&amp; valid &amp;&amp; (index = self.__inUseObjects.indexOf(obj)) &gt; -1) {
            self.__inUseObjects.splice(index, 1);
@@ -1006,7 +1009,7 @@ function (obj){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>called back with a valid or invalid state.</p>
+        <li> <code>Promise</code> <p>called back with a valid or invalid state.</p>
 </li>
     
     </ul>
@@ -1018,9 +1021,7 @@ function (obj){
     <pre class="prettyprint linenums lang-js">
 function (conn){
    if (!this.__validateConnectionCB) {
-       var ret = new Promise();
-       ret.callback(true);
-       return ret;
+       return Promise.resolve(true);
    } else {
        return this.__validateConnectionCB(conn);
    }

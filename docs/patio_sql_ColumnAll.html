@@ -445,7 +445,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
     
@@ -454,7 +454,7 @@
             <pre class="prettyprint linenums lang-js">
 function (table){
    this.table = table;
-           
+               
 }
             </pre>
       
@@ -477,7 +477,7 @@ function (table){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the ColumnAll expression to a string</p>
 </p>
@@ -507,10 +507,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.columnAllSql(this);
-           
+               
 }
     </pre>
     

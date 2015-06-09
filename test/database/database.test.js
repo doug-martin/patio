@@ -10,7 +10,7 @@ var it = require('it'),
     comb = require("comb"),
     hitch = comb.hitch;
 
-it.describe("Database", function (it) {
+it.describe("patio.Database", function (it) {
 
     var DummyDataset = comb.define(patio.Dataset, {
         instance: {

@@ -490,14 +490,8 @@ var Employee = (exports.Employee = patio.addModel("employee", {
 All sub classes should just inherit their super class
 <pre class='prettyprint linenums lang-js'>
 
-var Staff = (exports.Staff =  patio.addModel("staff", Employee, {
-     static:{
-         init:function () {
-             this._super(arguments);
-             this.manyToOne("manager", {key : "managerId", fetchType : this.fetchType.EAGER});
-         }
-     }
-}));
+var Staff = (exports.Staff =  patio.addModel("staff", Employee)
+     .manyToOne("manager", {key : "managerId", fetchType : patio.fetchTypes.EAGER}));
 var Manager = (exports.Manager = patio.addModel("manager", Employee, {
      static:{
          init:function () {
@@ -524,8 +518,8 @@ comb.when(
     new Staff({name:"Greg"}).save(),
     new Manager({name:"Jane"}).save(),
     new Executive({name:"Sue"}).save()
-).chain(function(){
-     return Employee.all().chain(function(emps){
+).then(function(){
+     return Employee.all().then(function(emps){
          var bob = emps[0], greg = emps[1], jane = emps[2], sue = emps[3];
          console.log(bob instanceof Employee); //true
          console.log(greg instanceof Employee);  //true
@@ -549,9 +543,16 @@ comb.when(
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined plugins/inheritance.js</em>
+    <em>Defined model/plugins/inheritance.js</em>
     
     
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+comb.define({
+            </pre>
+      
     
 
   
@@ -572,7 +573,7 @@ comb.when(
    </h3>
 
 <hr/>
-<em>Defined plugins/inheritance.js</em>
+<em>Defined model/plugins/inheritance.js</em>
 
 <p><p>Configures the plugins with the provided options. <b>Note:</b> This should only be called in the
 initial parent class.</p>
@@ -588,7 +589,7 @@ initial parent class.</p>
         <li> <em>[opts.key= <code>"key"</code>]</em> <code>String</code> : <p>the column in the base table that contains the name of the subclass.</p>
 </li>
     
-        <li> <em>opts.keyCb?</em> <code>Funciton</code> : <p>A callback to invoke on on the key returned from the database. This is useful
+        <li> <em>opts.keyCb?</em> <code>Function</code> : <p>A callback to invoke on on the key returned from the database. This is useful
 if you are working with other orms that save the keys differently.</p>
 </li>
     
@@ -627,7 +628,7 @@ function (opts){
    </h3>
 
 <hr/>
-<em>Defined plugins/inheritance.js</em>
+<em>Defined model/plugins/inheritance.js</em>
 
 <p><p><b>Not typically called by user code</b>. Sets up subclass inheritance.</p>
 </p>

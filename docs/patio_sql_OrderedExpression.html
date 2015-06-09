@@ -483,7 +483,7 @@
         <em>Static Properties</em>
         <table class='table table-bordered table-striped'><tr><td>Property</td><td>Type</td><td>Default Value</td><td>Description</td></tr><tr><td><em>INVERT_NULLS</em></td><td>Object</td><td><code>
 {first:"last", last:"first"}
-         </code></td><td><p>Hash that contains the inversions for &quot;first&quot; and &quot;last&quot;.</p>
+             </code></td><td><p>Hash that contains the inversions for &quot;first&quot; and &quot;last&quot;.</p>
 </td><tr></table>
     
     
@@ -499,7 +499,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/expressions.js</em>
     
     
     
@@ -513,7 +513,7 @@ function (expression,descending,opts){
    this.__descending = descending;
    var nulls = isString(opts) ? opts : opts.nulls;
    this.__nulls = isString(nulls) ? nulls.toLowerCase() : null;
-           
+               
 }
             </pre>
       
@@ -536,7 +536,7 @@ function (expression,descending,opts){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p></p>
 
@@ -556,8 +556,8 @@ function (expression,descending,opts){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (){
-   return new OrderedExpression(this.__expression, false, {nulls: this.__nulls});
-           
+   return new sql.OrderedExpression(this.__expression, false, {nulls: this.__nulls});
+               
 }
     </pre>
     
@@ -579,7 +579,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p></p>
 
@@ -599,8 +599,8 @@ function (){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (){
-   return new OrderedExpression(this.__expression, true, {nulls: this.__nulls});
-           
+   return new sql.OrderedExpression(this.__expression, true, {nulls: this.__nulls});
+               
 }
     </pre>
     
@@ -622,7 +622,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>* </p>
 </p>
@@ -643,8 +643,8 @@ function (){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (){
-   return new OrderedExpression(this.__expression, !this.__descending, {nulls: this._static.INVERT_NULLS[this.__nulls] || this.__nulls});
-           
+   return new sql.OrderedExpression(this.__expression, !this.__descending, {nulls: this._static.INVERT_NULLS[this.__nulls] || this.__nulls});
+               
 }
     </pre>
     
@@ -666,7 +666,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Converts the <a href='./patio_sql_OrderedExpression.html#'> patio.sql.OrderedExpression</a> to a string.</p>
 </p>
@@ -696,10 +696,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.orderedExpressionSql(this);
-           
+               
 }
     </pre>
     

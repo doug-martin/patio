@@ -735,7 +735,7 @@ function (db,block){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (columns,table,opts){
-   this.operations.push(merge({op:&quot;addConstraint&quot;, type:&quot;foreignKey&quot;, columns:columns, table:table}, opts));
+   this.operations.push(merge({op: &quot;addConstraint&quot;, type: &quot;foreignKey&quot;, columns: columns, table: table}, opts));
            
 }
     </pre>
@@ -777,7 +777,7 @@ function (columns,table,opts){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
-   this.operations.push(merge({op:&quot;addConstraint&quot;, type:&quot;primaryKey&quot;, columns:columns}, opts));
+   this.operations.push(merge({op: &quot;addConstraint&quot;, type: &quot;primaryKey&quot;, columns: columns}, opts));
            
 }
     </pre>
@@ -834,7 +834,7 @@ DB.alterTable(&quot;test&quot;, function(){
     <pre class="prettyprint linenums lang-js">
 function (name,type,opts){
    opts = opts || {};
-   this.operations.push(merge({op:&quot;addColumn&quot;, name:name, type:type}, opts));
+   this.operations.push(merge({op: &quot;addColumn&quot;, name: name, type: type}, opts));
            
 }
     </pre>
@@ -889,7 +889,7 @@ DB.alterTable(&quot;test&quot;, function(){
 function (name){
    var args = argsToArray(arguments).slice(1);
    var block = isFunction(args[args.length - 1]) ? args[args.length - 1]() : null;
-   this.operations.push({op:&quot;addConstraint&quot;, name:name, type:&quot;check&quot;, check:block || args});
+   this.operations.push({op: &quot;addConstraint&quot;, name: name, type: &quot;check&quot;, check: block || args});
            
 }
     </pre>
@@ -957,7 +957,7 @@ function (name,table,opts){
    if (isArray(name)) {
        return this.__addCompositeForeignKey(name, table, opts);
    } else {
-       return this.addColumn(name, &quot;integer&quot;, merge({table:table}, opts));
+       return this.addColumn(name, &quot;integer&quot;, merge({table: table}, opts));
    }
            
 }
@@ -1005,7 +1005,7 @@ See @{link patio.SchemaGenerator#index} for available options.</p>
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
    opts = opts || {};
-   return this.addIndex(columns, merge({type:&quot;fullText&quot;}, opts));
+   return this.addIndex(columns, merge({type: &quot;fullText&quot;}, opts));
            
 }
     </pre>
@@ -1060,7 +1060,7 @@ DB.alterTable(&quot;table&quot;, function(){
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
    opts = opts || {};
-   this.operations.push(merge({op:&quot;addIndex&quot;, columns:toArray(columns)}, opts));
+   this.operations.push(merge({op: &quot;addIndex&quot;, columns: toArray(columns)}, opts));
            
 }
     </pre>
@@ -1171,7 +1171,7 @@ See <a href='./patio_SchemaGenerator.html#index'> patio.SchemaGenerator#index</a
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
    opts = opts || {};
-   this.addIndex(columns, merge({}, {type:&quot;spatial&quot;}, opts));
+   this.addIndex(columns, merge({}, {type: &quot;spatial&quot;}, opts));
            
 }
     </pre>
@@ -1228,7 +1228,7 @@ DB.alterTable(&quot;test&quot;, function(){
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
    opts = opts || {};
-   this.operations.push(merge({op:&quot;addConstraint&quot;, type:&quot;unique&quot;, columns:toArray(columns)}, opts));
+   this.operations.push(merge({op: &quot;addConstraint&quot;, type: &quot;unique&quot;, columns: toArray(columns)}, opts));
            
 }
     </pre>
@@ -1280,7 +1280,7 @@ DB.alterTable(&quot;albums&quot;, function(){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (name){
-   this.operations.push({op:&quot;dropColumn&quot;, name:name});
+   this.operations.push({op: &quot;dropColumn&quot;, name: name});
            
 }
     </pre>
@@ -1332,7 +1332,7 @@ DB.alterTable(&quot;test&quot;, function(){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (name){
-   this.operations.push({op:&quot;dropConstraint&quot;, name:name});
+   this.operations.push({op: &quot;dropConstraint&quot;, name: name});
            
 }
     </pre>
@@ -1390,7 +1390,7 @@ DB.alterTable(&quot;albums&quot;, function(){
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
    opts = opts || {};
-   this.operations.push(merge({op:&quot;dropIndex&quot;, columns:toArray(columns)}, opts));
+   this.operations.push(merge({op: &quot;dropIndex&quot;, columns: toArray(columns)}, opts));
            
 }
     </pre>
@@ -1446,7 +1446,7 @@ DB.alterTable(&quot;artist&quot;, function(){
     <pre class="prettyprint linenums lang-js">
 function (name,newName,opts){
    opts = opts || {};
-   this.operations.push(merge({op:&quot;renameColumn&quot;, name:name, newName:newName}, opts));
+   this.operations.push(merge({op: &quot;renameColumn&quot;, name: name, newName: newName}, opts));
            
 }
     </pre>
@@ -1499,7 +1499,7 @@ DB.alterTable(&quot;artist&quot;, function(){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (name,allowNull){
-   this.operations.push({op:&quot;setColumnNull&quot;, name:name, &quot;null&quot;:allowNull});
+   this.operations.push({op: &quot;setColumnNull&quot;, name: name, &quot;null&quot;: allowNull});
            
 }
     </pre>
@@ -1552,7 +1552,7 @@ DB.alterTable(&quot;artist&quot;, function(){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (name,def){
-   this.operations.push({op:&quot;setColumnDefault&quot;, name:name, &quot;default&quot;:def});
+   this.operations.push({op: &quot;setColumnDefault&quot;, name: name, &quot;default&quot;: def});
            
 }
     </pre>
@@ -1608,7 +1608,7 @@ DB.alterTable(&quot;artist&quot;, function(){
     <pre class="prettyprint linenums lang-js">
 function (name,type,opts){
    opts = opts || {};
-   this.operations.push(merge({op:&quot;setColumnType&quot;, name:name, type:type}, opts));
+   this.operations.push(merge({op: &quot;setColumnType&quot;, name: name, type: type}, opts));
            
 }
     </pre>

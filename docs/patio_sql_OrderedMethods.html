@@ -453,7 +453,7 @@ sql.price.desc({nulls:&quot;first&quot;}); //=&gt; price DESC NULLS FIRST
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/methods.js</em>
     
     
     
@@ -482,7 +482,7 @@ define({
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Mark the receiving SQL column as sorting in an ascending fashion (generally a no-op).</p>
 </p>
@@ -520,8 +520,8 @@ sql.name.asc({nulls:&quot;last&quot;}); //=&gt; name ASC NULLS LAST
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (options){
-   return new OrderedExpression(this, false, options);
-           
+   return new sql.OrderedExpression(this, false, options);
+               
 }
     </pre>
     
@@ -543,7 +543,7 @@ function (options){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Mark the receiving SQL column as sorting in a descending fashion.</p>
 </p>
@@ -581,8 +581,8 @@ sql.price.desc({nulls:&quot;first&quot;}); //=&gt; price DESC NULLS FIRST
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (options){
-   return new OrderedExpression(this, true, options);
-           
+   return new sql.OrderedExpression(this, true, options);
+               
 }
     </pre>
     

@@ -677,7 +677,7 @@ function (db){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
-   this.constraints.push(merge({type:&quot;foreignKey&quot;, columns:columns}, opts));
+   this.constraints.push(merge({type: &quot;foreignKey&quot;, columns: columns}, opts));
            
 }
     </pre>
@@ -719,7 +719,7 @@ function (columns,opts){
 function (columns){
    var args = argsToArray(arguments, 1);
    var opts = args.pop() || {};
-   this.constraints.push(merge({type:&quot;primaryKey&quot;, columns:columns}, opts));
+   this.constraints.push(merge({type: &quot;primaryKey&quot;, columns: columns}, opts));
            
 }
     </pre>
@@ -888,7 +888,7 @@ DB.createTable("test", function(){
     <pre class="prettyprint linenums lang-js">
 function (name,type,opts){
    opts = opts || {};
-   this.columns.push(merge({name:name, type:type}, opts));
+   this.columns.push(merge({name: name, type: type}, opts));
    if (opts.index) {
        this.index(name);
    }
@@ -952,7 +952,7 @@ DB.createTable(&quot;test&quot;, function(){
 function (name,args){
    args = argsToArray(arguments).slice(1);
    var block = isFunction(args[args.length - 1]) ? args.pop : null;
-   this.constraints.push({name:name, type:&quot;check&quot;, check:block || args});
+   this.constraints.push({name: name, type: &quot;check&quot;, check: block || args});
            
 }
     </pre>
@@ -1013,7 +1013,7 @@ DB.createTable(&quot;flight_leg&quot;, function () {
     <pre class="prettyprint linenums lang-js">
 function (name,table,opts){
    opts = opts || {};
-   opts = isHash(table) ? merge({}, table, opts) : isString(table) ? merge({table:table}, opts) : opts;
+   opts = isHash(table) ? merge({}, table, opts) : isString(table) ? merge({table: table}, opts) : opts;
    if (isArray(name)) {
        return this.__compositeForeignKey(name, opts);
    } else {
@@ -1074,7 +1074,7 @@ DB.createTable(&quot;posts&quot;, function () {
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
    opts = opts || {};
-   return this.index(columns, merge({type:&quot;fullText&quot;}, opts));
+   return this.index(columns, merge({type: &quot;fullText&quot;}, opts));
            
 }
     </pre>
@@ -1193,7 +1193,7 @@ DB.createTable(&quot;test&quot;, function(table) {
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
-   this.indexes.push(merge({columns:toArray(columns)}, opts || {}));
+   this.indexes.push(merge({columns: toArray(columns)}, opts || {}));
            
 }
     </pre>
@@ -1259,9 +1259,9 @@ function (name){
    } else {
        var args = argsToArray(arguments, 1), type;
        var opts = args.pop();
-       this.__primaryKey = merge({}, this.db.serialPrimaryKeyOptions, {name:name}, opts);
+       this.__primaryKey = merge({}, this.db.serialPrimaryKeyOptions, {name: name}, opts);
        if (isDefined((type = args.pop()))) {
-           merge(opts, {type:type});
+           merge(opts, {type: type});
        }
        merge(this.__primaryKey, opts);
        return this.__primaryKey;
@@ -1311,7 +1311,7 @@ function (name){
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
    opts = opts || {};
-   return this.index(columns, merge({type:&quot;spatial&quot;}, opts));
+   return this.index(columns, merge({type: &quot;spatial&quot;}, opts));
            
 }
     </pre>
@@ -1366,7 +1366,7 @@ DB.createTable(&quot;test&quot;, function(){
     <pre class="prettyprint linenums lang-js">
 function (columns,opts){
    opts = opts || {};
-   this.constraints.push(merge({type:&quot;unique&quot;, columns:toArray(columns)}, opts));
+   this.constraints.push(merge({type: &quot;unique&quot;, columns: toArray(columns)}, opts));
            
 }
     </pre>

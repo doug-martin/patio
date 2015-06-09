@@ -438,9 +438,16 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+sql.Constant.extend({
+            </pre>
+      
     
 
   
@@ -460,7 +467,7 @@
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the <a href='./patio_sql_BooleanConstant.html#'> patio.sql.BooleanConstant</a> to a string.</p>
 </p>
@@ -490,10 +497,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.booleanConstantSql(this.__constant);
-           
+               
 }
     </pre>
     

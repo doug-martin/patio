@@ -7,7 +7,7 @@ var comb = require("comb"),
 
 patio.quoteIdentifiers = false;
 
-var MockDataset = comb.define(Dataset, {
+var MockDataset = exports.MockDataset = Dataset.extend({
     instance: {
         insert: function () {
             return this.db.execute(this.insertSql.apply(this, arguments));
@@ -27,9 +27,9 @@ var MockDataset = comb.define(Dataset, {
         }
 
     }
-}).as(exports, "MockDataset");
+});
 
-var MockDB = comb.define(Database, {
+var MockDB = exports.MockDatabase = Database.extend({
 
     instance: {
         constructor: function () {
@@ -81,11 +81,11 @@ var MockDB = comb.define(Database, {
         }
     }
 
-}).as(exports, "MockDatabase");
+});
 
 MockDB.setAdapterType("mau");
 
-comb.define(Database, {
+exports.SchemaDummyDatabase = Database.extend({
     instance: {
         constructor: function () {
             this._super(arguments);
@@ -99,4 +99,4 @@ comb.define(Database, {
             return Promise.resolve();
         }
     }
-}).as(exports, "SchemaDummyDatabase");
+});

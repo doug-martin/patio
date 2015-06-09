@@ -2274,7 +2274,6 @@ function (){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (table,op){
-   var ret = new Promise();
    var quotedName = op.name ? this.__quoteIdentifier(op.name) : null;
    var alterTableOp = null;
    switch (op.op) {
@@ -2297,9 +2296,9 @@ function (table,op){
        alterTableOp = format(&quot;ALTER COLUMN %s %s NOT NULL&quot;, quotedName, op[&quot;null&quot;] ? &quot;DROP&quot; : &quot;SET&quot;);
        break;
    case &quot;addIndex&quot;:
-       return ret.callback(this.__indexDefinitionSql(table, op)).promise();
+       return Promise.resolve(this.__indexDefinitionSql(table, op));
    case &quot;dropIndex&quot;:
-       return ret.callback(this.__dropIndexSql(table, op)).promise();
+       return Promise.resolve(this.__dropIndexSql(table, op));
    case &quot;addConstraint&quot;:
        alterTableOp = format(&quot;ADD %s&quot;, this.__constraintDefinitionSql(op));
        break;
@@ -2307,9 +2306,9 @@ function (table,op){
        alterTableOp = format(&quot;DROP CONSTRAINT %s&quot;, quotedName);
        break;
    default :
-       throw new DatabaseError(&quot;Invalid altertable operator&quot;);
+       return Promise.reject(new DatabaseError(&quot;Invalid alter table operator &#x27;&quot; + op.op + &quot;&#x27;&quot;));
    }
-   return ret.callback(format(&quot;ALTER TABLE %s %s&quot;, this.__quoteSchemaTable(table), alterTableOp)).promise();
+   return Promise.resolve(format(&quot;ALTER TABLE %s %s&quot;, this.__quoteSchemaTable(table), alterTableOp));
            
 }
     </pre>
@@ -2352,7 +2351,7 @@ function (table,op){
     <pre class="prettyprint linenums lang-js">
 function (table,operations){
    var self = this;
-   return new PromiseList(operations.map(function (operation) {
+   return Promise.all(operations.map(function (operation) {
        return self.__alterTableSql(table, operation);
    }));
            
@@ -2728,10 +2727,10 @@ function (name,generator,options){
    var ret;
    var promises = generator.indexes.map(function (index) {
        var ps = this.__indexSqlList(name, [index]).map(this.executeDdl, this);
-       return new PromiseList(ps);
+       return Promise.all(ps);
    }, this);
    if (promises.length) {
-       ret = new PromiseList(promises).chain(function (res) {
+       ret = Promise.all(promises).then(function (res) {
            return res;
        }, function (err) {
            if (!e) {
@@ -2739,9 +2738,9 @@ function (name,generator,options){
            }
        });
    } else {
-       ret = new Promise().callback();
+       ret = Promise.resolve();
    }
-   return ret.promise();
+   return ret;
            
 }
     </pre>
@@ -3036,22 +3035,13 @@ function (name){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>args</em>  : </li>
-    
-        <li> <em>block</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (args,block){
+function (){
    var ds = this.__schemaUtiltyDataset;
    return ds.literal(ds._filterExpr.apply(ds, arguments));
            
@@ -3525,20 +3515,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;blob&quot;;
            
 }
@@ -3565,20 +3548,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;boolean&quot;;
            
 }
@@ -3619,7 +3595,7 @@ function (column){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (column){
-   var type = column.type, ret = &quot;date&quot;;
+   var ret = &quot;date&quot;;
    if (column.onlyTime) {
        ret = &quot;time&quot;;
    } else if (column.timeStamp) {
@@ -3655,20 +3631,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;datetime&quot;;
            
 }
@@ -3695,20 +3664,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;double precision&quot;;
            
 }
@@ -3735,20 +3697,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;double precision&quot;;
            
 }
@@ -3775,20 +3730,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;json&quot;;
            
 }
@@ -3895,20 +3843,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;time&quot;;
            
 }
@@ -3935,20 +3876,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;timestamp&quot;;
            
 }
@@ -3975,20 +3909,13 @@ function (column){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>column</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (column){
+function (){
    return &quot;year&quot;;
            
 }
@@ -4124,13 +4051,13 @@ DB.addColumn(&quot;test&quot;, &quot;name&quot;, &quot;text&quot;, {unique : tru
         <li> <em>table</em>  : <p>the table to add the column to.</p>
 </li>
     
-        <li> <em>column</em>  : <p>the name of the column to add.</p>
+        <li> <em>column</em> <code>String</code> : <p>the name of the column to add.</p>
 </li>
     
         <li> <em>type</em>  : <p>datatype of the column</p>
 </li>
     
-        <li> <em>opts?</em>  : <p>additional options that can be used when adding a column.</p>
+        <li> <em>opts?</em> <code>Object</code> : <p>additional options that can be used when adding a column.</p>
 </li>
     
         <li> <em>opts.primaryKey?</em> <code>Boolean</code> : <p>set to true if this column is a primary key.</p>
@@ -4158,7 +4085,7 @@ DB.addColumn(&quot;test&quot;, &quot;name&quot;, &quot;text&quot;, {unique : tru
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (table,column,type,opts){
+function (table){
    var args = argsToArray(arguments).slice(1);
    return this.alterTable(table, function () {
        this.addColumn.apply(this, args);
@@ -4242,7 +4169,7 @@ function (table,columns,options){
    var ignoreErrors = options.ignoreErrors === true;
    return this.alterTable(table, function () {
        this.addIndex(columns, options);
-   }).chain(function (res) {
+   }).then(function (res) {
        return res;
    }, function (err) {
        if (!ignoreErrors) {
@@ -4419,13 +4346,13 @@ function (name,generator,block){
        generator = new AlterTableGenerator(this, block);
    }
    var self = this;
-   return this.__alterTableSqlList(name, generator.operations).chain(function (res) {
-       return asyncArray(comb(res).pluck(&quot;1&quot;)
-           .flatten())
+   return this.__alterTableSqlList(name, generator.operations).then(function (res) {
+       return asyncArray(res)
+           .flatten()
            .forEach(function (sql) {
                return self.executeDdl(sql);
-           })
-           .chain(function () {
+           }, 1)
+           .then(function () {
                return self.removeCachedSchema(name);
            });
    });
@@ -4532,7 +4459,7 @@ a connection to the database.</p>
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (conn){
+function (){
    throw new NotImplemented(&quot;Close connection must be implemented by the adapter&quot;);
            
 }
@@ -4566,7 +4493,7 @@ a connection to the database.</p>
     <em>Arguments</em>
     <ul>
     
-        <li> <em>options</em>  : <p>options that are adapter specific.</p>
+        <li> <em>options</em> <code>Object</code> : <p>options that are adapter specific.</p>
 </li>
     
      </ul>
@@ -4577,7 +4504,7 @@ a connection to the database.</p>
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (options){
+function (){
    throw new NotImplemented(&quot;Create connection must be implemented by the adapter&quot;);
            
 }
@@ -4649,7 +4576,7 @@ function (name,source,opts){
    opts = opts || {};
    opts.replace = true;
    var self = this;
-   return this.executeDdl(this.__createViewSql(name, source, opts)).chain(function () {
+   return this.executeDdl(this.__createViewSql(name, source, opts)).then(function () {
        return self.removeCachedSchema(name);
    });
            
@@ -4756,7 +4683,7 @@ function (name,options,block){
        options = {generator: options};
    }
    var generator = options.generator || new SchemaGenerator(this, block), self = this;
-   return this.__createTableFromGenerator(name, generator, options).chain(function () {
+   return this.__createTableFromGenerator(name, generator, options).then(function () {
        return self.__createTableIndexesFromGenerator(name, generator, options);
    });
            
@@ -4809,7 +4736,7 @@ function (name,options,block){
     <pre class="prettyprint linenums lang-js">
 function (name,options,block){
    var self = this;
-   return this.tableExists(name).chain(function (exists) {
+   return this.tableExists(name).then(function (exists) {
        if (!exists) {
            return self.createTable(name, options, block);
        }
@@ -4919,10 +4846,10 @@ function (name,source,opts){
 function (){
    var self = this;
    return this.pool.endAll()
-       .chain(function () {
+       .then(function () {
            return self.onDisconnect(self);
        })
-       .chain(function () {
+       .then(function () {
            return null;
        });
            
@@ -5041,10 +4968,6 @@ DB.dropIndex(&quot;posts&quot;, &quot;title&quot;);
         <li> <em>table</em>  : <p>the table to alter.</p>
 </li>
     
-        <li> <em>columns</em>  : </li>
-    
-        <li> <em>options</em>  : </li>
-    
         <li> <em>column</em> <code>String|patio.sql.Identifier</code> : <p>the name of the column/s the index was created from.</p>
 </li>
     
@@ -5064,7 +4987,7 @@ DB.dropIndex(&quot;posts&quot;, &quot;title&quot;);
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (table,columns,options){
+function (table){
    var args = argsToArray(arguments).slice(1);
    return this.alterTable(table, function () {
        this.dropIndex.apply(this, args);
@@ -5138,7 +5061,7 @@ function (names){
    });
    var self = this;
    return asyncArray(names).forEach(function (name) {
-       return self.executeDdl(self.__dropTableSql(name)).chain(function () {
+       return self.executeDdl(self.__dropTableSql(name)).then(function () {
            return self.removeCachedSchema(name);
        });
    }, 1);
@@ -5209,13 +5132,17 @@ function (names,opts){
    if (isArray(names)) {
        opts = opts || {};
        var self = this;
-       return asyncArray(names).forEach(function (name) {
-           return self.executeDdl(self.__dropViewSql(name, opts)).chain(function () {
-               self.removeCachedSchema(name);
+       return asyncArray(names)
+           .forEach(function (name) {
+               return self
+                   .executeDdl(self.__dropViewSql(name, opts))
+                   .then(function () {
+                       self.removeCachedSchema(name);
+                   });
+           }, null, 1)
+           .then(function () {
+               return null;
            });
-       }, null, 1).chain(function () {
-           return null;
-       });
    } else {
        var args = argsToArray(arguments);
        if (comb.isHash(args[args.length - 1])) {
@@ -5456,7 +5383,7 @@ it is used to iterate over the records:</p>
 </pre>
 If a block is not given then <a href='./patio_Database.html#fetch'> patio.Database#fetch</a> method returns a <a href='./patio_Dataset.html#'> patio.Dataset</a> instance:
 <pre class="code">
-  DB.fetch('SELECT * FROM items').all().chain(function(records){
+  DB.fetch('SELECT * FROM items').all().then(function(records){
      //do something with the records.
   });
 </pre>
@@ -5464,7 +5391,7 @@ If a block is not given then <a href='./patio_Database.html#fetch'> patio.Databa
 <p><a href='./patio_Database.html#fetch'> patio.Database#fetch</a> can also perform parameterized queries for protection against SQL
 injection:</p>
 <pre class="code">
-  DB.fetch('SELECT * FROM items WHERE name = ?', myName).all().chain(function(records){
+  DB.fetch('SELECT * FROM items WHERE name = ?', myName).all().then(function(records){
      //do something with the records.
   });
 </pre>
@@ -5506,9 +5433,9 @@ function (args,block){
    block = isFunction(args[args.length - 1]) ? args.pop() : null;
    var ds = this.dataset.withSql.apply(this.dataset, args);
    if (block) {
-       ret = ds.forEach(block).chain(function () {
+       ret = ds.forEach(block).then(function () {
            return ds;
-       }).promise();
+       });
    } else {
        ret = ds;
    }
@@ -5573,9 +5500,10 @@ function (args,block){
     <pre class="prettyprint linenums lang-js">
 function (name,options,block){
    var self = this;
-   return this.dropTable(name).chainBoth(function () {
+   function doCreate() {
        return self.createTable(name, options, block);
-   });
+   }
+   return this.dropTable(name).then(doCreate, doCreate);
            
 }
     </pre>
@@ -5643,20 +5571,24 @@ function (names){
    names = names.filter(function (t) {
        return isString(t) || isInstanceOf(t, Identifier, QualifiedIdentifier);
    });
-   var l = names.length, ret = new Promise(), self = this;
-   var drop = function (i) {
-       if (i &amp;lt; l) {
-           var name = names[i++];
-           self.executeDdl(self.__dropTableSql(name)).both(function () {
-               self.removeCachedSchema(name);
-               drop(i);
-           });
-       } else {
-           ret.callback();
-       }
-   };
-   drop(0);
-   return ret.promise();
+   var l = names.length, self = this;
+   return new Promise(function (resolve) {
+       (function drop(i) {
+           if (i &amp;lt; l) {
+               var name = names[i++];
+               self.executeDdl(self.__dropTableSql(name)).then(function () {
+                       self.removeCachedSchema(name);
+                       drop(i);
+                   },
+                   function () {
+                       self.removeCachedSchema(name);
+                       drop(i);
+                   });
+           } else {
+               resolve();
+           }
+       }(0));
+   });
            
 }
     </pre>
@@ -5797,20 +5729,11 @@ function (){
 
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
-DB.indexes(&quot;artists&quot;).chain(function(indexes){
+DB.indexes(&quot;artists&quot;).then(function(indexes){
     //e.g. indexes === {artists_name_ukey : {columns : [name], unique : true}};
   })
         </pre>
 
-
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>table</em>  : </li>
-    
-        <li> <em>opts</em>  : </li>
-    
-     </ul>
 
 
 
@@ -5818,7 +5741,7 @@ DB.indexes(&quot;artists&quot;).chain(function(indexes){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (table,opts){
+function (){
    throw new NotImplemented(&quot;indexes should be overridden by adapters&quot;);
            
 }
@@ -5928,20 +5851,13 @@ function (){
 </p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>error</em>  : </li>
-    
-     </ul>
-
 
 
 
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (error){
+function (){
    LOGGER.error.apply(LOGGER, arguments);
            
 }
@@ -6116,7 +6032,7 @@ function (){
 
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
-DB.schema(&quot;artists&quot;).chain(function(){
+DB.schema(&quot;artists&quot;).then(function(){
      DB.removeCachedSchema(&quot;artists&quot;);
 });
         </pre>
@@ -6187,10 +6103,10 @@ DB.renameColumn(&quot;items&quot;, &quot;cntr&quot;, &quot;counter&quot;);
         <li> <em>table</em>  : <p>the table to alter.</p>
 </li>
     
-        <li> <em>column</em>  : <p>the name of the column to rename.</p>
+        <li> <em>column</em> <code>String|patio.sql.Identifier</code> : <p>the name of the column to rename.</p>
 </li>
     
-        <li> <em>newColumn</em>  : <p>the new name of the column.</p>
+        <li> <em>newColumn</em> <code>String|patio.sql.Identifier</code> : <p>the new name of the column.</p>
 </li>
     
      </ul>
@@ -6209,7 +6125,7 @@ DB.renameColumn(&quot;items&quot;, &quot;cntr&quot;, &quot;counter&quot;);
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (table,column,newColumn){
+function (table){
    var args = argsToArray(arguments).slice(1);
    return this.alterTable(table, function () {
        this.renameColumn.apply(this, args);
@@ -6279,9 +6195,9 @@ comb.executeInOrder(DB, function(DB){
     <pre class="prettyprint linenums lang-js">
 function (name,newName){
    var self = this;
-   return this.executeDdl(this.__renameTableSql(name, newName)).chain(function () {
+   return this.executeDdl(this.__renameTableSql(name, newName)).then(function () {
        self.removeCachedSchema(name);
-   }).promise();
+   });
            
 }
     </pre>
@@ -6371,7 +6287,7 @@ function (sql,opts){
 
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
-DB.schema(&quot;artists&quot;).chain(function(schema){
+DB.schema(&quot;artists&quot;).then(function(schema){
     //example schema
     {
      id :  {
@@ -6452,7 +6368,7 @@ function (table,opts){
        delete this.schemas[quotedName];
    }
    var self = this;
-   return this.schemaParseTable(tableName, opts).chain(function (cols) {
+   return this.schemaParseTable(tableName, opts).then(function (cols) {
        if (!cols || cols.length === 0) {
            throw new Error(&quot;Error parsing schema, &quot; + table + &quot; no columns returns, table probably doesnt exist&quot;);
        } else {
@@ -6633,7 +6549,7 @@ DB.setColumnDefault(&quot;items&quot;, &quot;category&quot;, &quot;misc&quot;);
         <li> <em>table</em>  : <p>the table to alter.</p>
 </li>
     
-        <li> <em>column</em>  : <p>the name of the column to set the DEFAULT on.</p>
+        <li> <em>column</em> <code>String|patio.sql.Identifier</code> : <p>the name of the column to set the DEFAULT on.</p>
 </li>
     
         <li> <em>def</em>  : <p>the new default value of the column.</p>
@@ -6655,7 +6571,7 @@ DB.setColumnDefault(&quot;items&quot;, &quot;category&quot;, &quot;misc&quot;);
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (table,column,def){
+function (table){
    var args = argsToArray(arguments).slice(1);
    return this.alterTable(table, function () {
        this.setColumnDefault.apply(this, args);
@@ -6705,7 +6621,7 @@ DB.setColumnType(&quot;items&quot;, &quot;category&quot;, String);
         <li> <em>table</em>  : <p>the table to alter.</p>
 </li>
     
-        <li> <em>column</em>  : <p>the name of the column to set the TYPE on.</p>
+        <li> <em>column</em> <code>String|patio.sql.Identifier</code> : <p>the name of the column to set the TYPE on.</p>
 </li>
     
         <li> <em>type</em>  : <p>the datatype of the column.</p>
@@ -6727,7 +6643,7 @@ DB.setColumnType(&quot;items&quot;, &quot;category&quot;, String);
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (table,column,type){
+function (table){
    var args = argsToArray(arguments).slice(1);
    return this.alterTable(table, function () {
        this.setColumnType.apply(this, args);
@@ -6766,7 +6682,7 @@ comb.executeInOrder(DB, function(DB){
          table1Exists : DB.tableExists(&quot;table1&quot;),
          table2Exists : DB.tableExists(&quot;table2&quot;)
    };
-}).chain(function(ret){
+}).then(function(ret){
      //ret.table1Exists === true
      //ret.table2Exists === false
 });
@@ -6800,11 +6716,11 @@ comb.executeInOrder(DB, function(DB){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (table,cb){
-   return this.from(table).first().chain(function () {
+   return nodeify(this.from(table).first().then(function () {
        return true;
    }, function () {
        return false;
-   }).classic(cb).promise();
+   }), cb);
            
 }
     </pre>
@@ -6835,7 +6751,7 @@ should be implemented by the adapter.</p>
 
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
-DB.tables().chain(function(tables){
+DB.tables().then(function(tables){
    //e.g. tables === [&quot;table1&quot;, &quot;table2&quot;, &quot;table3&quot;];
 });
         </pre>
@@ -6890,7 +6806,7 @@ successful.</p>
 
 <pre class='prettyprint linenums lang-js'><code>//normal transaction
 DB.transaction(function() {
-     return comb.when(
+     return Promise.all(
          this.execute(&#39;DROP TABLE test;&#39;),
          this.execute(&#39;DROP TABLE test2;&#39;)
      );
@@ -6899,7 +6815,7 @@ DB.transaction(function() {
 //transaction with a save point.
 DB.transaction(function() {
      return this.transaction({savepoint : true}, function() {
-        return comb.when(
+        return Promise.all(
              this.execute(&#39;DROP TABLE test;&#39;),
              this.execute(&#39;DROP TABLE test2;&#39;)
         );
@@ -6913,7 +6829,7 @@ db.transaction(function(){
              lastName:&quot;Gorgenson&quot;,
              password:&quot;password&quot;,
              dateOfBirth:new Date(1956, 1, 3)
-         }).chain(function(){
+         }).then(function(){
              return ds.forEach(function(user){
                  return ds.where({id:user.id}).update({firstName:user.firstName + 1});
              });
@@ -6921,16 +6837,16 @@ db.transaction(function(){
 });</code></pre>
 <p>Using the done method</p>
 <pre class='prettyprint linenums lang-js'><code>var ds = db.from(&quot;user&quot;);
-db.transaction(function(db, done){
-     ds.insert({
+db.transaction(function(db){
+     return ds.insert({
          firstName:&quot;Jane&quot;,
          lastName:&quot;Gorgenson&quot;,
          password:&quot;password&quot;,
          dateOfBirth:new Date(1956, 1, 3)
-     }).chain(function(){
-         ds.forEach(function(user){
+     }).then(function(){
+         return ds.forEach(function(user){
             return ds.where({id:user.id}).update({firstName:user.firstName + 1});
-         }).classic(done)
+         });
      });
 });</code></pre>
 <pre class='prettyprint linenums lang-js'><code>//WITH ISOLATION LEVELS
@@ -7039,7 +6955,7 @@ function (opts,cb){
    } else {
        ret = this.__enqueueTransaction(opts, cb);
    }
-   return ret.promise();
+   return ret;
            
 }
     </pre>
@@ -7207,7 +7123,7 @@ method should be implemented by the adapter.</p>
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (conn){
+function (){
    throw new NotImplemented(&quot;Validate must be implemented by the adapter&quot;);
            
 }

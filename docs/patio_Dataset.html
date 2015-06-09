@@ -3363,7 +3363,7 @@ If you are looking for all columns for a single table and maybe some information
 each column (e.g. database type), see {@link patio.Database#schema}.
 
 <pre class="code">
- DB.from("table").columns.chain(function(columns){
+ DB.from("table").columns.then(function(columns){
        // => ["id", "name"]
   });
 </pre></td><td><code>function (){
@@ -3371,7 +3371,7 @@ each column (e.g. database type), see {@link patio.Database#schema}.
        return asyncArray(this.__columns);
    } else {
        var ds = this.unfiltered().unordered().mergeOptions({distinct: null, limit: 1});
-       return asyncArray(ds.forEach().chain(function () {
+       return asyncArray(ds.forEach().then(function () {
            var columns = this.__columns = ds.__columns || [];
            return columns;
        }.bind(this)));
@@ -3416,7 +3416,7 @@ each column (e.g. database type), see {@link patio.Database#schema}.
         
             <em>Source</em>
             <pre class="prettyprint linenums lang-js">
-function (db,opts){
+function (db){
    this._super(arguments);
    this.db = db;
    this.__opts = {};
@@ -4828,13 +4828,6 @@ function (v){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>v</em>  : </li>
-    
-     </ul>
-
 
     <em>Returns</em>
     <ul>
@@ -4849,7 +4842,7 @@ function (v){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (v){
+function (){
    throw new QueryError(&quot;Json not supported.&quot;);
            
 }
@@ -6553,13 +6546,6 @@ function (){
 <p></p>
 
 
-    <em>Arguments</em>
-    <ul>
-    
-        <li> <em>sql</em>  : </li>
-    
-     </ul>
-
 
     <em>Returns</em>
     <ul>
@@ -6575,7 +6561,7 @@ Includes join table if modifying joins is allowed.</p>
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (sql){
+function (){
    var ret = [this._sourceList(this.__opts.from)];
    if (this.supportsModifyingJoins) {
        ret.push(this._selectJoinSql());
@@ -6750,13 +6736,13 @@ If a block is given, the array is iterated over after all items have been loaded
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT * FROM table
-DB.from(&quot;table&quot;).all().chain(function(res){
+DB.from(&quot;table&quot;).all().then(function(res){
      //res === [{id : 1, ...}, {id : 2, ...}, ...];
 });
 // Iterate over all rows in the table
 var myArr = [];
 var rowPromise = DB.from(&quot;table&quot;).all(function(row){ myArr.push(row);});
-rowPromise.chain(function(rows){
+rowPromise.then(function(rows){
    //=&gt; rows == myArr;
 });
         </pre>
@@ -6789,13 +6775,13 @@ rowPromise.chain(function(rows){
     <pre class="prettyprint linenums lang-js">
 function (block,cb){
    var self = this;
-   var ret = asyncArray(this.forEach().chain(function (records) {
+   var ret = asyncArray(this.forEach().then(function (records) {
        return self.postLoad(records);
    }));
    if (block) {
        ret = ret.forEach(block);
    }
-   return ret.classic(cb).promise();
+   return nodeify(ret, cb);
            
 }
     </pre>
@@ -7116,7 +7102,7 @@ function (filterExp){
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT avg(number) FROM table LIMIT 1
-DB.from(&quot;table&quot;).avg(&quot;number&quot;).chain(function(avg){
+DB.from(&quot;table&quot;).avg(&quot;number&quot;).then(function(avg){
      // avg === 3
 });
         </pre>
@@ -7493,8 +7479,11 @@ function (op,args){
        }
    } else if ((newOp = this._static.TWO_ARITY_OPERATORS[op]) != null) {
        l = args[0];
-       return format(&quot;(%s %s %s)&quot;, isString(l) ? l : this.literal(l), newOp,
-           this.literal(args[1]));
+       try {
+           return format(&quot;(%s %s %s)&quot;, isString(l) ? l : this.literal(l), newOp, this.literal(args[1]));
+       } catch (e) {
+           throw new QueryError(&quot;Unable to do operation &quot; + l + &quot; &quot; + newOp + &quot; &quot; + args[1]);
+       }
    } else if ((newOp = this._static.N_ARITY_OPERATORS[op]) != null) {
        return string.format(&quot;(%s)&quot;, args.map(this.literal, this).join(&quot; &quot; + newOp + &quot; &quot;));
    } else if (op === &quot;NOT&quot;) {
@@ -7563,9 +7552,11 @@ function (op,args){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (type,dataset,options){
-   var ds = this._compoundFromSelf().mergeOptions({compounds: (array.toArray(this.__opts.compounds || [])).concat([
-       [type, dataset._compoundFromSelf(), options.all]
-   ])});
+   var ds = this._compoundFromSelf().mergeOptions({
+       compounds: (array.toArray(this.__opts.compounds || [])).concat([
+           [type, dataset._compoundFromSelf(), options.all]
+       ])
+   });
    return options.fromSelf === false ? ds : ds.fromSelf(options);
            
 }
@@ -7637,7 +7628,7 @@ function (constant){
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT COUNT(*) AS count FROM table LIMIT 1
-DB.from(&quot;table&quot;).count().chain(function(count){
+DB.from(&quot;table&quot;).count().then(function(count){
     //count === 3;
 });
         </pre>
@@ -7666,9 +7657,9 @@ DB.from(&quot;table&quot;).count().chain(function(count){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return this.__aggregateDataset().get(sql.COUNT(sql.literal(&quot;*&quot;)).as(&quot;count&quot;)).chain(function (res) {
+   return nodeify(this.__aggregateDataset().get(sql.COUNT(sql.literal(&quot;*&quot;)).as(&quot;count&quot;)).then(function (res) {
        return parseInt(res, 10);
-   }).classic(cb);
+   }), cb);
            
 }
     </pre>
@@ -8256,7 +8247,7 @@ DB.from(&quot;items&quot;).filter(:category =&gt; &#x27;software&#x27;).filter{p
         <li> <em>args</em>  : <p>filters to apply to the  WHERE/HAVING clause. Description of each:  <ul>      <li>Hash - list of equality/inclusion expressions</li>      <li>Array - depends:          <ul>              <li>If first member is a string, assumes the rest of the arguments                  are parameters and interpolates them into the string.</li>              <li>If all members are arrays of length two, treats the same way                  as a hash, except it allows for duplicate keys to be                  specified.</li>              <li>Otherwise, treats each argument as a separate condition.</li>           </ul>       </li>      <li>String - taken literally</li>      <li><a href='./patio_sql_Identifier.html#'> patio.sql.Identifier</a> - taken as a boolean column argument (e.g. WHERE active)</li>      <li><a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a> - an existing condition expression,          probably created using the patio.sql methods.       </li></p>
 </li>
     
-        <li> <em>cb?</em>  : <p>filter also takes a cb, which should return one of the above argument
+        <li> <em>cb?</em> <code>Function</code> : <p>filter also takes a cb, which should return one of the above argument
 types, and is treated the same way.  This block is called with an <a href='./patio.html#.sql'> patio.sql</a> object which can be used to dynaically create expression.  For more details
 on the sql object see <a href='./patio.html#.sql'> patio.sql</a></p>
 <p>
@@ -8279,7 +8270,7 @@ on the sql object see <a href='./patio.html#.sql'> patio.sql</a></p>
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (args,cb){
+function (args){
    args = [this.__opts[&quot;having&quot;] ? &quot;having&quot; : &quot;where&quot;].concat(argsToArray(arguments));
    return this._filter.apply(this, args);
            
@@ -8508,7 +8499,7 @@ function (block,cb){
            ret = ret.forEach(block);
        }
    }
-   return ret.classic(cb);
+   return nodeify(asyncArray(ret), cb);
            
 }
     </pre>
@@ -8798,20 +8789,20 @@ function (f){
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT id FROM table LIMIT 1
- DB.from(&quot;table&quot;).get(&quot;id&quot;).chain(function(val){
+ DB.from(&quot;table&quot;).get(&quot;id&quot;).then(function(val){
   // val === 3
  });
 
 
 // SELECT sum(id) FROM table LIMIT 1
-ds.get(sql.sum(&quot;id&quot;)).chain(function(val){
+ds.get(sql.sum(&quot;id&quot;)).then(function(val){
      // val === 6;
 });
 
 // SELECT sum(id) FROM table LIMIT 1
 ds.get(function(){
      return this.sum(&quot;id&quot;);
-}).chain(function(val){
+}).then(function(val){
      // val === 6;
 });
         </pre>
@@ -8885,7 +8876,7 @@ var p = comb.executeInOrder(ds, function(ds){
   var graphedDs = ds.graph("albums", {artist_id : "id"});
   return graphedDs.first();
 });
-p.chain(function(obj){
+p.then(function(obj){
    //obj == {artists : {
                  id : artists.id,
                  name : artists.name
@@ -8969,7 +8960,6 @@ instead of a hash with all nil values:</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (dataset,joinConditions,options,block){
-   var ret = new Promise();
    var args = argsToArray(arguments, 1);
    block = isFunction(args[args.length - 1]) ? args.pop() : null;
    joinConditions = args.shift() || null;
@@ -9026,7 +9016,7 @@ function (dataset,joinConditions,options,block){
        // has been used.
        if (addColumns) {
            var select = opts.select = [];
-           populateGraphPromise = this.columns.chain(function (cols) {
+           populateGraphPromise = this.columns.then(function (cols) {
                cols.forEach(function (column) {
                    columnAliases[column] = [master, column];
                    select.push(new sql.QualifiedIdentifier(master, column));
@@ -9034,12 +9024,12 @@ function (dataset,joinConditions,options,block){
                return graph;
            });
        } else {
-           populateGraphPromise = new Promise().callback(graph);
+           populateGraphPromise = Promise.resolve(graph);
        }
    } else {
-       populateGraphPromise = new Promise().callback(graph);
+       populateGraphPromise = Promise.resolve(graph);
    }
-   return populateGraphPromise.chain(function (graph) {
+   return populateGraphPromise.then(function (graph) {
        var ret;
        // Add the table alias to the list of aliases
        // Even if it isn&#x27;t been used in the result set,
@@ -9054,13 +9044,13 @@ function (dataset,joinConditions,options,block){
            // Which columns to add to the result set
            var dsColPromise;
            if (options.select) {
-               dsColPromise = new Promise().callback(options.select);
+               dsColPromise = Promise.resolve(options.select);
            } else {
                dsColPromise = dataset.columns;
            }
            // If the column hasn&#x27;t been used yet, don&#x27;t alias it.
            // If it has been used, try tableColumn.
-           ret = dsColPromise.chain(function (cols) {
+           ret = dsColPromise.then(function (cols) {
                cols.forEach(function (column) {
                    var colAlias, identifier;
                    if (columnAliases[column]) {
@@ -9156,7 +9146,7 @@ function (cb){
            graph[ta][column] = r[colAlias];
        }
        datasets.forEach(function (d) {
-           var ta = d[0], ds = d[1], dsCb = d[2];
+           var ta = d[0], dsCb = d[2];
            var g = graph[ta];
            if (!isEmpty(g) &amp;&amp; Object.keys(g).some(function (x) {
                    return !isUndefinedOrNull(g[x]);
@@ -9344,9 +9334,11 @@ DB.from(&quot;items&quot;).group(&quot;id&quot;)
 function (columns){
    columns = argsToArray(arguments);
    var self = this;
-   return this.mergeOptions({group: (array.compact(columns).length === 0 ? null : columns.map(function (c) {
-       return isString(c) ? self.stringToIdentifier(c) : c;
-   }))});
+   return this.mergeOptions({
+       group: (array.compact(columns).length === 0 ? null : columns.map(function (c) {
+           return isString(c) ? self.stringToIdentifier(c) : c;
+       }))
+   });
            
 }
     </pre>
@@ -9731,17 +9723,17 @@ function (columns,values,opts,cb){
        });
    } else {
        if (!values.length) {
-           ret = new Promise().callback();
+           ret = Promise.resolve();
        } else if (!columns.length) {
-           throw new QueryError(&quot;Invalid columns in import&quot;);
+           ret = Promise.reject(new QueryError(&quot;Invalid columns in import&quot;));
        }
        var sliceSize = opts.commitEvery || opts.slice, result = [];
        if (sliceSize) {
            ret = asyncArray(partition(values, sliceSize)).forEach(function (entries, offset) {
                offset = (offset * sliceSize);
                return self.db.transaction(opts, function () {
-                   return when(self.multiInsertSql(columns, entries).map(function (st, index) {
-                       return self.executeDui(st).chain(function (res) {
+                   return Promise.all(self.multiInsertSql(columns, entries).map(function (st, index) {
+                       return self.executeDui(st).then(function (res) {
                            result[offset + index] = res;
                        });
                    }));
@@ -9750,17 +9742,17 @@ function (columns,values,opts,cb){
        } else {
            var statements = this.multiInsertSql(columns, values);
            ret = this.db.transaction(function () {
-               return when(statements.map(function (st, index) {
-                   return self.executeDui(st).chain(function (res) {
+               return Promise.all(statements.map(function (st, index) {
+                   return self.executeDui(st).then(function (res) {
                        result[index] = res;
                    });
                }));
            });
        }
    }
-   return ret.chain(function () {
+   return nodeify(ret.then(function () {
        return flatten(result);
-   }).classic(cb).promise();
+   }), cb);
            
 }
     </pre>
@@ -9890,7 +9882,7 @@ DB.from(&quot;items&quot;).insert([&quot;a&quot;, &quot;b&quot;], DB.from(&quot;
 function (){
    var args = argsToArray(arguments);
    var cb = isFunction(args[args.length - 1]) ? args.pop() : null;
-   return this.executeInsert(this.insertSql.apply(this, args)).classic(cb);
+   return nodeify(this.executeInsert(this.insertSql.apply(this, args)), cb);
            
 }
     </pre>
@@ -9965,17 +9957,17 @@ DB.from(&quot;table&quot;).insertMultiple([{x : 1}, {x : 2}], function(row){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (array,block,cb){
-   var promises, ret;
+   var ret;
    if (block) {
-       ret = when(array.map(function (i) {
+       ret = Promise.all(array.map(function (i) {
            return this.insert(block(i));
        }, this));
    } else {
-       ret = when(array.map(function (i) {
+       ret = Promise.all(array.map(function (i) {
            return this.insert(i);
        }, this));
    }
-   return ret.classic(cb).promise();
+   return nodeify(ret, cb);
            
 }
     </pre>
@@ -10247,7 +10239,7 @@ for the given column.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT (max(id) - min(id)) FROM table LIMIT 1
-  DB.from(&quot;table&quot;).interval(&quot;id&quot;).chain(function(interval){
+  DB.from(&quot;table&quot;).interval(&quot;id&quot;).then(function(interval){
      //(e.g) interval === 6
   });
         </pre>
@@ -10440,7 +10432,7 @@ false otherwise.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT 1 FROM table LIMIT 1
-DB.from(&quot;table&quot;).isEmpty().chain(function(isEmpty){
+DB.from(&quot;table&quot;).isEmpty().then(function(isEmpty){
   // isEmpty === false
 });
         </pre>
@@ -10469,9 +10461,9 @@ DB.from(&quot;table&quot;).isEmpty().chain(function(isEmpty){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return this.get(1).chain(function (res) {
+   return nodeify(this.get(1).then(function (res) {
        return isUndefinedOrNull(res) || res.length === 0;
-   }.bind(this)).classic(cb);
+   }), cb);
            
 }
     </pre>
@@ -11192,8 +11184,8 @@ function (type,table,expr,options,cb){
    expr = isUndefined(expr) ? null : expr, options = isUndefined(options) ? {} : options;
    var h;
    var usingJoin = isArray(expr) &amp;&amp; expr.length &amp;&amp; expr.every(function (x) {
-       return isString(x) || isInstanceOf(x, Identifier);
-   });
+           return isString(x) || isInstanceOf(x, Identifier);
+       });
    if (usingJoin &amp;&amp; !this.supportsJoinUsing) {
        h = {};
        expr.forEach(function (s) {
@@ -11342,12 +11334,12 @@ unless you have an unambiguous order.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT * FROM table ORDER BY id DESC LIMIT 1
- DB.from(&quot;table&quot;).order(&quot;id&quot;).last().chain(function(lastItem){
+ DB.from(&quot;table&quot;).order(&quot;id&quot;).last().then(function(lastItem){
      //...(e.g lastItem === {id : 10})
  });
 
  // SELECT * FROM table ORDER BY id ASC LIMIT 2
-  DB.from(&quot;table&quot;).order(sql.id.desc()).last(2).chain(function(lastItems){
+  DB.from(&quot;table&quot;).order(sql.id.desc()).last(2).then(function(lastItems){
      //...(e.g lastItems === [{id : 1}, {id : 2});
  });
         </pre>
@@ -11356,7 +11348,7 @@ unless you have an unambiguous order.</p>
     <em>Arguments</em>
     <ul>
     
-        <li> <em>args</em>  : <p>See <a href='./patio_Dataset.html#first'> patio.Dataset#first</a> for argument types.</p>
+        <li> <em>args</em> <code>*</code> : <p>See <a href='./patio_Dataset.html#first'> patio.Dataset#first</a> for argument types.</p>
 </li>
     
      </ul>
@@ -11384,9 +11376,9 @@ arguments provided.</p>
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (args){
+function (){
    if (!this.__opts.order) {
-       throw new QueryError(&quot;No order specified&quot;);
+       return Promise.reject(new QueryError(&quot;No order specified&quot;));
    }
    var ds = this.reverse();
    return ds.first.apply(ds, arguments);
@@ -11783,7 +11775,9 @@ DB.from(&quot;test&quot;).gte({x : 1});
     <em>Arguments</em>
     <ul>
     
-        <li> <em>obj</em>  : <p>object used to create the less than or equal to expression.</p>
+        <li> <em>arr</em>  : </li>
+    
+        <li> <em>obj</em> <code>Object</code> : <p>object used to create the less than or equal to expression.</p>
 </li>
     
      </ul>
@@ -11802,9 +11796,9 @@ DB.from(&quot;test&quot;).gte({x : 1});
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (obj){
-   var arr = this.__arrayToConditionSpecifier(argsToArray(arguments), &quot;lte&quot;);
-   return this.filter(this.__createBoolExpression(&quot;lte&quot;, obj));
+function (arr){
+   arr = this.__arrayToConditionSpecifier(argsToArray(arguments), &quot;lte&quot;);
+   return this.filter(this.__createBoolExpression(&quot;lte&quot;, arr));
            
 }
     </pre>
@@ -11836,14 +11830,14 @@ given).</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT * FROM table
-DB.from(&quot;table&quot;).map(&quot;id&quot;).chain(function(ids){
+DB.from(&quot;table&quot;).map(&quot;id&quot;).then(function(ids){
   // e.g. ids === [1, 2, 3, ...]
 });
 
  // SELECT * FROM table
 DB.from(&quot;table&quot;).map(function(r){
      return r.id * 2;
-}).chain(function(ids){
+}).then(function(ids){
     // e.g. ids === [2, 4, 6, ...]
 });
         </pre>
@@ -11855,7 +11849,7 @@ DB.from(&quot;table&quot;).map(function(r){
         <li> <em>column</em>  : <p>if a string is provided then then it is assumed to be the name of a column in that table and the value of the column for each row will be returned. If column is a function then the return value of the function will be used.</p>
 </li>
     
-        <li> <em>cb?</em>  : <p>a function to be called when the aciton is complete</p>
+        <li> <em>cb?</em>  : <p>a function to be called when the action is complete</p>
 </li>
     
      </ul>
@@ -11877,7 +11871,7 @@ DB.from(&quot;table&quot;).map(function(r){
 function (column,cb){
    var ret = this.forEach();
    column &amp;&amp; (ret = ret[isFunction(column) ? &quot;map&quot; : &quot;pluck&quot;](column));
-   return ret.classic(cb).promise();
+   return nodeify(ret, cb);
            
 }
     </pre>
@@ -11908,7 +11902,7 @@ function (column,cb){
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT max(id) FROM table LIMIT 1
-DB.from(&quot;table&quot;).max(&quot;id&quot;).chain(function(max){
+DB.from(&quot;table&quot;).max(&quot;id&quot;).then(function(max){
   // e.g. max === 10.
 });
         </pre>
@@ -11999,7 +11993,7 @@ function (opts){
    var ds = new this._static(this.db, {});
    ds.rowCb = this.rowCb;
    this._static.FEATURES.forEach(function (f) {
-       ds[f] = this[f];
+       ds[&quot;__&quot; + f] = this[f];
    }, this);
    var dsOpts = ds.__opts = merge({}, this.__opts, opts);
    ds.identifierInputMethod = this.identifierInputMethod;
@@ -12041,7 +12035,7 @@ function (opts){
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT min(id) FROM table LIMIT 1
-DB.from(&quot;table&quot;).min(&quot;id&quot;).chain(function(min){
+DB.from(&quot;table&quot;).min(&quot;id&quot;).then(function(min){
   // e.g. max === 0.
 });
         </pre>
@@ -12112,12 +12106,12 @@ See <a href='./patio_Dataset.html#import'> patio.Dataset#import</a> for more inf
         <pre class="prettyprint linenums lang-js">
 // INSERT INTO table (x) VALUES (1)
 // INSERT INTO table (x) VALUES (2)
-DB.from(&quot;table&quot;).multiInsert([{x : 1}, {x : 2}]).chain(function(){
+DB.from(&quot;table&quot;).multiInsert([{x : 1}, {x : 2}]).then(function(){
     //...do something
 })
 
 //commit every 50 inserts
-DB.from(&quot;table&quot;).multiInsert([{x : 1}, {x : 2},....], {commitEvery : 50}).chain(function(){
+DB.from(&quot;table&quot;).multiInsert([{x : 1}, {x : 2},....], {commitEvery : 50}).then(function(){
     //...do something
 });
         </pre>
@@ -12158,9 +12152,9 @@ function (hashes,opts,cb){
    }
    opts = opts || {};
    hashes = hashes || [];
-   var ret = new Promise();
+   var ret;
    if (!hashes.length) {
-       ret.callback();
+       ret = Promise.resolve();
    } else {
        var columns = Object.keys(hashes[0]);
        ret = this[&quot;import&quot;](columns, hashes.map(function (h) {
@@ -12169,7 +12163,7 @@ function (hashes,opts,cb){
            });
        }), opts, cb);
    }
-   return ret.classic(cb).promise();
+   return nodeify(ret, cb);
            
 }
     </pre>
@@ -12268,10 +12262,10 @@ ds.rowCb = function(r){
     r.a = r.a * 2;
 }
 
-ds.all().chain(function(ret){
+ds.all().then(function(ret){
      //ret === [{a : 4}, {a : 6}]
 });
-ds.naked().all().chain(function(ret){
+ds.naked().all().then(function(ret){
      //ret ===  [{a : 2}, {a : 3}];
 });
         </pre>
@@ -13274,7 +13268,7 @@ dataset.qualifiedColumnName(&quot;ccc__b&quot;, &quot;items&quot;));
 function (column,table){
    if (isString(column)) {
        var parts = this._splitString(column);
-       var columnTable = parts[0], alias = parts[2], schema, tableAlias;
+       var columnTable = parts[0], schema, tableAlias;
        column = parts[1];
        if (!columnTable) {
            if (isInstanceOf(table, Identifier)) {
@@ -13664,7 +13658,7 @@ given column.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT max(id) AS v1, min(id) AS v2 FROM table LIMIT 1
- DB.from(&quot;table&quot;).range(&quot;id&quot;).chain(function(min, max){
+ DB.from(&quot;table&quot;).range(&quot;id&quot;).then(function(min, max){
      //e.g min === 1 AND max === 10
  });
         </pre>
@@ -13697,14 +13691,9 @@ and second args respectively.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (column,cb){
-   var ret = new Promise();
-   this.__aggregateDataset()
-       .select(sql.min(this.stringToIdentifier(column)).as(&quot;v1&quot;), sql.max(this.stringToIdentifier(column)).as(&quot;v2&quot;))
-       .first()
-       .chain(function (r) {
-           ret.callback(r.v1, r.v2);
-       }, ret.errback);
-   return ret.classic(cb).promise();
+   return nodeify(this.__aggregateDataset()
+       .select(sql.min(this.stringToIdentifier(column)).as(&quot;min&quot;), sql.max(this.stringToIdentifier(column)).as(&quot;max&quot;))
+       .first(), cb);
            
 }
     </pre>
@@ -13736,7 +13725,7 @@ number of records deleted, but that is adapter dependent.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // DELETE * FROM table
-DB.from(&quot;table&quot;).remove().chain(function(numDeleted){
+DB.from(&quot;table&quot;).remove().then(function(numDeleted){
     //numDeleted === 3
 });
         </pre>
@@ -13766,7 +13755,7 @@ number of records deleted, but that is adapter dependent.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return this.executeDui(this.deleteSql).classic(cb).promise();
+   return nodeify(this.executeDui(this.deleteSql), cb);
            
 }
     </pre>
@@ -13833,9 +13822,11 @@ function (values){
    } else {
        args = argsToArray(arguments);
    }
-   return this.mergeOptions({returning: args.map(function (v) {
-       return isString(v) ? sql.stringToIdentifier(v) : v;
-   })});
+   return this.mergeOptions({
+       returning: args.map(function (v) {
+           return isString(v) ? sql.stringToIdentifier(v) : v;
+       })
+   });
            
 }
     </pre>
@@ -14296,7 +14287,7 @@ values.  Similar to <a href='./patio_Dataset.html#toHash'> patio.Dataset#toHash<
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT id, name FROM table
- DB.from(&quot;table&quot;).selectHash(&quot;id&quot;, &quot;name&quot;).chain(function(hash){
+ DB.from(&quot;table&quot;).selectHash(&quot;id&quot;, &quot;name&quot;).then(function(hash){
   // e.g {1 : &#x27;a&#x27;, 2 : &#x27;b&#x27;, ...}
  });
         </pre>
@@ -14336,11 +14327,11 @@ function (keyColumn,valueColumn,cb){
    cb = isFunction(args[args.length - 1]) ? args.pop() : null;
    var k = this.__hashIdentifierToName(keyColumn),
        v = this.__hashIdentifierToName(valueColumn);
-   return this.select.apply(this, args).map(function (r) {
+   return nodeify(this.select.apply(this, args).map(function (r) {
        map[r[k]] = v ? r[v] : r;
-   }).chain(function () {
+   }).then(function () {
        return map;
-   }).classic(cb).promise();
+   }), cb);
            
 }
     </pre>
@@ -14400,7 +14391,7 @@ ds.selectIfNoSource(&quot;a&quot;, &quot;b&quot;). //SELECT a, b FROM items;
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (cols){
+function (){
    var ret;
    if (!this.hasSelectSource) {
        ret = this.select.apply(this, arguments);
@@ -14441,14 +14432,14 @@ the contents of the resulting array are undefined.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT id FROM table
- DB.from(&quot;table&quot;).selectMap(&quot;id&quot;).chain(function(selectMap){
+ DB.from(&quot;table&quot;).selectMap(&quot;id&quot;).then(function(selectMap){
   // e,g. selectMap === [3, 5, 8, 1, ...]
 });
 
 // SELECT abs(id) FROM table
 DB.from(&quot;table&quot;).selectMap(function(){
      return this.abs(&quot;id&quot;);
-}).chain(function(selectMap){
+}).then(function(selectMap){
   //e.g selectMap === [3, 5, 8, 1, ...]
 });
         </pre>
@@ -14584,14 +14575,14 @@ function (cols){
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT id FROM table ORDER BY id
-DB.from(&quot;table&quot;).selectOrderMap(&quot;id&quot;).chain(function(mappedIds){
+DB.from(&quot;table&quot;).selectOrderMap(&quot;id&quot;).then(function(mappedIds){
   //e.g. [1, 2, 3, 4, ...]
 });
 
  // SELECT abs(id) FROM table ORDER BY abs(id)
  DB.from(&quot;table&quot;).selectOrderMap(function(){
          return this.abs(&quot;id&quot;);
- }).chain(function(mappedIds){
+ }).then(function(mappedIds){
      //e.g. [1, 2, 3, 4, ...]
  });
         </pre>
@@ -14767,7 +14758,7 @@ var p = comb.executeInOrder(ds, function(ds){
                       forty_two : [&quot;albums&quot;, &quot;fourtwo&quot;, 42]).first();
 });
 
-p.chain(function(obj){
+p.then(function(obj){
    //obj == {artists : {name : artists.name}, albums : {name : albums.name, fourtwo : 42}}
 });
         </pre>
@@ -14883,7 +14874,7 @@ this method.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 //&#x27;SELECT * FROM test LIMIT 1&#x27;
-DB.from(&quot;test&quot;).singleRecord().chain(function(r) {
+DB.from(&quot;test&quot;).singleRecord().then(function(r) {
     //e.g r === {id : 1, name : &quot;firstName&quot;}
 });
         </pre>
@@ -14912,9 +14903,9 @@ DB.from(&quot;test&quot;).singleRecord().chain(function(r) {
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return this.mergeOptions({limit: 1}).all().chain(function (r) {
+   return nodeify(this.mergeOptions({limit: 1}).all().then(function (r) {
        return r &amp;&amp; r.length ? r[0] : null;
-   }).classic(cb).promise();
+   }), cb);
            
 }
     </pre>
@@ -14947,7 +14938,7 @@ Returns null if dataset is empty.  Users should generally use
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 //&#x27;SELECT * FROM test LIMIT 1&#x27;
-DB.from(&quot;test&quot;).singleValue().chain(function(r) {
+DB.from(&quot;test&quot;).singleValue().then(function(r) {
     //e.g r === 1
 });
         </pre>
@@ -14977,9 +14968,9 @@ from the dataset.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return this.naked().ungraphed().singleRecord().chain(function (r) {
+   return nodeify(this.naked().ungraphed().singleRecord().then(function (r) {
        return r ? r[Object.keys(r)[0]] : null;
-   }).classic(cb).promise();
+   }), cb);
            
 }
     </pre>
@@ -15054,7 +15045,7 @@ function (opts){
    if ((rowCb = this.rowCb)) {
        ret = new TransformStream({objectMode: true});
        ret._transform = function (data, encoding, done) {
-           when(rowCb(data)).chain(function (data) {
+           Promise.resolve(rowCb(data)).then(function (data) {
                ret.push(data);
                done();
            }, done);
@@ -15216,7 +15207,7 @@ function (s){
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT sum(id) FROM table LIMIT 1
-DB.from(&quot;table&quot;).sum(&quot;id&quot;).chain(function(sum){
+DB.from(&quot;table&quot;).sum(&quot;id&quot;).then(function(sum){
   // e.g sum === 55
 });
         </pre>
@@ -15288,7 +15279,7 @@ includeColumnTitles argument.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT * FROM table
- DB.from(&quot;table&quot;).toCsv().chain(function(csv){
+ DB.from(&quot;table&quot;).toCsv().then(function(csv){
      console.log(csv);
      //outputs
        id,name
@@ -15297,7 +15288,7 @@ includeColumnTitles argument.</p>
  });
 
    // SELECT * FROM table
- DB.from(&quot;table&quot;).toCsv(false).chain(function(csv){
+ DB.from(&quot;table&quot;).toCsv(false).then(function(csv){
      console.log(csv);
      //outputs
        1,Jim
@@ -15340,7 +15331,7 @@ function (includeColumnTitles,cb){
        includeColumnTitles = true;
    }
    includeColumnTitles = isBoolean(includeColumnTitles) ? includeColumnTitles : true;
-   return n.columns.chain(function (cols) {
+   var ret = n.columns.then(function (cols) {
        var vals = [];
        if (includeColumnTitles) {
            vals.push(cols.join(&quot;, &quot;));
@@ -15349,10 +15340,11 @@ function (includeColumnTitles,cb){
            vals.push(cols.map(function (c) {
                return r[c] || &quot;&quot;;
            }).join(&quot;, &quot;));
-       }).chain(function () {
+       }).then(function () {
            return vals.join(&quot;\r\n&quot;) + &quot;\r\n&quot;;
        });
-   }.bind(this)).classic(cb).promise();
+   });
+   return nodeify(ret, cb);
            
 }
     </pre>
@@ -15386,12 +15378,12 @@ is not given or null, uses the entire hash as the value.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // SELECT * FROM table
- DB.from(&quot;table&quot;).toHash(&quot;id&quot;, &quot;name&quot;).chain(function(hash){
+ DB.from(&quot;table&quot;).toHash(&quot;id&quot;, &quot;name&quot;).then(function(hash){
    // {1 : &#x27;Jim&#x27;, 2 : &#x27;Bob&#x27;, ...}
  });
 
 // SELECT * FROM table
-DB.from(&quot;table&quot;).toHash(&quot;id&quot;).chain(function(hash){
+DB.from(&quot;table&quot;).toHash(&quot;id&quot;).then(function(hash){
   // {1 : {id : 1, name : &#x27;Jim&#x27;}, 2 : {id : 2, name : &#x27;Bob&#x27;}, ...}
 });
         </pre>
@@ -15429,17 +15421,17 @@ DB.from(&quot;table&quot;).toHash(&quot;id&quot;).chain(function(hash){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (keyColumn,valueColumn,cb){
-   var ret = new Promise(), map = {};
+   var map = {};
    if (isFunction(valueColumn)) {
        cb = valueColumn;
        valueColumn = null;
    }
    var k = this.__hashIdentifierToName(keyColumn), v = this.__hashIdentifierToName(valueColumn);
-   return this.map(function (r) {
+   return nodeify(this.map(function (r) {
        map[r[k]] = v ? r[v] : r;
-   }).chain(function () {
+   }).then(function () {
        return map;
-   }).classic(cb).promise();
+   }), cb);
            
 }
     </pre>
@@ -15470,7 +15462,7 @@ function (keyColumn,valueColumn,cb){
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // TRUNCATE table
-DB.from(&quot;table&quot;).truncate().chain(function(){
+DB.from(&quot;table&quot;).truncate().then(function(){
     //...do something
 });
         </pre>
@@ -15499,7 +15491,7 @@ DB.from(&quot;table&quot;).truncate().chain(function(){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return this.executeDdl(this.truncateSql).classic(cb);
+   return nodeify(this.executeDdl(this.truncateSql), cb);
            
 }
     </pre>
@@ -15941,12 +15933,12 @@ number of rows updated, but that is adapter dependent.</p>
     <em>Example</em>
         <pre class="prettyprint linenums lang-js">
 // UPDATE table SET x = NULL
- DB.from(&quot;table&quot;).update({x : null}).chain(function(numRowsUpdated){
+ DB.from(&quot;table&quot;).update({x : null}).then(function(numRowsUpdated){
      //e.g. numRowsUpdated === 10
  });
 
 // UPDATE table SET x = (x + 1), y = 0
-DB.from(&quot;table&quot;).update({ x : sql.x.plus(1), y : 0}).chain(function(numRowsUpdated){
+DB.from(&quot;table&quot;).update({ x : sql.x.plus(1), y : 0}).then(function(numRowsUpdated){
   // e.g. numRowsUpdated === 10
 });
         </pre>
@@ -15979,7 +15971,7 @@ number of rows updated, but that is adapter dependent.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (values,cb){
-   return this.executeDui(this.updateSql(values)).classic(cb);
+   return nodeify(this.executeDui(this.updateSql(values)), cb);
            
 }
     </pre>

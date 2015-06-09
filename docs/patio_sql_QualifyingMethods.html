@@ -452,7 +452,7 @@ sql.column.qualify(&quot;table&quot;).qualify(&quot;schema&quot;) //=&gt; &quot;
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/methods.js</em>
     
     
     
@@ -481,7 +481,7 @@ define({
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Use to create a .* expression.</p>
 </p>
@@ -507,8 +507,8 @@ sql.table.qualify(&quot;schema&quot;).all() //=&gt; &quot;schema&quot;.&quot;tab
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (){
-   return new ColumnAll(this);
-           
+   return new sql.ColumnAll(this);
+               
 }
     </pre>
     
@@ -530,7 +530,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Qualify the receiver with the given qualifier (table for column/schema for table).</p>
 </p>
@@ -565,8 +565,8 @@ sql.column.qualify(&quot;table&quot;).qualify(&quot;schema&quot;) //=&gt; &quot;
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (qualifier){
-   return new QualifiedIdentifier(qualifier, this);
-           
+   return new sql.QualifiedIdentifier(qualifier, this);
+               
 }
     </pre>
     

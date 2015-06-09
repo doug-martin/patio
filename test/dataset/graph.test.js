@@ -16,7 +16,7 @@ var it = require('it'),
     serial = comb.serial;
 
 
-it.describe("Dataset graphing", function (it) {
+it.describe("patio.Dataset graphing", function (it) {
 
     patio.quoteIdentifiers = false;
     patio.identifierInputMethod = null;

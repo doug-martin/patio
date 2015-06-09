@@ -470,9 +470,16 @@ in a boolean value in SQL.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/expressions.js</em>
     
     
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+define([ComplexExpression, sql.BooleanMethods], {
+            </pre>
+      
     
 
   
@@ -491,7 +498,7 @@ in a boolean value in SQL.</p>
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p></p>
 
@@ -557,10 +564,10 @@ function (expr,key,op){
                newKey = [sql.stringToIdentifier(newKey[0])];
                if (k.match(/^like$/)) {
                    //its a like clause {col : {like : &quot;hello&quot;}}
-                   pairs.push(StringExpression.like.apply(StringExpression, (newKey.concat(isArray(v) ? v : [v]))));
+                   pairs.push(sql.StringExpression.like.apply(sql.StringExpression, (newKey.concat(isArray(v) ? v : [v]))));
                } else if (k.match(/^iLike$/)) {
                    //its a like clause {col : {iLike : &quot;hello&quot;}}
-                   pairs.push(StringExpression.like.apply(StringExpression, (newKey.concat(isArray(v) ? v : [v]).concat({caseInsensitive: true}))));
+                   pairs.push(sql.StringExpression.like.apply(sql.StringExpression, (newKey.concat(isArray(v) ? v : [v]).concat({caseInsensitive: true}))));
                } else if (k.match(/between/i)) {
                    //its a like clause {col : {between : [1,10]}}
                    var between = sql.stringToIdentifier(newKey[0]).between(v);
@@ -570,7 +577,7 @@ function (expr,key,op){
                    //otherwise is just a boolean expressio
                    //it its not a valid operator then we
                    //BooleanExpression with throw an error
-                   pairs.push(new BooleanExpression(k, newKey[0], v));
+                   pairs.push(new sql.BooleanExpression(k, newKey[0], v));
                }
            }
        } else {
@@ -583,13 +590,13 @@ function (expr,key,op){
            opts = [
                [newKey, v]
            ];
-           pairs.push(BooleanExpression.fromValuePairs(opts));
+           pairs.push(sql.BooleanExpression.fromValuePairs(opts));
        }
    }
    //if the total of pairs is one then we just return the first element
    //otherwise we join them all with an AND
-   return pairs.length === 1 ? pairs[0] : BooleanExpression.fromArgs([op || &quot;AND&quot;].concat(pairs));
-           
+   return pairs.length === 1 ? pairs[0] : sql.BooleanExpression.fromArgs([op || &quot;AND&quot;].concat(pairs));
+               
 }
     </pre>
     
@@ -613,7 +620,7 @@ function (expr,key,op){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Take pairs of values (e.g. a hash or array of two element arrays)
 and converts it to a <a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a>.  The operator and args
@@ -668,10 +675,10 @@ BooleanExpression.fromValuePairs({a : [1,2,3], b : true}, "OR", true) //=> a NOT
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (a,op,negate){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    op = op || &quot;AND&quot;, negate = negate || false;
    var pairArr = [];
-   var isArr = isArray(a) &amp;&amp; Expression.isConditionSpecifier(a);
+   var isArr = isArray(a) &amp;&amp; sql.Expression.isConditionSpecifier(a);
    if (isHash(a)) {
        pairArr.push(this.__filterObject(a, null, op));
    } else {
@@ -680,27 +687,27 @@ function (a,op,negate){
            k = isArr ? a[k][0] : k;
            if (isArray(v) || isInstanceOf(v, Dataset)) {
                k = isArray(k) ? k.map(sql.stringToIdentifier) : sql.stringToIdentifier(k);
-               ret = new BooleanExpression(&quot;IN&quot;, k, v);
-           } else if (isInstanceOf(v, NegativeBooleanConstant)) {
-               ret = new BooleanExpression(&quot;ISNOT&quot;, k, v.constant);
-           } else if (isInstanceOf(v, BooleanConstant)) {
-               ret = new BooleanExpression(&quot;IS&quot;, k, v.constant);
+               ret = new sql.BooleanExpression(&quot;IN&quot;, k, v);
+           } else if (isInstanceOf(v, sql.NegativeBooleanConstant)) {
+               ret = new sql.BooleanExpression(&quot;ISNOT&quot;, k, v.constant);
+           } else if (isInstanceOf(v, sql.BooleanConstant)) {
+               ret = new sql.BooleanExpression(&quot;IS&quot;, k, v.constant);
            } else if (isNull(v) || isBoolean(v)) {
-               ret = new BooleanExpression(&quot;IS&quot;, k, v);
+               ret = new sql.BooleanExpression(&quot;IS&quot;, k, v);
            } else if (isHash(v)) {
-               ret = BooleanExpression.__filterObject(v, k, op);
+               ret = sql.BooleanExpression.__filterObject(v, k, op);
            } else if (isRegExp(v)) {
-               ret = StringExpression.like(sql.stringToIdentifier(k), v);
+               ret = sql.StringExpression.like(sql.stringToIdentifier(k), v);
            } else {
-               ret = new BooleanExpression(&quot;EQ&quot;, sql.stringToIdentifier(k), v);
+               ret = new sql.BooleanExpression(&quot;EQ&quot;, sql.stringToIdentifier(k), v);
            }
-           negate &amp;&amp; (ret = BooleanExpression.invert(ret));
+           negate &amp;&amp; (ret = sql.BooleanExpression.invert(ret));
            pairArr.push(ret);
        }
    }
    //if We just have one then return the first otherwise create a new Boolean expression
-   return pairArr.length === 1 ? pairArr[0] : BooleanExpression.fromArgs([op].concat(pairArr));
-           
+   return pairArr.length === 1 ? pairArr[0] : sql.BooleanExpression.fromArgs([op].concat(pairArr));
+               
 }
     </pre>
     
@@ -724,7 +731,7 @@ function (a,op,negate){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Invert the expression, if possible.  If the expression cannot
 be inverted, it throws an <a href='./patio_error_ExpressionError.html#'> patio.error.ExpressionError</a>.  An inverted expression should match
@@ -761,23 +768,23 @@ BooleanExpression.invert(sql.a) //=&gt; NOT &quot;a&quot;
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (expression){
-   if (isInstanceOf(expression, BooleanExpression)) {
+   if (isInstanceOf(expression, sql.BooleanExpression)) {
        var op = expression.op, newArgs;
        if (op === &quot;AND&quot; || op === &quot;OR&quot;) {
            newArgs = [OPERTATOR_INVERSIONS[op]].concat(expression.args.map(function (arg) {
-               return BooleanExpression.invert(arg);
+               return sql.BooleanExpression.invert(arg);
            }));
-           return BooleanExpression.fromArgs(newArgs);
+           return sql.BooleanExpression.fromArgs(newArgs);
        } else {
            newArgs = [OPERTATOR_INVERSIONS[op]].concat(expression.args);
-           return BooleanExpression.fromArgs(newArgs);
+           return sql.BooleanExpression.fromArgs(newArgs);
        }
-   } else if (isInstanceOf(expression, StringExpression) || isInstanceOf(expression, NumericExpression)) {
+   } else if (isInstanceOf(expression, sql.StringExpression) || isInstanceOf(expression, sql.NumericExpression)) {
        throw new ExpressionError(format(&quot;Cannot invert %4j&quot;, [expression]));
    } else {
-       return new BooleanExpression(&quot;NOT&quot;, expression);
+       return new sql.BooleanExpression(&quot;NOT&quot;, expression);
    }
-           
+               
 }
     </pre>
     

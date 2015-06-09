@@ -17,7 +17,7 @@ var it = require('it'),
     DB_TYPE = require("../test.config").DB_TYPE;
 
 
-it.describe("Dataset queries", function (it) {
+it.describe("patio.Dataset queries", function (it) {
     patio.identifierInputMethod = null;
     patio.identifierOutputMethod = null;
 

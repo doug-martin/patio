@@ -582,9 +582,9 @@ Its just documented for reference.</p>
         <em>Instance Properties</em>
         <table class='table table-bordered table-striped'><tr><td>Property</td><td>Type</td><td>Default Value</td><td>Description</td></tr><tr><td>_fetchMethod</td><td>property</td><td><code>"all"</code></td><td><p>Method to call to look up association,
 called after the model has been filtered</p>
-</td><tr><tr><td>fetchType</td><td>property</td><td><code>fetch.LAZY</code></td><td><p>Fetch type</p>
+</td><tr><tr><td>fetchType</td><td>property</td><td><code>fetchTypes.LAZY</code></td><td><p>Fetch type</p>
 </td><tr><tr><td>filter</td><td>property</td><td><code>null</code></td><td><p>Our filter method</p>
-</td><tr><tr><td>model</td><td>Model</td><td></td><td><p>the model associatied with this association.</p>
+</td><tr><tr><td>model</td><td>Model</td><td></td><td><p>the model associated with this association.</p>
 </td><tr><tr><td>orderBy</td><td>property</td><td><code>null</code></td><td><p>how to order our association</p>
 </td><tr></table>
     
@@ -592,9 +592,16 @@ called after the model has been filtered</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined associations/_Association.js</em>
+    <em>Defined model/associations/association.js</em>
     
     
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+Middleware.extend({
+            </pre>
+      
     
 
   
@@ -612,7 +619,7 @@ called after the model has been filtered</p>
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Filters our associated dataset to load our association.</p>
 </p>
@@ -655,7 +662,7 @@ function (parent){
            var model = self._toModel(item, true);
            recip &amp;&amp; recip.__setValue(model, parent);
            //call hook to finish other model associations
-           return model._hook(&quot;post&quot;, &quot;load&quot;).chain(function () {
+           return model._hook(&quot;post&quot;, &quot;load&quot;).then(function () {
                return model;
            });
        };
@@ -663,7 +670,7 @@ function (parent){
        ds.rowCb = function (item) {
            var model = self._toModel(item, true);
            //call hook to finish other model associations
-           return model._hook(&quot;post&quot;, &quot;load&quot;).chain(function () {
+           return model._hook(&quot;post&quot;, &quot;load&quot;).then(function () {
                return model;
            });
        };
@@ -689,7 +696,7 @@ function (parent){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Alias used to explicitly get an association on a model.</p>
 </p>
@@ -715,7 +722,7 @@ function (model){
    //if we have them return them;
    if (this.associationLoaded(model)) {
        var assoc = this.getAssociation(model);
-       return this.isEager() ? assoc : when(assoc);
+       return this.isEager() ? assoc : Promise.resolve(assoc);
    } else if (model.isNew) {
        return null;
    } else {
@@ -741,7 +748,7 @@ function (model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Middleware called after a model is loaded.
 </br>
@@ -755,8 +762,6 @@ function (model){
         <li> <em>next</em>  : <p>function to pass control up the middleware stack.</p>
 </li>
     
-        <li> <em>model</em>  : </li>
-    
         <li> <em>self</em> <code>_Association</code> : <p>reference to the Association that is being called.</p>
 </li>
     
@@ -768,7 +773,7 @@ function (model){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (next,model){
+function (next){
    next();
            
 }
@@ -790,7 +795,7 @@ function (next,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Middleware called aft era model is removed.
 </br>
@@ -804,8 +809,6 @@ function (next,model){
         <li> <em>next</em>  : <p>function to pass control up the middleware stack.</p>
 </li>
     
-        <li> <em>model</em>  : </li>
-    
         <li> <em>self</em> <code>_Association</code> : <p>reference to the Association that is being called.</p>
 </li>
     
@@ -817,7 +820,7 @@ function (next,model){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (next,model){
+function (next){
    next();
            
 }
@@ -839,7 +842,7 @@ function (next,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Middleware called after a model is saved.
 </br>
@@ -853,8 +856,6 @@ function (next,model){
         <li> <em>next</em>  : <p>function to pass control up the middleware stack.</p>
 </li>
     
-        <li> <em>model</em>  : </li>
-    
         <li> <em>self</em> <code>_Association</code> : <p>reference to the Association that is being called.</p>
 </li>
     
@@ -866,7 +867,7 @@ function (next,model){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (next,model){
+function (next){
    next();
            
 }
@@ -888,7 +889,7 @@ function (next,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Middleware called before a model is updated.
 </br>
@@ -902,8 +903,6 @@ function (next,model){
         <li> <em>next</em>  : <p>function to pass control up the middleware stack.</p>
 </li>
     
-        <li> <em>model</em>  : </li>
-    
         <li> <em>self</em> <code>_Association</code> : <p>reference to the Association that is being called.</p>
 </li>
     
@@ -915,7 +914,7 @@ function (next,model){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (next,model){
+function (next){
    next();
            
 }
@@ -937,7 +936,7 @@ function (next,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Middleware called before a model is loaded.
 </br>
@@ -951,8 +950,6 @@ function (next,model){
         <li> <em>next</em>  : <p>function to pass control up the middleware stack.</p>
 </li>
     
-        <li> <em>model</em>  : </li>
-    
         <li> <em>self</em> <code>_Association</code> : <p>reference to the Association that is being called.</p>
 </li>
     
@@ -964,7 +961,7 @@ function (next,model){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (next,model){
+function (next){
    next();
            
 }
@@ -986,7 +983,7 @@ function (next,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Middleware called before a model is removed.
 </br>
@@ -1017,7 +1014,7 @@ function (next,model){
    if (this.isOwner &amp;&amp; !this.isCascading) {
        var q = {};
        this._setAssociationKeys(model, q, null);
-       model[this.associatedDatasetName].update(q).classic(next);
+       nodeify(model[this.associatedDatasetName].update(q), next);
    } else {
        next();
    }
@@ -1041,7 +1038,7 @@ function (next,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Middleware called before a model is saved.
 </br>
@@ -1055,8 +1052,6 @@ function (next,model){
         <li> <em>next</em>  : <p>function to pass control up the middleware stack.</p>
 </li>
     
-        <li> <em>model</em>  : </li>
-    
         <li> <em>self</em> <code>_Association</code> : <p>reference to the Association that is being called.</p>
 </li>
     
@@ -1068,7 +1063,7 @@ function (next,model){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (next,model){
+function (next){
    next();
            
 }
@@ -1090,7 +1085,7 @@ function (next,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Middleware called before a model is updated.
 </br>
@@ -1104,8 +1099,6 @@ function (next,model){
         <li> <em>next</em>  : <p>function to pass control up the middleware stack.</p>
 </li>
     
-        <li> <em>model</em>  : </li>
-    
         <li> <em>self</em> <code>_Association</code> : <p>reference to the Association that is being called.</p>
 </li>
     
@@ -1117,7 +1110,7 @@ function (next,model){
     
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
-function (next,model){
+function (next){
    next();
            
 }
@@ -1139,7 +1132,7 @@ function (next,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Alias used to explicitly set an association on a model.</p>
 </p>
@@ -1188,7 +1181,7 @@ function (val,model){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p><p>Method to inject functionality into a model. This method alters the model
 to prepare it for associations, and initializes all required middleware calls
@@ -1260,7 +1253,7 @@ function (parent,name){
    </h3>
 
 <hr/>
-<em>Defined associations/_Association.js</em>
+<em>Defined model/associations/association.js</em>
 
 <p></p>
 
@@ -1280,7 +1273,7 @@ function (parent,name){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (){
-   return this.fetchType === fetch.EAGER;
+   return this.fetchType === fetchTypes.EAGER;
            
 }
     </pre>

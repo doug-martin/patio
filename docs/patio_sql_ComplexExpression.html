@@ -453,22 +453,22 @@ be used instead of this class directly.</p>
         <em>Static Properties</em>
         <table class='table table-bordered table-striped'><tr><td>Property</td><td>Type</td><td>Default Value</td><td>Description</td></tr><tr><td><em>BITWISE_OPERATORS</em></td><td>Object</td><td><code>
 {bitWiseAnd:"&", bitWiseOr:"|", exclusiveOr:"^", leftShift:"<<", rightShift:">>"}
-         </code></td><td><p>Default bitwise operators.</p>
+             </code></td><td><p>Default bitwise operators.</p>
 </td><tr><tr><td><em>BOOLEAN_OPERATORS</em></td><td>Object</td><td><code>
 {AND:"AND",OR:"OR"}
-         </code></td><td><p>Default boolean operators.</p>
+             </code></td><td><p>Default boolean operators.</p>
 </td><tr><tr><td><em>INEQUALITY_OPERATORS</em></td><td>Object</td><td><code>
 {GT:">",GTE:">=",LT:"<",LTE:"<="}
-         </code></td><td><p>Default inequality operators.</p>
+             </code></td><td><p>Default inequality operators.</p>
 </td><tr><tr><td><em>IN_OPERATORS</em></td><td>Object</td><td><code>
 {IN:"IN",NOTIN:'NOT IN'}
-         </code></td><td><p>Default IN operators.</p>
+             </code></td><td><p>Default IN operators.</p>
 </td><tr><tr><td><em>IS_OPERATORS</em></td><td>Object</td><td><code>
 {IS:"IS", ISNOT:'IS NOT'}
-         </code></td><td><p>Default IS operators.</p>
+             </code></td><td><p>Default IS operators.</p>
 </td><tr><tr><td><em>MATHEMATICAL_OPERATORS</em></td><td>Object</td><td><code>
 {PLUS:"+", MINUS:"-", DIVIDE:"/", MULTIPLY:"*"}
-         </code></td><td><p>Default mathematical operators.</p>
+             </code></td><td><p>Default mathematical operators.</p>
 </td><tr><tr><td><em>N_ARITY_OPERATORS</em></td><td>Object</td><td><code>
 {
      "||":"||",
@@ -478,13 +478,13 @@ be used instead of this class directly.</p>
      MINUS:"-",
      DIVIDE:"/", MULTIPLY:"*"
 }
-         </code></td><td><p>Default N(multi) arity operators.</p>
+             </code></td><td><p>Default N(multi) arity operators.</p>
 </td><tr><tr><td><em>ONE_ARITY_OPERATORS</em></td><td>Object</td><td><code>
 {
      "NOT":"NOT",
      "NOOP":"NOOP"
  }
-         </code></td><td><p>Default ONE operators.</p>
+             </code></td><td><p>Default ONE operators.</p>
 </td><tr><tr><td><em>OPERATOR_INVERSIONS</em></td><td>Object</td><td><code>
 {
      AND:"OR",
@@ -509,7 +509,7 @@ be used instead of this class directly.</p>
      ILIKE:'NOT ILIKE',
      NOTILIKE:"ILIKE"
 }
-         </code></td><td><p>Hash of operator inversions</p>
+             </code></td><td><p>Hash of operator inversions</p>
 </td><tr><tr><td><em>TWO_ARITY_OPERATORS</em></td><td>Object</td><td><code>
 {
      EQ:'=',
@@ -535,7 +535,7 @@ be used instead of this class directly.</p>
      IN:"IN",
      NOTIN:'NOT IN'
  }
-         </code></td><td><p>Default two arity operators.</p>
+             </code></td><td><p>Default two arity operators.</p>
 </td><tr></table>
     
     
@@ -543,7 +543,7 @@ be used instead of this class directly.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/expressions.js</em>
     
     
         <em>Throws</em>
@@ -567,8 +567,8 @@ function (op){
        //make a copy of the args
        var origArgs = args.slice(0);
        args.forEach(function (a, i) {
-           if (Expression.isConditionSpecifier(a)) {
-               args[i] = BooleanExpression.fromValuePairs(a);
+           if (sql.Expression.isConditionSpecifier(a)) {
+               args[i] = sql.BooleanExpression.fromValuePairs(a);
            }
        });
        op = op.toUpperCase();
@@ -601,7 +601,7 @@ function (op){
        this.op = op;
        this.args = args;
    }
-           
+               
 }
             </pre>
       
@@ -624,7 +624,7 @@ function (op){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Converts the ComplexExpression to a string.</p>
 </p>
@@ -654,10 +654,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.complexExpressionSql(this.op, this.args);
-           
+               
 }
     </pre>
     

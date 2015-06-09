@@ -452,7 +452,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
     
@@ -464,7 +464,7 @@ function (arrCol,sub){
    this.__arrCol = arrCol;
    //The array of subscripts to use (should be an array of numbers)
    this.__sub = sub;
-           
+               
 }
             </pre>
       
@@ -487,7 +487,7 @@ function (arrCol,sub){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Create a new <a href='./patio_sql_Subscript.html#'> patio.sql.Subscript</a> appending the given subscript(s)
 the the current array of subscripts.</p>
@@ -508,8 +508,8 @@ the the current array of subscripts.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (sub){
-   return new SubScript(this.__arrCol, this.__sub.concat(sub));
-           
+   return new sql.SubScript(this.__arrCol, this.__sub.concat(sub));
+               
 }
     </pre>
     
@@ -531,7 +531,7 @@ function (sub){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the <a href='./patio_sql_SubScript.html#'> patio.sql.SubScript</a> to a string.</p>
 </p>
@@ -561,10 +561,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.subscriptSql(this);
-           
+               
 }
     </pre>
     

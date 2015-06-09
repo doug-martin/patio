@@ -446,7 +446,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/expressions.js</em>
     
     
     
@@ -479,7 +479,7 @@ function (expression,alias){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Converts the aliased expression to a string</p>
 </p>
@@ -509,7 +509,7 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.aliasedExpressionSql(this);
                

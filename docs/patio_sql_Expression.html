@@ -469,9 +469,16 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/expressions.js</em>
     
     
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+define({
+            </pre>
+      
     
 
   
@@ -492,7 +499,7 @@
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>This is a helper method that will take in an array of arguments and return an expression.</p>
 </p>
@@ -533,7 +540,7 @@ function (args){
    }
    this.apply(ret, args);
    return ret;
-           
+               
 }
     </pre>
     
@@ -557,7 +564,7 @@ function (args){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Helper to determine if something is a condition specifier. Returns true if the object
 is a Hash or is an array of two element arrays.</p>
@@ -598,7 +605,7 @@ function (obj){
    return isHash(obj) || (isArray(obj) &amp;&amp; obj.length &amp;&amp; obj.every(function (i) {
            return isArray(i) &amp;&amp; i.length === 2;
        }));
-           
+               
 }
     </pre>
     
@@ -621,7 +628,7 @@ function (obj){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Returns the string representation of this expression</p>
 </p>
@@ -651,7 +658,7 @@ function (obj){
     <pre class="prettyprint linenums lang-js">
 function (ds){
    return this.toString(ds);
-           
+               
 }
     </pre>
     

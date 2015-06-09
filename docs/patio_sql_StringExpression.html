@@ -456,9 +456,16 @@ LIKE expression.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/expressions.js</em>
     
     
+    
+        
+            <em>Source</em>
+            <pre class="prettyprint linenums lang-js">
+define([ComplexExpression, sql.StringMethods, sql.StringConcatenationMethods, sql.InequalityMethods, sql.NoBooleanInputMethods], {
+            </pre>
+      
     
 
   
@@ -479,7 +486,7 @@ LIKE expression.</p>
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Creates a SQL pattern match expression. left (l) is the SQL string we
 are matching against, and ces are the patterns we are matching.
@@ -527,17 +534,17 @@ function (l){
    var args = argsToArray(arguments, 1);
    var params = likeElement(l);
    var likeMap = this.likeMap;
-   var lh = params[0], lre = params[1], lci = params[2];
+   var lre = params[1], lci = params[2];
    var last = args[args.length - 1];
    lci = (isHash(last) ? args.pop() : {})[&quot;caseInsensitive&quot;] ? true : lci;
    args = args.map(function (ce) {
        var r, rre, rci;
        var ceArr = likeElement(ce);
        r = ceArr[0], rre = ceArr[1], rci = ceArr[2];
-       return new BooleanExpression(likeMap[&quot;&quot; + (lre || rre) + (lci || rci)], l, r);
+       return new sql.BooleanExpression(likeMap[&quot;&quot; + (lre || rre) + (lci || rci)], l, r);
    }, this);
-   return args.length === 1 ? args[0] : BooleanExpression.fromArgs([&quot;OR&quot;].concat(args));
-           
+   return args.length === 1 ? args[0] : sql.BooleanExpression.fromArgs([&quot;OR&quot;].concat(args));
+               
 }
     </pre>
     

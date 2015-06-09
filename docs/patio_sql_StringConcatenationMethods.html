@@ -450,7 +450,7 @@ sql.x.sqlString.concat(&quot;y&quot;); //=&gt; &quot;x&quot; || &quot;y&quot;
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/methods.js</em>
     
     
     
@@ -479,7 +479,7 @@ define({
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Return a <a href='./patio_sql_StringExpression.html#'> patio.sql.StringExpression</a> representing the concatenation of this expression
 with the given argument.</p>
@@ -506,8 +506,8 @@ sql.x.sqlString.concat(&quot;y&quot;); //=&gt; &quot;x&quot; || &quot;y&quot;
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (expression){
-   return new StringExpression(&quot;||&quot;, this, expression);
-           
+   return new sql.StringExpression(&quot;||&quot;, this, expression);
+               
 }
     </pre>
     
@@ -529,7 +529,7 @@ function (expression){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Return a <a href='./patio_sql_Subscript.html#'> patio.sql.Subscript</a> with the given arguments, representing an
 SQL array access.</p>
@@ -557,9 +557,9 @@ sql.array.sqlSubscript([1, 2]) //=&gt; array[1, 2]
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (subscript){
-   var args = argsToArray(arguments);
-   return new SubScript(this, flatten(args));
-           
+   subscript = argsToArray(arguments);
+   return new sql.SubScript(this, flatten(subscript));
+               
 }
     </pre>
     

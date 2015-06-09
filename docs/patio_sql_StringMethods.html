@@ -452,7 +452,7 @@ sql.a.like(/^a/); //=&gt;  &quot;a&quot; ~* &#x27;^a&#x27;
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/methods.js</em>
     
     
     
@@ -481,7 +481,7 @@ define({
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Create a <a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a> case insensitive pattern match of the receiver
 with the given patterns.  See <a href='./patio_sql_StringExpression.html#like'> patio.sql.StringExpression#like</a>.</p>
@@ -515,10 +515,10 @@ sql.a.iLike(&quot;A%&quot;); //=&gt; &quot;a&quot; LIKE &#x27;A%&#x27;
     <pre class="prettyprint linenums lang-js">
 function (expression){
    expression = argsToArray(arguments);
-   return StringExpression.like.apply(StringExpression, [this].concat(expression).concat([
+   return sql.StringExpression.like.apply(sql.StringExpression, [this].concat(expression).concat([
        {caseInsensitive: true}
    ]));
-           
+               
 }
     </pre>
     
@@ -540,7 +540,7 @@ function (expression){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/methods.js</em>
 
 <p><p>Create a <a href='./patio_sql_BooleanExpression.html#'> patio.sql.BooleanExpression</a> case sensitive (if the database supports it) pattern match of the receiver with
 the given patterns.  See <a href='./patio_sql_StringExpression.html#like'> patio.sql.StringExpression#like</a>.</p>
@@ -568,8 +568,8 @@ sql.a.like(&quot;A%&quot;); //=&gt; &quot;a&quot; LIKE &#x27;A%&#x27;
     <pre class="prettyprint linenums lang-js">
 function (expression){
    expression = argsToArray(arguments);
-   return StringExpression.like.apply(StringExpression, [this].concat(expression));
-           
+   return sql.StringExpression.like.apply(sql.StringExpression, [this].concat(expression));
+               
 }
     </pre>
     

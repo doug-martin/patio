@@ -452,7 +452,7 @@ all conditions represent their own boolean expression.</p>
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/expressions.js</em>
     
     
     
@@ -460,13 +460,13 @@ all conditions represent their own boolean expression.</p>
             <em>Source</em>
             <pre class="prettyprint linenums lang-js">
 function (conditions,def,expression){
-   if (Expression.isConditionSpecifier(conditions)) {
+   if (sql.Expression.isConditionSpecifier(conditions)) {
        this.conditions = toArray(conditions);
        this.def = def;
        this.expression = expression;
        this.noExpression = isUndefined(expression);
    }
-           
+               
 }
             </pre>
       
@@ -489,7 +489,7 @@ function (conditions,def,expression){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/expressions.js</em>
 
 <p><p>Converts the case expression to a string</p>
 </p>
@@ -519,10 +519,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.caseExpressionSql(this);
-           
+               
 }
     </pre>
     

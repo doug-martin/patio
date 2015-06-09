@@ -446,7 +446,7 @@ See <a href='./patio_sql_JoinClause.html#'> patio.sql.JoinClause</a> for other a
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined sql.js</em>
+    <em>Defined sql/types.js</em>
     
     
     
@@ -456,7 +456,7 @@ See <a href='./patio_sql_JoinClause.html#'> patio.sql.JoinClause</a> for other a
 function (on,joinType,table,tableAlias){
    this.__on = on;
    this._super(arguments, [joinType, table, tableAlias]);
-           
+               
 }
             </pre>
       
@@ -479,7 +479,7 @@ function (on,joinType,table,tableAlias){
    </h3>
 
 <hr/>
-<em>Defined sql.js</em>
+<em>Defined sql/types.js</em>
 
 <p><p>Converts the <a href='./patio_sql_JoinOnClause.html#'> patio.sql.JoinOnClause</a> to a string.</p>
 </p>
@@ -509,10 +509,10 @@ the dataset is ommited then the default <a href='./patio_Dataset.html#'> patio.D
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (ds){
-   !Dataset &amp;&amp; (Dataset = require(&quot;./dataset&quot;));
+   !Dataset &amp;&amp; (Dataset = require(&quot;../dataset&quot;));
    ds = ds || new Dataset();
    return ds.joinOnClauseSql(this);
-           
+               
 }
     </pre>
     
