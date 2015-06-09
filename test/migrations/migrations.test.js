@@ -3,7 +3,7 @@
 var it = require('it'),
     assert = require('assert'),
     comb = require("comb"),
-    patio = require("index");
+    patio = require("../../lib");
 
 var patioMigrationVersion = -1, patioMigrationFiles = [];
 
@@ -177,13 +177,13 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("raise and error if there is a missing integer migration version", function () {
-            return patio.migrate(DB, __dirname + "/migrations/files/missing_migration_file").then(assert.fail, function (err) {
+            return patio.migrate(DB, __dirname + "/files/missing_migration_file").then(assert.fail, function (err) {
                 assert.deepEqual(err.message, "Migration error : Missing migration for 1");
             });
         });
 
         it.should("raise and error if there is a duplicate integer migration version", function () {
-            return patio.migrate(DB, __dirname + "/migrations/files/duplicate_migration_file").then(assert.fail, function (err) {
+            return patio.migrate(DB, __dirname + "/files/duplicate_migration_file").then(assert.fail, function (err) {
                 assert.deepEqual(err.message, "Migration error : Duplicate migration number 0");
             });
         });
@@ -191,7 +191,7 @@ it.describe("Migrators", function (it) {
         it.should("add a column name if it doesn't already exist in the schemaInfo table", function () {
             return DB.createTable("schema_info", function () {
             }).then(function () {
-                return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration").then(function () {
+                return patio.migrate(DB, __dirname + "/files/basic_integer_migration").then(function () {
                     assert.isTrue(DB.alteredTables["schema_info"]);
                     assert.isTrue(DB.columnsCreated.indexOf("version") !== -1);
                 });
@@ -199,7 +199,7 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("add a create a schemaInfoTable if it doesn't already exist", function () {
-            return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration").then(function () {
+            return patio.migrate(DB, __dirname + "/files/basic_integer_migration").then(function () {
                 assert.isTrue(DB.tables["schema_info"]);
                 assert.isTrue(DB.columnsCreated.indexOf("version") !== -1);
             });
@@ -207,7 +207,7 @@ it.describe("Migrators", function (it) {
 
 
         it.should("add a allow one to specify the schema and column", function () {
-            return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration", {
+            return patio.migrate(DB, __dirname + "/files/basic_integer_migration", {
                 table: "migration_info",
                 column: "mi"
             }).then(function () {
@@ -217,7 +217,7 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("apply a migration correctly if no target is given", function () {
-            return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration").then(function () {
+            return patio.migrate(DB, __dirname + "/files/basic_integer_migration").then(function () {
                 assert.isTrue(DB.tables.test1);
                 assert.isTrue(DB.tables.test2);
                 assert.isTrue(DB.tables.test3);
@@ -236,7 +236,7 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("apply a migration correctly in the up direction if a target is given", function () {
-            return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration", {target: 2}).then(function () {
+            return patio.migrate(DB, __dirname + "/files/basic_integer_migration", {target: 2}).then(function () {
                 assert.isTrue(DB.tables.test1);
                 assert.isTrue(DB.tables.test2);
                 assert.isTrue(DB.tables.test3);
@@ -251,7 +251,7 @@ it.describe("Migrators", function (it) {
                 this.version("integer", {"default": 0});
             }).then(function () {
                 return DB.from("schema_info").update({version: 3}).then(function () {
-                    return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration", {target: -1}).then(function () {
+                    return patio.migrate(DB, __dirname + "/files/basic_integer_migration", {target: -1}).then(function () {
                         assert.deepEqual(DB.droppedTables, ["test4", "test3", "test2", "test1"]);
                         assert.equal(patioMigrationVersion, -1);
                         assert.isTrue(comb.isEmpty(DB.alteredTables));
@@ -266,7 +266,7 @@ it.describe("Migrators", function (it) {
                 this.version("integer", {"default": 0});
             }).then(function () {
                 return DB.from("schema_info").update({version: 3}).then(function () {
-                    return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration", {
+                    return patio.migrate(DB, __dirname + "/files/basic_integer_migration", {
                         target: -1,
                         current: 4
                     }).then(function () {
@@ -287,14 +287,14 @@ it.describe("Migrators", function (it) {
             });
         });
         it.should("apply return the correct target number", function () {
-            return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration", {target: 4, current: 2})
+            return patio.migrate(DB, __dirname + "/files/basic_integer_migration", {target: 4, current: 2})
                 .then(function (val) {
                     assert.equal(val, 4);
-                    return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration", {target: -1});
+                    return patio.migrate(DB, __dirname + "/files/basic_integer_migration", {target: -1});
                 })
                 .then(function (val) {
                     assert.equal(val, 0);
-                    return patio.migrate(DB, __dirname + "/migrations/files/basic_integer_migration");
+                    return patio.migrate(DB, __dirname + "/files/basic_integer_migration");
                 })
                 .then(function (val) {
                     assert.equal(val, 4);
@@ -385,7 +385,7 @@ it.describe("Migrators", function (it) {
 
 
         it.should("migrate all the way up", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration").then(function () {
+            return patio.migrate(TSDB, __dirname + "/files/timestamp_migration").then(function () {
                 assert.isTrue(TSDB.tables.test1);
                 assert.isTrue(TSDB.tables.test2);
                 assert.isTrue(TSDB.tables.test3);
@@ -397,9 +397,9 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("migrate all the way down", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration")
+            return patio.migrate(TSDB, __dirname + "/files/timestamp_migration")
                 .then(function () {
-                    return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration", {target: -1});
+                    return patio.migrate(TSDB, __dirname + "/files/timestamp_migration", {target: -1});
                 })
                 .then(function () {
                     assert.isNull(TSDB.tables.test1);
@@ -413,7 +413,7 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("migrate all the way up to a timestamp", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration", {target: 1327997243}).then(function () {
+            return patio.migrate(TSDB, __dirname + "/files/timestamp_migration", {target: 1327997243}).then(function () {
                 assert.isTrue(TSDB.tables.test1);
                 assert.isTrue(TSDB.tables.test2);
                 assert.isTrue(TSDB.tables.test3);
@@ -424,9 +424,9 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("migrate all the way down to a timestamp", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration", {target: 1327997243})
+            return patio.migrate(TSDB, __dirname + "/files/timestamp_migration", {target: 1327997243})
                 .then(function () {
-                    return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration", {target: -1});
+                    return patio.migrate(TSDB, __dirname + "/files/timestamp_migration", {target: -1});
                 })
                 .then(function () {
                     assert.isNull(TSDB.tables.test1);
@@ -438,8 +438,8 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("apply missing migration files", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration").then(function () {
-                return patio.migrate(TSDB, __dirname + "/migrations/files/interleaved_timestamp_migrations");
+            return patio.migrate(TSDB, __dirname + "/files/timestamp_migration").then(function () {
+                return patio.migrate(TSDB, __dirname + "/files/interleaved_timestamp_migrations");
             })
                 .then(function () {
                     assert.isTrue(TSDB.tables.test1);
@@ -471,14 +471,14 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("not apply down action when up has not been called", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration").then(function () {
+            return patio.migrate(TSDB, __dirname + "/files/timestamp_migration").then(function () {
                 assert.isTrue(TSDB.tables.test1);
                 assert.isTrue(TSDB.tables.test2);
                 assert.isTrue(TSDB.tables.test3);
                 assert.deepEqual(TSDB.columnsCreated, ["column1", "column2", "column3", "column4"]);
                 assert.lengthOf(patioMigrationFiles, 4);
                 assert.deepEqual(patioMigrationFiles, ["1327997153.create_table.js", "1327997224.create_table.js", "1327997243.migration.js", '1327997262.migration.js']);
-                return patio.migrate(TSDB, __dirname + "/migrations/files/interleaved_timestamp_migrations", {target: -1}).then(function () {
+                return patio.migrate(TSDB, __dirname + "/files/interleaved_timestamp_migrations", {target: -1}).then(function () {
                     assert.lengthOf(TSDB.droppedTables, 4);
                     assert.deepEqual(TSDB.droppedTables, ["test4", "test3", "test2", "test1"]);
                     assert.isTrue(comb.isEmpty(TSDB.alteredTables));
@@ -489,8 +489,8 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("apply missing files up to a certian timestamp", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/timestamp_migration").then(function () {
-                return patio.migrate(TSDB, __dirname + "/migrations/files/interleaved_timestamp_migrations", {target: 1327997262}).then(function () {
+            return patio.migrate(TSDB, __dirname + "/files/timestamp_migration").then(function () {
+                return patio.migrate(TSDB, __dirname + "/files/interleaved_timestamp_migrations", {target: 1327997262}).then(function () {
                     assert.isTrue(TSDB.tables.test1);
                     assert.isTrue(TSDB.tables.test2);
                     assert.isTrue(TSDB.tables.test3);
@@ -520,7 +520,7 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("handle bad migrations", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/bad_timestamp_migration").then(assert.fail, function () {
+            return patio.migrate(TSDB, __dirname + "/files/bad_timestamp_migration").then(assert.fail, function () {
                 assert.isTrue(TSDB.tables.test1);
                 assert.isTrue(TSDB.tables.test2);
                 assert.isTrue(TSDB.tables.test3);
@@ -528,7 +528,7 @@ it.describe("Migrators", function (it) {
                 assert.lengthOf(patioMigrationFiles, 3);
                 sortMigrationFiles();
                 assert.deepEqual(patioMigrationFiles, ['1327997153.create_table.js', '1327997224.create_table.js', '1327997243.migration.js']);
-                return patio.migrate(TSDB, __dirname + "/migrations/files/bad_timestamp_migration", {target: -1}).then(assert.fail, function () {
+                return patio.migrate(TSDB, __dirname + "/files/bad_timestamp_migration", {target: -1}).then(assert.fail, function () {
                     assert.isTrue(TSDB.tables.test1);
                     assert.isNull(TSDB.tables.test2);
                     assert.isNull(TSDB.tables.test3);
@@ -540,7 +540,7 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("handle duplicate timestamps", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/duplicate_timestamp_migration").then(function () {
+            return patio.migrate(TSDB, __dirname + "/files/duplicate_timestamp_migration").then(function () {
                 assert.isTrue(TSDB.tables.test1);
                 assert.isTrue(TSDB.tables.test2);
                 assert.isTrue(TSDB.tables.test3);
@@ -556,7 +556,7 @@ it.describe("Migrators", function (it) {
                     '1327997243.migration.js',
                     '1327997262.migration.js'
                 ]);
-                return patio.migrate(TSDB, __dirname + "/migrations/files/duplicate_timestamp_migration", {target: -1}).then(function () {
+                return patio.migrate(TSDB, __dirname + "/files/duplicate_timestamp_migration", {target: -1}).then(function () {
                     assert.isNull(TSDB.tables.test1);
                     assert.isNull(TSDB.tables.test2);
                     assert.isNull(TSDB.tables.test3);
@@ -568,8 +568,8 @@ it.describe("Migrators", function (it) {
         });
 
         it.should("convert integer migrations", function () {
-            return patio.migrate(TSDB, __dirname + "/migrations/files/basic_integer_migration").then(function () {
-                return patio.migrate(TSDB, __dirname + "/migrations/files/both_migration").then(function () {
+            return patio.migrate(TSDB, __dirname + "/files/basic_integer_migration").then(function () {
+                return patio.migrate(TSDB, __dirname + "/files/both_migration").then(function () {
                     assert.isTrue(TSDB.tables.test1);
                     assert.isTrue(TSDB.tables.test2);
                     assert.isTrue(TSDB.tables.test3);
@@ -594,7 +594,7 @@ it.describe("Migrators", function (it) {
                         '1327997153.create_table.js',
                         '1327997224.create_table.js'
                     ]);
-                    return patio.migrate(TSDB, __dirname + "/migrations/files/both_migration", {target: -1}).then(function () {
+                    return patio.migrate(TSDB, __dirname + "/files/both_migration", {target: -1}).then(function () {
                         assert.isNull(TSDB.tables.test1);
                         assert.isNull(TSDB.tables.test2);
                         assert.isNull(TSDB.tables.test3);

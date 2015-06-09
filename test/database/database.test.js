@@ -2,7 +2,7 @@
 
 var it = require('it'),
     assert = require('assert'),
-    patio = require("index"),
+    patio = require("../../lib"),
     Database = patio.Database,
     sql = patio.sql,
     helper = require("../helpers/helper"),

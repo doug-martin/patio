@@ -2,7 +2,7 @@
 
 var it = require('it'),
     assert = require('assert'),
-    patio = require("index"),
+    patio = require("../../lib"),
     config = require("./../test.config.js"),
     comb = require("comb-proxy");
 

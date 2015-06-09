@@ -3,7 +3,7 @@
 var it = require('it'),
     assert = require('assert'),
     helper = require("../data/validator.helper.js"),
-    patio = require("index"),
+    patio = require("../../lib"),
     ValidatorPlugin = patio.plugins.ValidatorPlugin,
     comb = require("comb");
 

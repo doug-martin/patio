@@ -2,7 +2,7 @@
 
 var it = require('it'),
     assert = require('assert'),
-    patio = require("index"),
+    patio = require("../../lib"),
     nodeify = require('../../lib/utils').nodeify,
     helper = require("../data/timestampPlugin.helper.js");
 

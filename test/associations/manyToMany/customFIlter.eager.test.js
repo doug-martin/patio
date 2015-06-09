@@ -3,7 +3,7 @@
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/manyToMany.helper.js"),
-    patio = require("index"),
+    patio = require("../../../lib"),
     sql = patio.sql;
 
 var gender = ["M", "F"],
@@ -96,7 +96,7 @@ it.describe("Many to Many eager with filter", function (it) {
 
         it.beforeEach(function () {
             return Company.remove().then(function () {
-                new Company({companyName: "Google"}).save();
+                return new Company({companyName: "Google"}).save();
             });
         });
 

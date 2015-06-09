@@ -3,10 +3,9 @@
 var it = require('it'),
     assert = require('assert'),
     helper = require("../../data/oneToOne.helper.js"),
-    patio = require("index");
+    patio = require("../../../lib");
 
 var gender = ["M", "F"];
-
 it.describe("One To One with camelize option", function (it) {
     var Works, Employee;
     it.beforeAll(function () {
@@ -79,18 +78,23 @@ it.describe("One To One with camelize option", function (it) {
 
     it.context(function (it) {
         it.beforeEach(function () {
-            return new Employee({
-                lastName: "last" + 1,
-                firstName: "first" + 1,
-                midInitial: "m",
-                gender: gender[1 % 2],
-                street: "Street " + 1,
-                city: "City " + 1,
-                works: {
-                    companyName: "Google",
-                    salary: 100000
-                }
-            }).save();
+            return Promise.all([
+                Employee.remove(),
+                Works.remove()
+            ]).then(function () {
+                return new Employee({
+                    lastName: "last" + 1,
+                    firstName: "first" + 1,
+                    midInitial: "m",
+                    gender: gender[1 % 2],
+                    street: "Street " + 1,
+                    city: "City " + 1,
+                    works: {
+                        companyName: "Google",
+                        salary: 100000
+                    }
+                }).save();
+            });
         });
 
         it.should("not load associations when querying", function () {

@@ -2,7 +2,7 @@
 var it = require('it'),
     assert = require('assert'),
     helper = require("./../data/model.helper.js"),
-    patio = require("index");
+    patio = require("../../lib");
 
 
 it.describe("A model with custom accessors", function (it) {

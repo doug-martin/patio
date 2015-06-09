@@ -4,7 +4,7 @@
 
 var it = require('it'),
     assert = require('assert'),
-    patio = require("index"),
+    patio = require("../../lib"),
     Dataset = patio.Dataset,
     Database = patio.Database,
     sql = patio.SQL,

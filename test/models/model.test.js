@@ -3,7 +3,7 @@
 var it = require('it'),
     assert = require('assert'),
     helper = require("./../data/model.helper.js"),
-    patio = require("index"),
+    patio = require("../../lib"),
     sql = patio.SQL,
     comb = require("comb-proxy"),
     hitch = comb.hitch,
@@ -342,7 +342,7 @@ it.describe("patio.Model", function (it) {
             });
 
             it.should("support last", function () {
-                return Employee.order("firstName").last()
+                return Employee.order("firstname").last()
                     .then(function (emp) {
                         assert.instanceOf(emp, Employee);
                         assert.equal(emp.firstname, "first9");

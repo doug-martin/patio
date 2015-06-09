@@ -3,7 +3,7 @@
 var it = require('it'),
     assert = require('assert'),
     helper = require("./../data/model.helper.js"),
-    patio = require("index"),
+    patio = require("../../lib"),
     sql = patio.SQL;
 
 var gender = ["M", "F"];
@@ -380,7 +380,7 @@ it.describe("A model with camelized properites", function (it) {
             return Employee.update({firstName: "dougie"}).then(function (records) {
                 assert.lengthOf(records, 1);
                 records.forEach(function (r) {
-                    assert.equal(r.firstName, "doug");
+                    assert.equal(r.firstName, "dougie");
                 });
             });
         });

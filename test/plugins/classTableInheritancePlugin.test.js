@@ -2,7 +2,7 @@
 
 var it = require('it'),
     assert = require('assert'),
-    patio = require("index"),
+    patio = require("../../lib"),
     ClassTableInheritance = patio.plugins.ClassTableInheritancePlugin,
     helper = require("../data/classTableInheritance.helper.js"),
     Employee, Staff, Manager, Executive;

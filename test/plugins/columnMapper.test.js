@@ -3,7 +3,7 @@
 var it = require('it'),
     assert = require('assert'),
     helper = require("../data/mappedColumnPlugin.helper.js"),
-    patio = require("index"),
+    patio = require("../../lib"),
     sql = patio.sql;
 
 var gender = ["M", "F"];
@@ -80,11 +80,6 @@ it.describe("patio.plugins.ColumnMapper", function (it) {
             }
         });
         return employee.save().then(function () {
-            console.log('asdas');
-            //return Promise.all([Employee.all(), Works.all()]).then(function (res) {
-            //    assert.lengthOf(res[0], 0);
-            //    assert.lengthOf(res[1], 1);
-            //});
             assert.equal(employee.salary, 100000);
             assert.equal(employee.mySalary, 90000);
             assert.equal(employee.salaryInner, 80000);
