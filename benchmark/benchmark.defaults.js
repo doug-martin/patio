@@ -1,23 +1,31 @@
-var patio = require("../index"), comb = require("comb");
-var DB;
-exports.createTableAndModel = function (connect) {
-    DB = patio.connect(connect);
-    return DB.forceCreateTable("patioEntry",
-        function () {
+"use strict";
+var patio = require("../index");
+
+module.exports = {
+    createTableAndModel: createTableAndModel,
+    disconnect: disconnect,
+    disconnectErr: disconnectErr
+};
+
+function createTableAndModel(connect) {
+    var db = patio.connect(connect);
+    return db
+        .forceCreateTable("patioEntry", function () {
             this.primaryKey("id");
             this.column("number", "integer");
             this.column("string", String);
-        }).chain(function () {
+        })
+        .then(function () {
             patio.addModel("patioEntry");
             return patio.syncModels();
         });
-};
+}
 
-exports.disconnect = function () {
+function disconnect() {
     return patio.disconnect();
 }
 
-exports.disconnectErr = function (err) {
+function disconnectErr(err) {
     console.error(err);
     return patio.disconnect();
 }

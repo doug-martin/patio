@@ -304,8 +304,8 @@ it.describe("patio.Model manyToOne lazy", function (it) {
 
     it.should("should not delete associations when deleting", function () {
         return Company.one().then(function (company) {
-            company.remove().then(function () {
-                Employee.count().then(function (count) {
+            return company.remove().then(function () {
+                return Employee.count().then(function (count) {
                     assert.equal(count, 3);
                 });
             });

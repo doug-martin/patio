@@ -5,7 +5,7 @@ var it = require('it'),
     helper = require("../../../data/manyToOne.helper.js"),
     patio = require("../../../../lib"),
     sql = patio.sql,
-    comb = require("comb-proxy");
+    comb = require("comb");
 
 
 var gender = ["M", "F"],
@@ -50,10 +50,10 @@ it.describe("patio.Model manyToOne eager with custom filter", function (it) {
 
 
         it.beforeAll(function () {
-            return comb.when(
+            return Promise.all([
                 Company.remove(),
                 Employee.remove()
-            );
+            ]);
         });
 
         it.should("it should save the associations", function () {
@@ -114,10 +114,10 @@ it.describe("patio.Model manyToOne eager with custom filter", function (it) {
 
 
         it.beforeAll(function () {
-            return comb.when(
+            return Promise.all([
                 Company.remove(),
                 Employee.remove()
-            );
+            ]);
         });
 
         it.should("it should save the associations", function () {

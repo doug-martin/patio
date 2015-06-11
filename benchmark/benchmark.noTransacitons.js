@@ -1,14 +1,21 @@
-var patio = require("../index"), comb = require("comb");
-var DB;
+"use strict";
+var patio = require("../index");
 
-exports.createTableAndModel = function (connect) {
-    DB = patio.connect(connect);
-    return DB.forceCreateTable("patioEntry",
-        function () {
+module.exports = {
+    createTableAndModel: createTableAndModel,
+    disconnect: disconnect,
+    disconnectErr: disconnectErr
+};
+
+function createTableAndModel(connect) {
+    var db = patio.connect(connect);
+    return db
+        .forceCreateTable("patioEntry", function () {
             this.primaryKey("id");
             this.column("number", "integer");
             this.column("string", String);
-        }).chain(function () {
+        })
+        .then(function () {
             var PatioEntry = patio.addModel("patioEntry");
             PatioEntry.useTransactions = false;
             PatioEntry.reloadOnSave = false;
@@ -17,13 +24,13 @@ exports.createTableAndModel = function (connect) {
             PatioEntry.typecastOnLoad = false;
             return patio.syncModels();
         });
-};
-
-exports.disconnect = function () {
-    patio.disconnect();
 }
 
-exports.disconnectErr = function (err) {
-    console.error(err);
-    patio.disconnect();
+function disconnect() {
+    return patio.disconnect();
+}
+
+function disconnectErr(err) {
+    console.error(err.stack || err);
+    return patio.disconnect();
 }

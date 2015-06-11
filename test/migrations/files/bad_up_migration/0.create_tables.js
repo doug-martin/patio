@@ -1,6 +1,6 @@
-var comb = require("comb");
+"use strict";
 exports.up = function (db) {
-    return comb.when(
+    return Promise.all([
         db.createTable("test", function () {
             this.column("column", "integer");
         }),
@@ -13,7 +13,7 @@ exports.up = function (db) {
         db.createTable("test4", function () {
             this.column("column", "integer");
         })
-    );
+    ]);
 };
 
 exports.down = function (db) {

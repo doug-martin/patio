@@ -29,19 +29,6 @@ it.describe("patio", function (it) {
     var DummyDataset, DummyDatabase;
     it.beforeAll(function () {
         return patio.disconnect().then(function () {
-            DummyDataset = comb.define(patio.Dataset, {
-                instance: {
-                    first: function () {
-                        var ret = new comb.Promise();
-                        if (this.__opts.from[0] === "a") {
-                            ret.errback();
-                        } else {
-                            ret.callback();
-                        }
-                        return ret;
-                    }
-                }
-            });
             DummyDatabase = comb.define(patio.Database, {
                 instance: {
                     constructor: function () {
@@ -84,28 +71,10 @@ it.describe("patio", function (it) {
 
                     reset: function () {
                         this.sqls = [];
-                    },
-
-                    transaction: function (opts, cb) {
-                        var ret = new comb.Promise();
-                        cb();
-                        ret.callback();
-                        return ret;
-                    },
-
-                    getters: {
-                        dataset: function () {
-                            return new DummyDataset(this);
-                        }
                     }
-                },
 
-                "static": {
-                    init: function () {
-                        this.setAdapterType("dummydb");
-                    }
                 }
-            });
+            }).setAdapterType("dummydb");
             patio.resetIdentifierMethods();
         });
     });

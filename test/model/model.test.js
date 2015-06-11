@@ -5,7 +5,7 @@ var it = require('it'),
     helper = require("./../data/model.helper.js"),
     patio = require("../../lib"),
     sql = patio.SQL,
-    comb = require("comb-proxy"),
+    comb = require("comb"),
     hitch = comb.hitch,
     config = require("./../test.config.js");
 

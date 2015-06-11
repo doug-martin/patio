@@ -4,7 +4,7 @@ var it = require('it'),
     assert = require('assert'),
     patio = require("../../lib"),
     sql = patio.SQL,
-    comb = require("comb-proxy"),
+    comb = require("comb"),
     config = require("../test.config.js"),
     serial = comb.serial;
 

@@ -65,7 +65,7 @@ it.describe("patio.Model manyToOne lazy with custom filter", function (it) {
             });
             return c1.save().then(function () {
                 return Company.one().then(function (company) {
-                    Promise.all([
+                    return Promise.all([
                         company.employees,
                         company.omahaEmployees,
                         company.lincolnEmployees
@@ -96,7 +96,7 @@ it.describe("patio.Model manyToOne lazy with custom filter", function (it) {
         it.should("the child associations should also be associated to the parent ", function () {
             return Employee.all().then(function (emps) {
                 assert.lengthOf(emps, 3);
-                Promise.all([
+                return Promise.all([
                     emps[0].company,
                     emps[1].company
                 ]).then(function (companies) {
@@ -132,7 +132,7 @@ it.describe("patio.Model manyToOne lazy with custom filter", function (it) {
             return emp.save().then(function () {
                 return emp.company.then(function (company) {
                     assert.equal(company.companyName, "Google");
-                    Promise.all([
+                    return Promise.all([
                         company.employees,
                         company.omahaEmployees,
                         company.lincolnEmployees
@@ -181,7 +181,7 @@ it.describe("patio.Model manyToOne lazy with custom filter", function (it) {
                     company.addOmahaEmployee(omahaEmp),
                     company.addLincolnEmployee(lincolnEmp)
                 ]).then(function () {
-                    Promise.all([
+                    return Promise.all([
                         company.omahaEmployees,
                         company.lincolnEmployees
                     ]).then(function (ret) {
@@ -215,16 +215,16 @@ it.describe("patio.Model manyToOne lazy with custom filter", function (it) {
                 });
             }
             return Company.one().then(function (company) {
-                Promise.all([
+                return Promise.all([
                     company.addOmahaEmployees(omahaEmployees),
                     company.addLincolnEmployees(lincolnEmployees)
                 ]).then(function () {
-                    Promise.all([
+                    return Promise.all([
                         company.omahaEmployees,
                         company.lincolnEmployees
                     ]).then(function (ret) {
-                        assert.lengthOf(ret[0], 1);
-                        assert.lengthOf(ret[1], 1);
+                        assert.lengthOf(ret[0], 3);
+                        assert.lengthOf(ret[1], 3);
                     });
                 });
             });
@@ -252,63 +252,91 @@ it.describe("patio.Model manyToOne lazy with custom filter", function (it) {
             });
         });
 
+        it.should("the removing of a filtered association and deleting them", function () {
+            return Company.one().then(function (company) {
+                return Promise.all([company.omahaEmployees, company.lincolnEmployees])
+                    .then(function (emps) {
+                        return Promise.all([
+                            company.removeOmahaEmployee(emps[0][0], true),
+                            company.removeLincolnEmployee(emps[1][0], true)
+                        ]);
+                    })
+                    .then(function () {
+                        return Promise.all([company.omahaEmployees, company.lincolnEmployees])
+                    })
+                    .then(function (emps) {
+                        return Employee.count().then(function (count) {
+                            assert.equal(count, 1);
+                            assert.lengthOf(emps[0], 0);
+                            assert.lengthOf(emps[1], 0);
+                        });
+                    });
+            });
+        });
+
+        it.should("the removing of a filtered association without deleting them", function () {
+            return Company.one().then(function (company) {
+                return Promise.all([company.omahaEmployees, company.lincolnEmployees])
+                    .then(function (emps) {
+                        return Promise.all([
+                            company.removeOmahaEmployee(emps[0][0]),
+                            company.removeLincolnEmployee(emps[1][0])
+                        ]);
+                    })
+                    .then(function () {
+                        return Promise.all([company.omahaEmployees, company.lincolnEmployees])
+                    })
+                    .then(function (emps) {
+                        return Employee.count().then(function (count) {
+                            assert.equal(count, 3);
+                            assert.lengthOf(emps[0], 0);
+                            assert.lengthOf(emps[1], 0);
+                        });
+                    });
+            });
+        });
+
         it.should("the removing of filtered associations and deleting them", function () {
             return Company.one().then(function (company) {
-                Promise.all([
-                    company.removeOmahaEmployee(company.omahaEmployees[0], true),
-                    company.removeLincolnEmployee(company.lincolnEmployees[0], true)
-                ]).then(function () {
-                    return Employee.count().then(function (count) {
-                        assert.lengthOf(company.omahaEmployees, 0);
-                        assert.lengthOf(company.lincolnEmployees, 0);
-                        assert.equal(count, 1);
+                return Promise.all([company.omahaEmployees, company.lincolnEmployees])
+                    .then(function (emps) {
+                        return Promise.all([
+                            company.removeOmahaEmployee(emps[0], true),
+                            company.removeLincolnEmployee(emps[1], true)
+                        ]);
+                    })
+                    .then(function () {
+                        return Promise.all([company.omahaEmployees, company.lincolnEmployees]);
+                    })
+                    .then(function (emps) {
+                        return Employee.count().then(function (count) {
+                            assert.equal(count, 1);
+                            assert.lengthOf(emps[0], 0);
+                            assert.lengthOf(emps[1], 0);
+                        });
                     });
-                });
             });
         });
 
         it.should("the removing of filtered associations without deleting them", function () {
             return Company.one().then(function (company) {
-                Promise.all([
-                    company.removeOmahaEmployee(company.omahaEmployees[0]),
-                    company.removeLincolnEmployee(company.lincolnEmployees[0])
-                ]).then(function () {
-                    return Employee.count().then(function (count) {
-                        assert.lengthOf(company.omahaEmployees, 0);
-                        assert.lengthOf(company.lincolnEmployees, 0);
-                        assert.equal(count, 3);
+                return Promise.all([company.omahaEmployees, company.lincolnEmployees])
+                    .then(function (emps) {
+                        return Promise.all([
+                            company.removeOmahaEmployee(emps[0]),
+                            company.removeLincolnEmployee(emps[1])
+                        ]);
+                    })
+                    .then(function () {
+                        return Promise.all([company.omahaEmployees, company.lincolnEmployees])
+                    })
+                    .then(function (emps) {
+                        return Employee.count().then(function (count) {
+                            assert.equal(count, 3);
+                            assert.lengthOf(emps[0], 0);
+                            assert.lengthOf(emps[1], 0);
+                        });
                     });
-                });
-            });
-        });
-
-        it.should("the removing of filtered associations and deleting them", function () {
-            return Company.one().then(function (company) {
-                Promise.all([
-                    company.removeOmahaEmployee(company.omahaEmployees, true),
-                    company.removeLincolnEmployee(company.lincolnEmployees, true)
-                ]).then(function () {
-                    return Employee.count().then(function (count) {
-                        assert.lengthOf(company.omahaEmployees, 0);
-                        assert.lengthOf(company.lincolnEmployees, 0);
-                        assert.equal(count, 1);
-                    });
-                });
-            });
-        });
-
-        it.should("the removing of filtered associations without deleting them", function () {
-            return Company.one().then(function (company) {
-                Promise.all([
-                    company.removeOmahaEmployee(company.omahaEmployees),
-                    company.removeLincolnEmployee(company.lincolnEmployees)
-                ]).then(function () {
-                    return Employee.count().then(function (count) {
-                        assert.lengthOf(company.omahaEmployees, 0);
-                        assert.lengthOf(company.lincolnEmployees, 0);
-                        assert.equal(count, 3);
-                    });
-                });
             });
         });
     });

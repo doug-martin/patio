@@ -79,7 +79,7 @@ it.describe("patio.Model manyToOne with a string for key", function (it) {
         it.should("the child associations should also be associated to the parent ", function () {
             return Employee.all().then(function (emps) {
                 assert.lengthOf(emps, 2);
-                Promise.all([
+                return Promise.all([
                     emps[0].company,
                     emps[1].company
                 ]).then(function (companies) {
@@ -294,3 +294,4 @@ it.describe("patio.Model manyToOne with a string for key", function (it) {
         return helper.dropModels();
     });
 });
+

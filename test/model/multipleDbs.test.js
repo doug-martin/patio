@@ -4,7 +4,7 @@ var it = require('it'),
     assert = require('assert'),
     patio = require("../../lib"),
     config = require("./../test.config.js"),
-    comb = require("comb-proxy");
+    comb = require("comb");
 
 var DB1, DB2;
 var createTablesAndSync = function () {

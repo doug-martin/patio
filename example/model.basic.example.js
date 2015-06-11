@@ -89,7 +89,6 @@ connectAndCreateSchema().chain(function () {
         console.log(format("%s %s's id is %d", myUser.firstName, myUser.lastName, myUser.id));
 
         return User.db.transaction(function () {
-            var ret = new comb.Promise();
             return User.forUpdate().first({id: 1}).chain(function (user) {
                 // SELECT * FROM user WHERE id = 1 FOR UPDATE
                 user.password = null;

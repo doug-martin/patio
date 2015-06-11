@@ -1,3 +1,4 @@
+"use strict";
 var patio = require("../../../index"), comb = require("comb");
 
 /*
@@ -11,7 +12,6 @@ module.exports = exports = comb.define(null, {
         },
 
         findByIdRoute: function (params) {
-            var ret = new comb.Promise();
             return this.findById(params.id).chain(function (model) {
                 if (model) {
                     return model.toObject();

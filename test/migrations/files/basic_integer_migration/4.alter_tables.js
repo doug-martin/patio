@@ -1,9 +1,9 @@
 "use strict";
 
-var nodeify = require("../../../../lib/utils").nodeify;
+var p = require("../../../../lib/promise");
 
 exports.up = function (db, next) {
-    nodeify(Promise.all([
+    p.nodeify(Promise.all([
         db.alterTable("test1", function () {
             this.renameColumn("column1", "column2");
         }),

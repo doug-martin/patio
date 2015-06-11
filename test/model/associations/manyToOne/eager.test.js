@@ -220,7 +220,7 @@ it.describe("patio.Model manyToOne eager", function (it) {
                 Company.remove(),
                 Employee.remove()
             ]).then(function () {
-                new Company({companyName: "Google", employees: employees}).save();
+                return new Company({companyName: "Google", employees: employees}).save();
             });
         });
 

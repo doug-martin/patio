@@ -562,7 +562,7 @@ function (db,directory,opts,cb){
        opts = opts || {};
    }
    opts = opts || {};
-   return nodeify(this.__getMigrator(directory).then(function (Migrator) {
+   return p.nodeify(this.__getMigrator(directory).then(function (Migrator) {
        return new Migrator(db, directory, opts).run();
    }), cb);
            

@@ -1226,7 +1226,7 @@ User.findById([&quot;greg&quot;, &quot;yukon&quot;]).then(function(userOne){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>called back with the record or null if one is not found.</p>
+        <li> <code>Promise</code> <p>called back with the record or null if one is not found.</p>
 </li>
     
     </ul>
@@ -1689,7 +1689,7 @@ but the pre/post remove hooks not be notified of the deletion.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>called back when the removal completes.</p>
+        <li> <code>Promise</code> <p>called back when the removal completes.</p>
 </li>
     
     </ul>
@@ -1768,7 +1768,7 @@ removing the model.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>called back when the removal completes.</p>
+        <li> <code>Promise</code> <p>called back when the removal completes.</p>
 </li>
     
     </ul>
@@ -1884,7 +1884,7 @@ saving the models.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>called back with the saved record/s.</p>
+        <li> <code>Promise</code> <p>called back with the saved record/s.</p>
 </li>
     
     </ul>
@@ -2086,7 +2086,7 @@ myModel.reload().then(function(model){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>resolved with the model instance.</p>
+        <li> <code>Promise</code> <p>resolved with the model instance.</p>
 </li>
     
     </ul>
@@ -2104,7 +2104,7 @@ function (){
            return self;
        });
    } else {
-       return Promise.resolve(this);
+       return p.resolve(this);
    }
            
 }
@@ -2147,7 +2147,7 @@ function (){
 function (options){
    options || (options = {});
    var reload = isBoolean(options.reload) ? options.reload : this._static.reloadOnSave;
-   return reload ? this.__reload() : Promise.resolve(this);
+   return reload ? this.__reload() : p.resolve(this);
            
 }
     </pre>
@@ -2190,7 +2190,7 @@ function (options){
    options = options || {};
    options || (options = {});
    var reload = isBoolean(options.reload) ? options.reload : this._static.reloadOnUpdate;
-   return reload ? this.__reload() : Promise.resolve(this);
+   return reload ? this.__reload() : p.resolve(this);
            
 }
     </pre>
@@ -2251,7 +2251,7 @@ removing the model.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>called back after the deletion is successful.</p>
+        <li> <code>Promise</code> <p>called back after the deletion is successful.</p>
 </li>
     
     </ul>
@@ -2282,7 +2282,7 @@ function (options){
                    });
            });
        } else {
-           return Promise.resolve(0);
+           return p.resolve(0);
        }
    } else {
        throw new ModelError(&quot;Model &quot; + this.tableName + &quot; has not been synced&quot;);
@@ -2386,7 +2386,7 @@ precedence over <a href='./patio_Model.html#.reloadOnSave'> patio.Model.reloadOn
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>resolved when the save action has completed.</p>
+        <li> <code>Promise</code> <p>resolved when the save action has completed.</p>
 </li>
     
     </ul>
@@ -2718,7 +2718,7 @@ precedence over <a href='./patio_Model.html#.reloadOnUpdate'> patio.Model.reload
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>resolved when the update action has completed.</p>
+        <li> <code>Promise</code> <p>resolved when the update action has completed.</p>
 </li>
     
     </ul>
@@ -2756,7 +2756,7 @@ function (vals,options){
        } else if (this.__isNew &amp;&amp; this.__isChanged) {
            return this.save(vals, options);
        } else {
-           return Promise.resolve(this);
+           return p.resolve(this);
        }
    } else {
        throw new ModelError(&quot;Model &quot; + this.tableName + &quot; has not been synced&quot;);

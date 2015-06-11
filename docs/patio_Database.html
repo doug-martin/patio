@@ -2296,9 +2296,9 @@ function (table,op){
        alterTableOp = format(&quot;ALTER COLUMN %s %s NOT NULL&quot;, quotedName, op[&quot;null&quot;] ? &quot;DROP&quot; : &quot;SET&quot;);
        break;
    case &quot;addIndex&quot;:
-       return Promise.resolve(this.__indexDefinitionSql(table, op));
+       return p.resolve(this.__indexDefinitionSql(table, op));
    case &quot;dropIndex&quot;:
-       return Promise.resolve(this.__dropIndexSql(table, op));
+       return p.resolve(this.__dropIndexSql(table, op));
    case &quot;addConstraint&quot;:
        alterTableOp = format(&quot;ADD %s&quot;, this.__constraintDefinitionSql(op));
        break;
@@ -2306,9 +2306,9 @@ function (table,op){
        alterTableOp = format(&quot;DROP CONSTRAINT %s&quot;, quotedName);
        break;
    default :
-       return Promise.reject(new DatabaseError(&quot;Invalid alter table operator &#x27;&quot; + op.op + &quot;&#x27;&quot;));
+       return p.reject(new DatabaseError(&quot;Invalid alter table operator &#x27;&quot; + op.op + &quot;&#x27;&quot;));
    }
-   return Promise.resolve(format(&quot;ALTER TABLE %s %s&quot;, this.__quoteSchemaTable(table), alterTableOp));
+   return p.resolve(format(&quot;ALTER TABLE %s %s&quot;, this.__quoteSchemaTable(table), alterTableOp));
            
 }
     </pre>
@@ -2351,7 +2351,7 @@ function (table,op){
     <pre class="prettyprint linenums lang-js">
 function (table,operations){
    var self = this;
-   return Promise.all(operations.map(function (operation) {
+   return p.all(operations.map(function (operation) {
        return self.__alterTableSql(table, operation);
    }));
            
@@ -2727,10 +2727,10 @@ function (name,generator,options){
    var ret;
    var promises = generator.indexes.map(function (index) {
        var ps = this.__indexSqlList(name, [index]).map(this.executeDdl, this);
-       return Promise.all(ps);
+       return p.all(ps);
    }, this);
    if (promises.length) {
-       ret = Promise.all(promises).then(function (res) {
+       ret = p.all(promises).then(function (res) {
            return res;
        }, function (err) {
            if (!e) {
@@ -2738,7 +2738,7 @@ function (name,generator,options){
            }
        });
    } else {
-       ret = Promise.resolve();
+       ret = p.resolve();
    }
    return ret;
            
@@ -4833,7 +4833,7 @@ function (name,source,opts){
     <em>Returns</em>
     <ul>
     
-        <li>  <p>Promise a promise that is resolved once all the connections have been closed.</p>
+        <li> <code>Promise</code> <p>a promise that is resolved once all the connections have been closed.</p>
 </li>
     
     </ul>
@@ -5572,7 +5572,7 @@ function (names){
        return isString(t) || isInstanceOf(t, Identifier, QualifiedIdentifier);
    });
    var l = names.length, self = this;
-   return new Promise(function (resolve) {
+   return new p.Promise(function (resolve) {
        (function drop(i) {
            if (i &amp;lt; l) {
                var name = names[i++];
@@ -6716,7 +6716,7 @@ comb.executeInOrder(DB, function(DB){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (table,cb){
-   return nodeify(this.from(table).first().then(function () {
+   return p.nodeify(this.from(table).first().then(function () {
        return true;
    }, function () {
        return false;
@@ -6806,7 +6806,7 @@ successful.</p>
 
 <pre class='prettyprint linenums lang-js'><code>//normal transaction
 DB.transaction(function() {
-     return Promise.all(
+     return p.all(
          this.execute(&#39;DROP TABLE test;&#39;),
          this.execute(&#39;DROP TABLE test2;&#39;)
      );
@@ -6815,7 +6815,7 @@ DB.transaction(function() {
 //transaction with a save point.
 DB.transaction(function() {
      return this.transaction({savepoint : true}, function() {
-        return Promise.all(
+        return p.all(
              this.execute(&#39;DROP TABLE test;&#39;),
              this.execute(&#39;DROP TABLE test2;&#39;)
         );

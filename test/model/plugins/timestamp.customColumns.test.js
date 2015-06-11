@@ -4,7 +4,7 @@ var it = require('it'),
     assert = require('assert'),
     patio = require("../../../lib"),
     helper = require("../../data/timestampPlugin.helper.js"),
-    nodeify = require('../../../lib/utils').nodeify,
+    p = require('../../../lib/promise'),
     Employee;
 
 it.describe("Timestamp custom columns", function (it) {
@@ -55,7 +55,7 @@ it.describe("Timestamp custom columns", function (it) {
     it.should("set updated column", function (next) {
         setTimeout(function () {
             emp.firstname = "dave";
-            return nodeify(emp.save().then(function () {
+            return p.nodeify(emp.save().then(function () {
                 //force reload
                 assert.isNotNull(emp.updatedAt);
                 assert.instanceOf(emp.updatedAt, patio.SQL.DateTime);

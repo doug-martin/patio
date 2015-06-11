@@ -32,6 +32,19 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.registerTask("benchmarks", "runs benchmarks", function () {
+        var done = this.async();
+        require("./benchmark/benchmark")()
+            .then(function () {
+                done();
+            })
+            .catch(function (err) {
+                console.log(err.stack || err);
+                done(false);
+
+            });
+    });
+
     grunt.registerTask("spawn-test", "spawn tests", function (db) {
         var done = this.async();
         var env = process.env;

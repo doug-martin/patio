@@ -321,7 +321,7 @@ it.describe("patio.Dataset actions", function (it) {
 
         it.should("work on a graphed_dataset", function () {
             return dataset.graph(dataset, ["a"], {tableAlias: "test2"}).then(function (ds) {
-                Promise.all([
+                return Promise.all([
                     ds.count().then(function (count) {
                         assert.equal(count, 1);
                         assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');

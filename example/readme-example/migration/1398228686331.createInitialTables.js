@@ -1,3 +1,4 @@
+"use strict";
 module.exports = {
     //up is called when you migrate your database up
     up: function (db) {

@@ -3241,7 +3241,7 @@
         Each dataset does not actually send any query to the database until an action method has
         been called upon it(with the exception of <a href='./patio_Dataset.html#graph'> patio.Dataset#graph</a> because columns
         from the other table might need retrived in order to set up the graph). Each action
-        returns a <i>comb.Promise</i> that will be resolved with the result or errback, it is important
+        returns a <i>sPromise</i> that will be resolved with the result or errback, it is important
         that you account for errors otherwise it can be difficult to track down issues.
         The list of action methods is:
         <ul>
@@ -3353,7 +3353,7 @@ if called with a block.</p>
     
         <a name="instanceProperties"></a>
         <em>Instance Properties</em>
-        <table class='table table-bordered table-striped'><tr><td>Property</td><td>Type</td><td>Default Value</td><td>Description</td></tr><tr><td>columns</td><td>{comb.Promise}
+        <table class='table table-bordered table-striped'><tr><td>Property</td><td>Type</td><td>Default Value</td><td>Description</td></tr><tr><td>columns</td><td>{Promise}
 
  Returns a promise that is resolved with the columns in the result set in order as an array of strings.
 If the columns are currently cached, then the promise is immediately resolved with the cached value. Otherwise,
@@ -6763,7 +6763,7 @@ rowPromise.then(function(rows){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved with an array of rows.</p>
+        <li> <code>Promise</code> <p>a promise that is resolved with an array of rows.</p>
 </li>
     
     </ul>
@@ -6781,7 +6781,7 @@ function (block,cb){
    if (block) {
        ret = ret.forEach(block);
    }
-   return nodeify(ret, cb);
+   return p.nodeify(ret, cb);
            
 }
     </pre>
@@ -7123,7 +7123,7 @@ DB.from(&quot;table&quot;).avg(&quot;number&quot;).then(function(avg){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved with the average value of the column.</p>
+        <li> <code>Promise</code> <p>a promise that is resolved with the average value of the column.</p>
 </li>
     
     </ul>
@@ -7646,7 +7646,7 @@ DB.from(&quot;table&quot;).count().then(function(count){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved with the the number of records in the dataset.</p>
+        <li> <code>Promise</code> <p>a promise that is resolved with the the number of records in the dataset.</p>
 </li>
     
     </ul>
@@ -7657,7 +7657,7 @@ DB.from(&quot;table&quot;).count().then(function(count){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return nodeify(this.__aggregateDataset().get(sql.COUNT(sql.literal(&quot;*&quot;)).as(&quot;count&quot;)).then(function (res) {
+   return p.nodeify(this.__aggregateDataset().get(sql.COUNT(sql.literal(&quot;*&quot;)).as(&quot;count&quot;)).then(function (res) {
        return parseInt(res, 10);
    }), cb);
            
@@ -8392,7 +8392,7 @@ comb.executeInOrder(DB.from(&quot;table&quot;), function(ds){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved with the either the first matching record.
+        <li> <code>Promise</code> <p>a promise that is resolved with the either the first matching record.
                        Or an array of items if a limit was provided as the first argument.</p>
 </li>
     
@@ -8474,7 +8474,7 @@ DB.from(&quot;table&quot;).forEach(function(row){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved when the action has completed.</p>
+        <li> <code>Promise</code> <p>a promise that is resolved when the action has completed.</p>
 </li>
     
     </ul>
@@ -8499,7 +8499,7 @@ function (block,cb){
            ret = ret.forEach(block);
        }
    }
-   return nodeify(asyncArray(ret), cb);
+   return p.nodeify(asyncArray(ret), cb);
            
 }
     </pre>
@@ -8823,7 +8823,7 @@ ds.get(function(){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that will be resolved will the value requested.</p>
+        <li> <code>Promise</code> <p>a promise that will be resolved will the value requested.</p>
 </li>
     
     </ul>
@@ -9024,10 +9024,10 @@ function (dataset,joinConditions,options,block){
                return graph;
            });
        } else {
-           populateGraphPromise = Promise.resolve(graph);
+           populateGraphPromise = p.resolve(graph);
        }
    } else {
-       populateGraphPromise = Promise.resolve(graph);
+       populateGraphPromise = p.resolve(graph);
    }
    return populateGraphPromise.then(function (graph) {
        var ret;
@@ -9044,7 +9044,7 @@ function (dataset,joinConditions,options,block){
            // Which columns to add to the result set
            var dsColPromise;
            if (options.select) {
-               dsColPromise = Promise.resolve(options.select);
+               dsColPromise = p.resolve(options.select);
            } else {
                dsColPromise = dataset.columns;
            }
@@ -9700,7 +9700,7 @@ when inserting a large number of records, e.g.:</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved once all records have been inserted.</p>
+        <li> <code>Promise</code> <p>a promise that is resolved once all records have been inserted.</p>
 </li>
     
     </ul>
@@ -9723,16 +9723,16 @@ function (columns,values,opts,cb){
        });
    } else {
        if (!values.length) {
-           ret = Promise.resolve();
+           ret = p.resolve();
        } else if (!columns.length) {
-           ret = Promise.reject(new QueryError(&quot;Invalid columns in import&quot;));
+           ret = p.reject(new QueryError(&quot;Invalid columns in import&quot;));
        }
        var sliceSize = opts.commitEvery || opts.slice, result = [];
        if (sliceSize) {
            ret = asyncArray(partition(values, sliceSize)).forEach(function (entries, offset) {
                offset = (offset * sliceSize);
                return self.db.transaction(opts, function () {
-                   return Promise.all(self.multiInsertSql(columns, entries).map(function (st, index) {
+                   return p.all(self.multiInsertSql(columns, entries).map(function (st, index) {
                        return self.executeDui(st).then(function (res) {
                            result[offset + index] = res;
                        });
@@ -9742,7 +9742,7 @@ function (columns,values,opts,cb){
        } else {
            var statements = this.multiInsertSql(columns, values);
            ret = this.db.transaction(function () {
-               return Promise.all(statements.map(function (st, index) {
+               return p.all(statements.map(function (st, index) {
                    return self.executeDui(st).then(function (res) {
                        result[index] = res;
                    });
@@ -9750,7 +9750,7 @@ function (columns,values,opts,cb){
            });
        }
    }
-   return nodeify(ret.then(function () {
+   return p.nodeify(ret.then(function () {
        return flatten(result);
    }), cb);
            
@@ -9869,7 +9869,7 @@ DB.from(&quot;items&quot;).insert([&quot;a&quot;, &quot;b&quot;], DB.from(&quot;
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is typically resolved with the ID of the inserted row.</p>
+        <li> <code>Promise</code> <p>a promise that is typically resolved with the ID of the inserted row.</p>
 </li>
     
     </ul>
@@ -9882,7 +9882,7 @@ DB.from(&quot;items&quot;).insert([&quot;a&quot;, &quot;b&quot;], DB.from(&quot;
 function (){
    var args = argsToArray(arguments);
    var cb = isFunction(args[args.length - 1]) ? args.pop() : null;
-   return nodeify(this.executeInsert(this.insertSql.apply(this, args)), cb);
+   return p.nodeify(this.executeInsert(this.insertSql.apply(this, args)), cb);
            
 }
     </pre>
@@ -9945,7 +9945,7 @@ DB.from(&quot;table&quot;).insertMultiple([{x : 1}, {x : 2}], function(row){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.PromiseList</code> <p>a promiseList that should be resolved with the id of each item inserted
+        <li> <code>Promise</code> <p>a promise that will be resolved with the id of each item inserted
          in the order that was in the array.</p>
 </li>
     
@@ -9959,15 +9959,15 @@ DB.from(&quot;table&quot;).insertMultiple([{x : 1}, {x : 2}], function(row){
 function (array,block,cb){
    var ret;
    if (block) {
-       ret = Promise.all(array.map(function (i) {
+       ret = p.all(array.map(function (i) {
            return this.insert(block(i));
        }, this));
    } else {
-       ret = Promise.all(array.map(function (i) {
+       ret = p.all(array.map(function (i) {
            return this.insert(i);
        }, this));
    }
-   return nodeify(ret, cb);
+   return p.nodeify(ret, cb);
            
 }
     </pre>
@@ -10260,7 +10260,7 @@ for the given column.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that will be resolved with the interval between the min and max values
+        <li> <code>Promise</code> <p>a promise that will be resolved with the interval between the min and max values
 of the column.</p>
 </li>
     
@@ -10450,7 +10450,7 @@ DB.from(&quot;table&quot;).isEmpty().then(function(isEmpty){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved with a boolean indicating if the table is empty.</p>
+        <li> <code>Promise</code> <p>a promise that is resolved with a boolean indicating if the table is empty.</p>
 </li>
     
     </ul>
@@ -10461,7 +10461,7 @@ DB.from(&quot;table&quot;).isEmpty().then(function(isEmpty){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return nodeify(this.get(1).then(function (res) {
+   return p.nodeify(this.get(1).then(function (res) {
        return isUndefinedOrNull(res) || res.length === 0;
    }), cb);
            
@@ -11357,7 +11357,7 @@ unless you have an unambiguous order.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that will be resolved with a single object or array depending on the
+        <li> <code>Promise</code> <p>a promise that will be resolved with a single object or array depending on the
 arguments provided.</p>
 </li>
     
@@ -11378,7 +11378,7 @@ arguments provided.</p>
     <pre class="prettyprint linenums lang-js">
 function (){
    if (!this.__opts.order) {
-       return Promise.reject(new QueryError(&quot;No order specified&quot;));
+       return p.reject(new QueryError(&quot;No order specified&quot;));
    }
    var ds = this.reverse();
    return ds.first.apply(ds, arguments);
@@ -11858,7 +11858,7 @@ DB.from(&quot;table&quot;).map(function(r){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise resolved with the array of mapped values.</p>
+        <li> <code>Promise</code> <p>a promise resolved with the array of mapped values.</p>
 </li>
     
     </ul>
@@ -11871,7 +11871,7 @@ DB.from(&quot;table&quot;).map(function(r){
 function (column,cb){
    var ret = this.forEach();
    column &amp;&amp; (ret = ret[isFunction(column) ? &quot;map&quot; : &quot;pluck&quot;](column));
-   return nodeify(ret, cb);
+   return p.nodeify(ret, cb);
            
 }
     </pre>
@@ -12135,7 +12135,7 @@ DB.from(&quot;table&quot;).multiInsert([{x : 1}, {x : 2},....], {commitEvery : 5
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>See <a href='./patio_Dataset.html#import'> patio.Dataset#import</a> for return functionality.</p>
+        <li> <code>Promise</code> <p>See <a href='./patio_Dataset.html#import'> patio.Dataset#import</a> for return functionality.</p>
 </li>
     
     </ul>
@@ -12154,7 +12154,7 @@ function (hashes,opts,cb){
    hashes = hashes || [];
    var ret;
    if (!hashes.length) {
-       ret = Promise.resolve();
+       ret = p.resolve();
    } else {
        var columns = Object.keys(hashes[0]);
        ret = this[&quot;import&quot;](columns, hashes.map(function (h) {
@@ -12163,7 +12163,7 @@ function (hashes,opts,cb){
            });
        }), opts, cb);
    }
-   return nodeify(ret, cb);
+   return p.nodeify(ret, cb);
            
 }
     </pre>
@@ -12488,7 +12488,7 @@ be a filter function but instead a callback.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise resolved with a single row from the database that matched the filter.</p>
+        <li> <code>Promise</code> <p>a promise resolved with a single row from the database that matched the filter.</p>
 </li>
     
     </ul>
@@ -13679,7 +13679,7 @@ given column.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved with the min and max value, as the first
+        <li> <code>Promise</code> <p>a promise that is resolved with the min and max value, as the first
 and second args respectively.</p>
 </li>
     
@@ -13691,7 +13691,7 @@ and second args respectively.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (column,cb){
-   return nodeify(this.__aggregateDataset()
+   return p.nodeify(this.__aggregateDataset()
        .select(sql.min(this.stringToIdentifier(column)).as(&quot;min&quot;), sql.max(this.stringToIdentifier(column)).as(&quot;max&quot;))
        .first(), cb);
            
@@ -13743,7 +13743,7 @@ DB.from(&quot;table&quot;).remove().then(function(numDeleted){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise resolved with the
+        <li> <code>Promise</code> <p>a promise resolved with the
 number of records deleted, but that is adapter dependent.</p>
 </li>
     
@@ -13755,7 +13755,7 @@ number of records deleted, but that is adapter dependent.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return nodeify(this.executeDui(this.deleteSql), cb);
+   return p.nodeify(this.executeDui(this.deleteSql), cb);
            
 }
     </pre>
@@ -14311,7 +14311,7 @@ values.  Similar to <a href='./patio_Dataset.html#toHash'> patio.Dataset#toHash<
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved with an array of hashes, that have the keyColumn
+        <li> <code>Promise</code> <p>a promise that is resolved with an array of hashes, that have the keyColumn
 as the key and the valueColumn as the value.</p>
 </li>
     
@@ -14327,7 +14327,7 @@ function (keyColumn,valueColumn,cb){
    cb = isFunction(args[args.length - 1]) ? args.pop() : null;
    var k = this.__hashIdentifierToName(keyColumn),
        v = this.__hashIdentifierToName(valueColumn);
-   return nodeify(this.select.apply(this, args).map(function (r) {
+   return p.nodeify(this.select.apply(this, args).map(function (r) {
        map[r[k]] = v ? r[v] : r;
    }).then(function () {
        return map;
@@ -14460,7 +14460,7 @@ DB.from(&quot;table&quot;).selectMap(function(){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise resolved with the array of mapped values.</p>
+        <li> <code>Promise</code> <p>a promise resolved with the array of mapped values.</p>
 </li>
     
     </ul>
@@ -14602,7 +14602,7 @@ DB.from(&quot;table&quot;).selectOrderMap(&quot;id&quot;).then(function(mappedId
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise resolved with the array of mapped values.</p>
+        <li> <code>Promise</code> <p>a promise resolved with the array of mapped values.</p>
 </li>
     
     </ul>
@@ -14892,7 +14892,7 @@ DB.from(&quot;test&quot;).singleRecord().then(function(r) {
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise resolved with the first record returned from the query.</p>
+        <li> <code>Promise</code> <p>a promise resolved with the first record returned from the query.</p>
 </li>
     
     </ul>
@@ -14903,7 +14903,7 @@ DB.from(&quot;test&quot;).singleRecord().then(function(r) {
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return nodeify(this.mergeOptions({limit: 1}).all().then(function (r) {
+   return p.nodeify(this.mergeOptions({limit: 1}).all().then(function (r) {
        return r &amp;&amp; r.length ? r[0] : null;
    }), cb);
            
@@ -14956,7 +14956,7 @@ DB.from(&quot;test&quot;).singleValue().then(function(r) {
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that will be resolved with the first value of the first row returned
+        <li> <code>Promise</code> <p>a promise that will be resolved with the first value of the first row returned
 from the dataset.</p>
 </li>
     
@@ -14968,7 +14968,7 @@ from the dataset.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return nodeify(this.naked().ungraphed().singleRecord().then(function (r) {
+   return p.nodeify(this.naked().ungraphed().singleRecord().then(function (r) {
        return r ? r[Object.keys(r)[0]] : null;
    }), cb);
            
@@ -15045,7 +15045,7 @@ function (opts){
    if ((rowCb = this.rowCb)) {
        ret = new TransformStream({objectMode: true});
        ret._transform = function (data, encoding, done) {
-           Promise.resolve(rowCb(data)).then(function (data) {
+           p.resolve(rowCb(data)).then(function (data) {
                ret.push(data);
                done();
            }, done);
@@ -15228,7 +15228,7 @@ DB.from(&quot;table&quot;).sum(&quot;id&quot;).then(function(sum){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise resolved with the sum of the column.</p>
+        <li> <code>Promise</code> <p>a promise resolved with the sum of the column.</p>
 </li>
     
     </ul>
@@ -15313,7 +15313,7 @@ includeColumnTitles argument.</p>
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that will be resolved with the CSV string of the results of the
+        <li> <code>Promise</code> <p>a promise that will be resolved with the CSV string of the results of the
  query.</p>
 </li>
     
@@ -15344,7 +15344,7 @@ function (includeColumnTitles,cb){
            return vals.join(&quot;\r\n&quot;) + &quot;\r\n&quot;;
        });
    });
-   return nodeify(ret, cb);
+   return p.nodeify(ret, cb);
            
 }
     </pre>
@@ -15410,7 +15410,7 @@ DB.from(&quot;table&quot;).toHash(&quot;id&quot;).then(function(hash){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that will be resolved with the resulting hash.</p>
+        <li> <code>Promise</code> <p>a promise that will be resolved with the resulting hash.</p>
 </li>
     
     </ul>
@@ -15427,7 +15427,7 @@ function (keyColumn,valueColumn,cb){
        valueColumn = null;
    }
    var k = this.__hashIdentifierToName(keyColumn), v = this.__hashIdentifierToName(valueColumn);
-   return nodeify(this.map(function (r) {
+   return p.nodeify(this.map(function (r) {
        map[r[k]] = v ? r[v] : r;
    }).then(function () {
        return map;
@@ -15480,7 +15480,7 @@ DB.from(&quot;table&quot;).truncate().then(function(){
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is resolved once truncation is complete.</p>
+        <li> <code>Promise</code> <p>a promise that is resolved once truncation is complete.</p>
 </li>
     
     </ul>
@@ -15491,7 +15491,7 @@ DB.from(&quot;table&quot;).truncate().then(function(){
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (cb){
-   return nodeify(this.executeDdl(this.truncateSql), cb);
+   return p.nodeify(this.executeDdl(this.truncateSql), cb);
            
 }
     </pre>
@@ -15959,7 +15959,7 @@ DB.from(&quot;table&quot;).update({ x : sql.x.plus(1), y : 0}).then(function(num
     <em>Returns</em>
     <ul>
     
-        <li> <code>comb.Promise</code> <p>a promise that is generally resolved with the
+        <li> <code>Promise</code> <p>a promise that is generally resolved with the
 number of rows updated, but that is adapter dependent.</p>
 </li>
     
@@ -15971,7 +15971,7 @@ number of rows updated, but that is adapter dependent.</p>
     <em>Source</em>
     <pre class="prettyprint linenums lang-js">
 function (values,cb){
-   return nodeify(this.executeDui(this.updateSql(values)), cb);
+   return p.nodeify(this.executeDui(this.updateSql(values)), cb);
            
 }
     </pre>

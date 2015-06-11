@@ -118,18 +118,17 @@ var multipleTransactions = function (db) {
                 password: "password",
                 dateOfBirth: new Date(1956, 1, 3)
             }).chain(function () {
-                    return ds.all(function (user) {
-                        return ds.where({id: user.id}).update({firstName: user.firstName + 1});
-                    })
-                });
+                return ds.all(function (user) {
+                    return ds.where({id: user.id}).update({firstName: user.firstName + 1});
+                })
+            });
         }));
 };
 
 var multipleTransactionsError = function (db) {
     var ds = db.from("user");
     console.log("\n\n********MULTIPLE TRANSACTION(ROLLBACK)*********");
-    var ret = new comb.Promise();
-    return comb.when(
+    return Promise.all([
         db.transaction(function () {
             return ds.insert({
                 firstName: "Bob",
@@ -153,12 +152,12 @@ var multipleTransactionsError = function (db) {
                 password: "password",
                 dateOfBirth: new Date(1956, 1, 3)
             }).chain(function () {
-                    return ds.all(function (user) {
-                        return ds.where({id: user.id}).update({firstName: user.firstName + 1});
-                    })
+                return ds.all(function (user) {
+                    return ds.where({id: user.id}).update({firstName: user.firstName + 1});
                 });
+            });
         })
-    );
+    ]);
 };
 
 var inOrderTransaction = function (db) {
@@ -203,33 +202,33 @@ var errorTransaciton = function (db) {
             password: "password",
             dateOfBirth: new Date(1980, 8, 29)
         }).chain(function () {
-                return db.transaction(function () {
-                    return ds.insert({
-                        firstName: "Greg",
-                        lastName: "Kilosky",
-                        password: "password",
-                        dateOfBirth: new Date(1988, 7, 19)
-                    }).chain(function () {
-                            throw "Error";
-                            return db.transaction(function () {
-                                return ds.insert({
-                                    firstName: "Jane",
-                                    lastName: "Gorgenson",
-                                    password: "password",
-                                    dateOfBirth: new Date(1956, 1, 3)
-                                });
-                            });
+            return db.transaction(function () {
+                return ds.insert({
+                    firstName: "Greg",
+                    lastName: "Kilosky",
+                    password: "password",
+                    dateOfBirth: new Date(1988, 7, 19)
+                }).chain(function () {
+                    throw "Error";
+                    return db.transaction(function () {
+                        return ds.insert({
+                            firstName: "Jane",
+                            lastName: "Gorgenson",
+                            password: "password",
+                            dateOfBirth: new Date(1956, 1, 3)
                         });
-                })
+                    });
+                });
             })
+        })
 
-    }).chain(function(){
-            throw new Error("unexpected error");
-        }, function () {
-            return ds.count().chain(function (count) {
-                patio.logInfo(format("COUNT = " + count));
-            });
+    }).chain(function () {
+        throw new Error("unexpected error");
+    }, function () {
+        return ds.count().chain(function (count) {
+            patio.logInfo(format("COUNT = " + count));
         });
+    });
 };
 
 var errorCallbackTransaciton = function (db) {
@@ -262,19 +261,19 @@ var errorCallbackTransaciton = function (db) {
                                     dateOfBirth: new Date(1956, 1, 3)
                                 })
                                     .chain(function () {
-                                        return new comb.Promise().errback("err");
+                                        return Promise.reject(new Error("err"));
                                     });
-                            })
+                            });
                         });
                 });
             });
     }).chain(function () {
-            throw new Error("unexpected error");
-        }, function () {
-            return ds.count().chain(function (count) {
-                patio.logInfo(format("COUNT = " + count));
-            });
+        throw new Error("unexpected error");
+    }, function () {
+        return ds.count().chain(function (count) {
+            patio.logInfo(format("COUNT = " + count));
         });
+    });
 };
 
 

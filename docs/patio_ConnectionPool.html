@@ -541,7 +541,7 @@
     <a name="constructor"></a>
     <h3>Constructor</h3>
 
-    <em>Defined ConnectionPool.js</em>
+    <em>Defined connectionPool.js</em>
     
     
     
@@ -551,10 +551,10 @@
 function (options){
    options = options || {};
    if (!options.createConnection || !isFunction(options.createConnection)) {
-       throw new Error(&quot;patio.adapters.clients.ConnectionPool : create connection CB required.&quot;);
+       throw new Error(&quot;patio.ConnectionPool : create connection CB required.&quot;);
    }
    if (!options.closeConnection || !isFunction(options.closeConnection)) {
-       throw new Error(&quot;patio.adapters.clients.ConnectionPool : close connection CB required.&quot;);
+       throw new Error(&quot;patio.ConnectionPool : close connection CB required.&quot;);
    }
    options.minObjects = parseInt(options.minConnections || 0, 10);
    options.maxObjects = parseInt(options.maxConnections || 10, 10);
@@ -585,7 +585,7 @@ function (options){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Checks all deferred connection requests.</p>
 </p>
@@ -631,7 +631,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Override to implement close connection functionality;</p>
 </p>
@@ -683,7 +683,7 @@ function (conn){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Override to create connections to insert into this ConnectionPool.</p>
 </p>
@@ -719,7 +719,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Override to implement the closing of all connections.</p>
 </p>
@@ -750,7 +750,7 @@ function (){
        ps.push(this.closeConnection(inUse[i]));
    }
    this.__inUseObjects.length = 0;
-   return Promise.all(ps);
+   return p.all(ps);
            
 }
     </pre>
@@ -773,7 +773,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Performs a query on one of the connection in this Pool.</p>
 </p>
@@ -795,7 +795,7 @@ function (){
     <pre class="prettyprint linenums lang-js">
 function (){
    var self = this;
-   return new Promise(function (resolve, reject) {
+   return new p.Promise(function (resolve, reject) {
        var conn,
            ret = {resolve: resolve, reject: reject};
        if (self.count &gt; self.__maxObjects) {
@@ -811,7 +811,7 @@ function (){
            }
        }
        if (self.count &gt; self.__maxObjects &amp;&amp; !conn) {
-           reject(new Error(&quot;Unexpected ConnectionPool error&quot;));
+           reject(new Error(&quot;Unexpected patio.ConnectionPool error&quot;));
        }
    });
            
@@ -836,7 +836,7 @@ function (){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Removes a connection from the pool.</p>
 </p>
@@ -880,7 +880,7 @@ function (conn){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Return a connection to the pool.</p>
 </p>
@@ -932,7 +932,7 @@ function (connection){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Override comb.collections.Pool to allow async validation to allow
 pools to do any calls to reset a connection if it needs to be done.</p>
@@ -989,7 +989,7 @@ function (obj){
    </h3>
 
 <hr/>
-<em>Defined ConnectionPool.js</em>
+<em>Defined connectionPool.js</em>
 
 <p><p>Override to provide any additional validation. By default the promise is called back with true.</p>
 </p>
@@ -1021,7 +1021,7 @@ function (obj){
     <pre class="prettyprint linenums lang-js">
 function (conn){
    if (!this.__validateConnectionCB) {
-       return Promise.resolve(true);
+       return p.resolve(true);
    } else {
        return this.__validateConnectionCB(conn);
    }

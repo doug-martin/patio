@@ -2,7 +2,7 @@
 
 var patio = require("../../lib"),
     config = require("../test.config.js"),
-    comb = require("comb-proxy"),
+    comb = require("comb"),
     DB;
 
 
@@ -12,7 +12,9 @@ module.exports = {
 };
 
 function createSchemaAndSync(underscore) {
-    return createTables(underscore).then(comb.hitch(patio, "syncModels"));
+    return createTables(underscore).then(function(){
+        return patio.syncModels();
+    });
 }
 
 function dropModels() {

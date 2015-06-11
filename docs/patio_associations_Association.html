@@ -722,7 +722,7 @@ function (model){
    //if we have them return them;
    if (this.associationLoaded(model)) {
        var assoc = this.getAssociation(model);
-       return this.isEager() ? assoc : Promise.resolve(assoc);
+       return this.isEager() ? assoc : p.resolve(assoc);
    } else if (model.isNew) {
        return null;
    } else {
@@ -1014,7 +1014,7 @@ function (next,model){
    if (this.isOwner &amp;&amp; !this.isCascading) {
        var q = {};
        this._setAssociationKeys(model, q, null);
-       nodeify(model[this.associatedDatasetName].update(q), next);
+       p.nodeify(model[this.associatedDatasetName].update(q), next);
    } else {
        next();
    }

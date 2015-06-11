@@ -227,13 +227,11 @@ var toHash = function () {
 };
 var forUpdate = function () {
     return DB.transaction(function () {
-        var ret = new comb.Promise();
-        User.forUpdate().first({id: 1}).chain(function (user) {
+        return User.forUpdate().first({id: 1}).chain(function (user) {
             // SELECT * FROM user WHERE id = 1 FOR UPDATE
             user.password = null;
-            user.save().chain(comb.hitch(ret, "callback"), comb.hitch(ret, "errback"));
-        }, comb.hitch(ret, "errback"));
-        return ret;
+            return user.save();
+        });
     });
 };
 
