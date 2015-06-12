@@ -1,3 +1,5 @@
+"use strict";
+
 var it = require('it'),
     assert = require('assert'),
     patio = new require("../lib"),
@@ -72,7 +74,6 @@ it.describe("patio", function (it) {
                     reset: function () {
                         this.sqls = [];
                     }
-
                 }
             }).setAdapterType("dummydb");
             patio.resetIdentifierMethods();

@@ -610,5 +610,4 @@ it.describe("Migrators", function (it) {
     it.afterAll(function () {
         return patio.disconnect();
     });
-
 });

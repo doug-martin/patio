@@ -3,7 +3,7 @@
 module.exports = function (grunt) {
     // Project configuration.
 
-    var DEFAULT_COVERAGE_ARGS = ["cover", "-x", "Gruntfile.js", "--report", "none", "--print", "none", "--include-pid", "grunt", "--", "it"];
+    var DEFAULT_COVERAGE_ARGS = ["cover", "-x", "Gruntfile.js", "--report", "none", "--print", "none", "--include-pid", "grunt", "--", "recreate_databases", "it"];
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -32,11 +32,24 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.registerTask("recreate_databases", "recreates test databases for tests", function () {
+        var done = this.async();
+        require("./test/test.config")
+            .recreateDatabases()
+            .then(function () {
+                done();
+            })
+            .catch(function (err) {
+                console.log(err.stack || err);
+                done(false);
+            });
+    });
+
     grunt.registerTask("benchmarks", "runs benchmarks", function () {
         var done = this.async();
         require("./benchmark/benchmark")()
             .then(function () {
-                done();
+                done(true);
             })
             .catch(function (err) {
                 console.log(err.stack || err);
@@ -49,7 +62,11 @@ module.exports = function (grunt) {
         var done = this.async();
         var env = process.env;
         env.PATIO_DB = db;
-        grunt.util.spawn({cmd: "grunt", args: ["it"], opts: {stdio: 'inherit', env: env}}, function (err) {
+        grunt.util.spawn({
+            cmd: "grunt",
+            args: ["recreate_databases", "it"],
+            opts: {stdio: 'inherit', env: env}
+        }, function (err) {
             if (err) {
                 done(false);
             } else {
@@ -62,7 +79,11 @@ module.exports = function (grunt) {
         var done = this.async();
         var env = process.env;
         env.PATIO_DB = db;
-        grunt.util.spawn({cmd: "istanbul", args: DEFAULT_COVERAGE_ARGS, opts: {stdio: 'inherit', env: env}}, function (err) {
+        grunt.util.spawn({
+            cmd: "istanbul",
+            args: DEFAULT_COVERAGE_ARGS,
+            opts: {stdio: 'inherit', env: env}
+        }, function (err) {
             if (err) {
                 done(false);
             } else {

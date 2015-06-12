@@ -1,4 +1,5 @@
 "use strict";
+
 var patio = require("../index"),
     sql = patio.sql,
     comb = require("comb"),
@@ -75,7 +76,7 @@ var connectAndCreateSchema = function () {
 
 
 //connect and create schema
-connectAndCreateSchema().chain(function () {
+connectAndCreateSchema().then(function () {
     var myUser = new User({
         firstName: "bob",
         lastName: "yukon",
@@ -84,19 +85,19 @@ connectAndCreateSchema().chain(function () {
     });
     console.log(User.order("userId").limit(100).group("userId").sql);
     //save the user
-    return myUser.save().chain(function () {
+    return myUser.save().then(function () {
         console.log(format("%s %s was created at %s", myUser.firstName, myUser.lastName, myUser.created.toString()));
         console.log(format("%s %s's id is %d", myUser.firstName, myUser.lastName, myUser.id));
 
         return User.db.transaction(function () {
-            return User.forUpdate().first({id: 1}).chain(function (user) {
+            return User.forUpdate().first({id: 1}).then(function (user) {
                 // SELECT * FROM user WHERE id = 1 FOR UPDATE
                 user.password = null;
                 return user.save();
             });
-        }).chain(function () {
-                return User.removeById(myUser.id);
-            });
+        }).then(function () {
+            return User.removeById(myUser.id);
+        });
     });
-}).chain(disconnect, disconnectError);
+}).then(disconnect, disconnectError);
 

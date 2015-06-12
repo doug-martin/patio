@@ -46,7 +46,7 @@ var dropTableAndDisconnect = function () {
 };
 
 
-it.describe("patio.Model from mutliple databases", function (it) {
+it.describe("Models from multiple databases", function (it) {
 
     var Employee, Employee2, ds1, ds2;
 
@@ -168,5 +168,4 @@ it.describe("patio.Model from mutliple databases", function (it) {
     });
 
     it.afterAll(dropTableAndDisconnect);
-
 });

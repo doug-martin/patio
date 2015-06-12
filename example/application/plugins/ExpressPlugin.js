@@ -1,10 +1,12 @@
 "use strict";
-var patio = require("../../../index"), comb = require("comb");
+
+var patio = require("../../../index"),
+    comb = require("comb");
 
 /*
  * Very simple express routing for a model
  * */
-module.exports = exports = comb.define(null, {
+module.exports = comb.define(null, {
     static: {
 
         addRoute: function (route, cb) {
@@ -12,11 +14,11 @@ module.exports = exports = comb.define(null, {
         },
 
         findByIdRoute: function (params) {
-            return this.findById(params.id).chain(function (model) {
+            return this.findById(params.id).then(function (model) {
                 if (model) {
                     return model.toObject();
                 } else {
-                    throw new Error("Could not find a model with id " + id);
+                    throw new Error("Could not find a model with id " + params.id);
                 }
             });
         },
@@ -27,10 +29,10 @@ module.exports = exports = comb.define(null, {
 
         __routeProxy: function (cb) {
             return function (req, res) {
-                comb.when(cb(req.params)).chain(comb.hitch(res, "send"), function (err) {
+                comb.when(cb(req.params)).then(comb.hitch(res, "send"), function (err) {
                     res.send({error: err.message});
                 });
-            }
+            };
         },
 
         route: function (app) {
