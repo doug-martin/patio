@@ -3,7 +3,8 @@
 module.exports = function (grunt) {
     // Project configuration.
 
-    var DEFAULT_COVERAGE_ARGS = ["cover", "-x", "Gruntfile.js", "--report", "none", "--print", "none", "--include-pid", "grunt", "--", "recreate_databases", "it"];
+    var DEFAULT_COVERAGE_ARGS = ["cover", "-x", "Gruntfile.js", "--report", "none", "--print", "none", "--include-pid", "grunt", "--", "recreate_databases", "it"],
+        path = require("path");
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -90,6 +91,25 @@ module.exports = function (grunt) {
                 done();
             }
         });
+    });
+
+    grunt.registerTask("example", "Runs an example from the examples directory", function (exp) {
+        if (!exp) {
+            console.log("Please choose one of the following examples:");
+            grunt.file.expand("./example/**/*.example.js").forEach(function (exp) {
+                console.log("\tgrunt example:%s", exp.replace("./example/", "").replace(/\.js$/, ""));
+            });
+        } else {
+            var done = this.async();
+            require(path.resolve("./example/", exp))()
+                .then(function () {
+                    done();
+                })
+                .catch(function (err) {
+                    console.log(err.stack || err);
+                    done(false);
+                });
+        }
     });
 
     grunt.registerTask("process-coverage", "process coverage obects", function () {
