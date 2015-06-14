@@ -1,12 +1,11 @@
 "use strict";
-var patio = require("../index"),
+var patio = require("../../index"),
     sql = patio.sql,
     comb = require("comb"),
     format = comb.string.format,
-    config = require("./config"),
+    config = require("../config"),
     db = config.connect("sandbox"),
-    User = patio.addModel("user"),
-    Blog = patio.addModel("blog");
+    User = patio.addModel("user");
 
 module.exports = runExamples;
 function runExamples() {
@@ -27,7 +26,7 @@ function runExamples() {
 }
 
 function findById() {
-    console.log("\n\n=====FIND BY ID EXAMPLES=====\n\n");
+    console.log("\n\n=====FIND BY ID EXAMPLES=====");
     // Find user with primary key (id) 1
     return User.findById(1)
         .then(function (user) {
@@ -40,11 +39,11 @@ function findById() {
 }
 
 function first() {
-    console.log("\n\n=====FIRST EXAMPLES=====\n\n");
+    console.log("\n\n=====FIRST EXAMPLES=====");
     return User.first()
         .then(function (first) {
             console.log("FIRST = %s", first);
-            return User.first({name: 'Bob'})
+            return User.first({name: 'Bob'});
         })
         .then(function (bob) {
             console.log("FIRST = %s", bob);
@@ -60,7 +59,7 @@ function first() {
 }
 
 function last() {
-    console.log("\n\n=====LAST EXAMPLES=====\n\n");
+    console.log("\n\n=====LAST EXAMPLES=====");
     return User.order("name").last().then(function (user) {
         // SELECT * FROM user ORDER BY name DESC LIMIT 1
         console.log("LAST = %s", user);
@@ -68,7 +67,7 @@ function last() {
 }
 
 function getMethod() {
-    console.log("\n\n=====GET EXAMPLES=====\n\n");
+    console.log("\n\n=====GET EXAMPLES=====");
     return User.get("name").then(function (name) {
         // SELECT name FROM user LIMIT 1
         console.log("NAME = %s", name);
@@ -76,7 +75,7 @@ function getMethod() {
 }
 
 function all() {
-    console.log("\n\n=====ALL EXAMPLES=====\n\n");
+    console.log("\n\n=====ALL EXAMPLES=====");
     return User.all().then(function (users) {
         // SELECT * FROM user
         console.log("USERS = [%s]", users);
@@ -84,7 +83,7 @@ function all() {
 }
 
 function forEach() {
-    console.log("\n\n=====FOREACH EXAMPLES=====\n\n");
+    console.log("\n\n=====FOREACH EXAMPLES=====");
     return User
         .forEach(function (user) {
             console.log("FOR EACH name = %s ", user.name);
@@ -101,21 +100,13 @@ function forEach() {
 }
 
 function map() {
-    console.log("\n\n=====MAP EXAMPLES=====\n\n");
+    console.log("\n\n=====MAP EXAMPLES=====");
     return User
         .map(function (user) {
             return user.name;
         })
         .then(function (userNames) {
             console.log("MAPPED USER NAMES = [%s]", userNames);
-            return User.map(function (user) {
-                return Blog.filter({userId: user.id}).map(function (blog) {
-                    return blog.title;
-                });
-            });
-        })
-        .then(function (userBlogTitles) {
-            console.log("MAPPED USER BLOG TITLES = [%s]", userBlogTitles);
             return User.map("name").then(function (userNames) {
                 console.log("MAPPED USER NAMES BY COLUMN = [%s]", userNames);
             });
@@ -135,7 +126,7 @@ function map() {
 }
 
 function toHash() {
-    console.log("\n\n=====TO HASH EXAMPLES=====\n\n");
+    console.log("\n\n=====TO HASH EXAMPLES=====");
     return User.toHash("name", "id")
         .then(function (nameIdMap) {
             console.log("TO HASH = %j", nameIdMap);
@@ -157,7 +148,7 @@ function toHash() {
 }
 
 function isEmpty() {
-    console.log("\n\n=====IS EMPTY EXAMPLES=====\n\n");
+    console.log("\n\n=====IS EMPTY EXAMPLES=====");
     return User.isEmpty()
         .then(function (isEmpty) {
             console.log("IS EMPTY = " + isEmpty);
@@ -173,7 +164,7 @@ function isEmpty() {
 }
 
 function aggregateFunctions() {
-    console.log("\n\n=====AGGREGATE EXAMPLES=====\n\n");
+    console.log("\n\n=====AGGREGATE EXAMPLES=====");
     return User.count()
         .then(function (count) {
             console.log("COUNT = " + count);
@@ -200,7 +191,7 @@ function aggregateFunctions() {
 
 function setup() {
     //This assumes new tables each time you could just connect to the database
-    return db.forceDropTable("blog", "user")
+    return db.forceDropTable("user")
         .then(function () {
             //drop and recreate the user
             return db.createTable("user", function () {
@@ -212,15 +203,6 @@ function setup() {
                 this.lastAccessed(Date);
                 this.created(sql.TimeStamp);
                 this.updated(sql.DateTime);
-            });
-        })
-        .then(function () {
-            return db.createTable("blog", function () {
-                this.primaryKey("id");
-                this.title(String);
-                this.numPosts("integer");
-                this.numFollowers("integer");
-                this.foreignKey("userId", "user", {key: "id"});
             });
         })
         .then(patio.syncModels)
@@ -240,33 +222,16 @@ function setup() {
                         dateOfBirth: new Date(1982, 9, 2),
                         isVerified: true
                     }
-                ])
-                .then(function () {
-                    return User.forEach(function (user) {
-                        return Blog.save([
-                            {
-                                title: user.name + "'s Blog " + 1,
-                                numPosts: 2,
-                                numFollowers: 100,
-                                userId: user.id
-                            },
-                            {
-                                title: user.name + " Blog " + 2,
-                                numPosts: 100,
-                                numFollowers: 0,
-                                userId: user.id
-                            }
-                        ]);
-                    });
-                });
+                ]);
         });
 }
 
 function teardown() {
-    return db.dropTable("blog", "user");
+    return db.dropTable("user");
 }
 
 function fail(err) {
+    console.log(err.stack);
     return teardown().then(function () {
         return Promise.reject(err);
     });
