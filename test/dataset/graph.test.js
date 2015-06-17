@@ -7,14 +7,8 @@ var it = require('it'),
     Database = patio.Database,
     sql = patio.SQL,
     Identifier = sql.Identifier,
-    SQLFunction = sql.SQLFunction,
-    LiteralString = sql.LiteralString,
     helper = require("../helpers/helper"),
-    MockDatabase = helper.MockDatabase,
-    MockDataset = helper.MockDataset,
-    comb = require("comb"),
-    serial = comb.serial;
-
+    comb = require("comb");
 
 it.describe("patio.Dataset graphing", function (it) {
 

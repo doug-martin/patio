@@ -1,3 +1,4 @@
+/* jshint camelcase: false */
 "use strict";
 
 var it = require('it'),
@@ -24,7 +25,8 @@ if (process.env.PATIO_DB === "mysql") {
             });
 
             MYSQL_DB.__defineSetter__("sqls", function (sql) {
-                return this.__sqls = sql;
+                this.__sqls = sql;
+                return this.__sqls;
             });
 
             var origExecute = MYSQL_DB.__logAndExecute;
@@ -88,47 +90,42 @@ if (process.env.PATIO_DB === "mysql") {
             });
 
             it.should("not create the autoIncrement attribute if it is specified", function () {
-                return comb.serial([
-                    function () {
-                        return db.createTable("dolls", function () {
-                            this.n2("integer");
-                            this.n3(String);
-                            this.n4("integer", {autoIncrement: true, unique: true});
-                        });
-                    },
-                    hitch(db, "schema", "dolls")
-                ]).then(function (res) {
-                    var schema = res[1];
-                    assert.deepEqual([false, false, true], Object.keys(schema).map(function (k) {
-                        return schema[k].autoIncrement;
-                    }));
-                });
-
+                return db
+                    .createTable("dolls", function () {
+                        this.n2("integer");
+                        this.n3(String);
+                        this.n4("integer", {autoIncrement: true, unique: true});
+                    })
+                    .then(hitch(db, "schema", "dolls"))
+                    .then(function (res) {
+                        var schema = res;
+                        assert.deepEqual([false, false, true], Object.keys(schema).map(function (k) {
+                            return schema[k].autoIncrement;
+                        }));
+                    });
             });
 
             it.should("create blob types", function () {
-                return comb.serial([
-                    function () {
-                        return db.createTable("dolls", {engine: "MyISAM", charset: "latin2"}, function () {
-                            this.name(Buffer);
+                return db
+                    .createTable("dolls", {engine: "MyISAM", charset: "latin2"}, function () {
+                        this.name(Buffer);
+                    })
+                    .then(hitch(db, "schema", "dolls"))
+                    .then(function (res) {
+                        var schema = res;
+                        assert.deepEqual(db.sqls, ["CREATE TABLE dolls (name blob) ENGINE=MyISAM DEFAULT CHARSET=latin2", "DESCRIBE dolls"]);
+                        assert.deepEqual(schema, {
+                            name: {
+                                autoIncrement: false,
+                                allowNull: true,
+                                primaryKey: false,
+                                default: null,
+                                dbType: 'blob',
+                                type: 'blob',
+                                jsDefault: null
+                            }
                         });
-                    },
-                    hitch(db, "schema", "dolls")
-                ]).then(function (res) {
-                    var schema = res[1];
-                    assert.deepEqual(db.sqls, ["CREATE TABLE dolls (name blob) ENGINE=MyISAM DEFAULT CHARSET=latin2", "DESCRIBE dolls"]);
-                    assert.deepEqual(schema, {
-                        name: {
-                            autoIncrement: false,
-                            allowNull: true,
-                            primaryKey: false,
-                            default: null,
-                            dbType: 'blob',
-                            type: 'blob',
-                            jsDefault: null
-                        }
                     });
-                });
             });
         });
 
@@ -154,23 +151,42 @@ if (process.env.PATIO_DB === "mysql") {
         });
 
         it.should("convert tinyint to bool", function () {
-            return MYSQL_DB.createTable("booltest", function () {
-                this.column("b", "tinyint(1)");
-                this.column("i", "tinyint(4)");
-            }).then(function () {
-                return MYSQL_DB.schema("booltest", {reload: true})
-                    .then(function (schema) {
-                        assert.deepEqual(schema, {
-                            b: {type: "boolean", autoIncrement: false, allowNull: true, primaryKey: false, "default": null, jsDefault: null, dbType: "tinyint(1)"},
-                            i: {type: "integer", autoIncrement: false, allowNull: true, primaryKey: false, "default": null, jsDefault: null, dbType: "tinyint(4)"}
+            return MYSQL_DB
+                .createTable("booltest", function () {
+                    this.column("b", "tinyint(1)");
+                    this.column("i", "tinyint(4)");
+                }).then(function () {
+                    return MYSQL_DB
+                        .schema("booltest", {reload: true})
+                        .then(function (schema) {
+                            assert.deepEqual(schema, {
+                                b: {
+                                    type: "boolean",
+                                    autoIncrement: false,
+                                    allowNull: true,
+                                    primaryKey: false,
+                                    "default": null,
+                                    jsDefault: null,
+                                    dbType: "tinyint(1)"
+                                },
+                                i: {
+                                    type: "integer",
+                                    autoIncrement: false,
+                                    allowNull: true,
+                                    primaryKey: false,
+                                    "default": null,
+                                    jsDefault: null,
+                                    dbType: "tinyint(4)"
+                                }
+                            });
                         });
-                    });
-            });
+                });
         });
 
         it.should("return tinyint(1)s as boolean values and tinyint(4) as integers ", function () {
             var ds = MYSQL_DB.from("booltest");
-            return ds.remove()
+            return ds
+                .remove()
                 .then(function () {
                     return ds.insert({b: true, i: 10}).then(function () {
                         return ds.all();
@@ -528,7 +544,11 @@ if (process.env.PATIO_DB === "mysql") {
 
             it.should("allow to pass custom options (engine, charset, collate) for table creation", function () {
                 return db
-                    .createTable("items", {engine: 'MyISAM', charset: 'latin1', collate: 'latin1_swedish_ci'}, function () {
+                    .createTable("items", {
+                        engine: 'MyISAM',
+                        charset: 'latin1',
+                        collate: 'latin1_swedish_ci'
+                    }, function () {
                         this.size("integer");
                         this.name("text");
                     })
@@ -590,7 +610,12 @@ if (process.env.PATIO_DB === "mysql") {
             it.should("correctly format CREATE TABLE statements with foreign keys", function () {
                 return db.createTable("items", function () {
                     this.primaryKey("id");
-                    this.foreignKey("p_id", "items", {key: "id", "null": false, onUpdate: "cascade", onDelete: "cascade"});
+                    this.foreignKey("p_id", "items", {
+                        key: "id",
+                        "null": false,
+                        onUpdate: "cascade",
+                        onDelete: "cascade"
+                    });
                 }).then(function () {
                     assert.deepEqual(db.sqls, ['CREATE TABLE items (id integer PRIMARY KEY AUTO_INCREMENT, p_id integer NOT NULL, FOREIGN KEY (p_id) REFERENCES items(id) ON DELETE CASCADE ON UPDATE CASCADE)']);
                 });
@@ -1190,21 +1215,21 @@ if (process.env.PATIO_DB === "mysql") {
                             return d.all();
                         })
                         .then(function (ret) {
-                            assert.deepEqual(ret, [{id: 1, name: null, value: 2, image: null}])
+                            assert.deepEqual(ret, [{id: 1, name: null, value: 2, image: null}]);
                             return d.replace([]);
                         })
                         .then(function () {
                             return d.all();
                         })
                         .then(function (ret) {
-                            assert.deepEqual(ret, [{id: 1, name: null, value: 2, image: null}])
+                            assert.deepEqual(ret, [{id: 1, name: null, value: 2, image: null}]);
                             return d.replace({});
                         })
                         .then(function () {
                             return d.all();
                         })
                         .then(function (ret) {
-                            assert.deepEqual(ret, [{id: 1, name: null, value: 2, image: null}])
+                            assert.deepEqual(ret, [{id: 1, name: null, value: 2, image: null}]);
                         });
                 });
 
@@ -1215,21 +1240,21 @@ if (process.env.PATIO_DB === "mysql") {
                             return d.all();
                         })
                         .then(function (res) {
-                            assert.deepEqual(res, [{id: 1, name: "hello", value: 2, image: new Buffer("test")}])
+                            assert.deepEqual(res, [{id: 1, name: "hello", value: 2, image: new Buffer("test")}]);
                             return d.replace(1, "hello", 2, new Buffer("test"));
                         })
                         .then(function () {
                             return d.all();
                         })
                         .then(function (res) {
-                            assert.deepEqual(res, [{id: 1, name: 'hello', value: 2, image: new Buffer("test")}])
+                            assert.deepEqual(res, [{id: 1, name: 'hello', value: 2, image: new Buffer("test")}]);
                             return d.replace(d);
                         })
                         .then(function () {
                             return d.all();
                         })
                         .then(function (res) {
-                            assert.deepEqual(res, [{id: 1, name: "hello", value: 2, image: new Buffer("test")}])
+                            assert.deepEqual(res, [{id: 1, name: "hello", value: 2, image: new Buffer("test")}]);
                         });
                 });
 
@@ -1252,7 +1277,7 @@ if (process.env.PATIO_DB === "mysql") {
                         })
                         .then(function (ret) {
                             assert.deepEqual(ret, [{id: 111, name: null, value: null, image: null}]);
-                            return d.replace({id: 111, value: 333})
+                            return d.replace({id: 111, value: 333});
                         })
                         .then(function () {
                             return d.all();
@@ -1378,53 +1403,52 @@ if (process.env.PATIO_DB === "mysql") {
 
             it.should("not use a null value bad date/time is used and convertInvalidDateTime is string || String", function () {
                 var db = MYSQL_DB;
-                return comb.serial([
-                    function () {
-                        patio.mysql.convertInvalidDateTime = String;
-                        return Promise.all([
-                            db.fetch("SELECT CAST('0000-00-00' AS date)").singleValue(),
-                            db.fetch("SELECT CAST('0000-00-00 00:00:00' AS datetime)").singleValue(),
-                            db.fetch("SELECT CAST('25:00:00' AS time)").singleValue()
-                        ]);
-                    },
-                    function () {
+                patio.mysql.convertInvalidDateTime = String;
+                return Promise
+                    .all([
+                        db.fetch("SELECT CAST('0000-00-00' AS date)").singleValue(),
+                        db.fetch("SELECT CAST('0000-00-00 00:00:00' AS datetime)").singleValue(),
+                        db.fetch("SELECT CAST('25:00:00' AS time)").singleValue()
+                    ])
+                    .then(function (res) {
+                        assert.deepEqual(res, ['0000-00-00', '0000-00-00 00:00:00', '25:00:00']);
+
                         patio.mysql.convertInvalidDateTime = "string";
                         return Promise.all([
                             db.fetch("SELECT CAST('0000-00-00' AS date)").singleValue(),
                             db.fetch("SELECT CAST('0000-00-00 00:00:00' AS datetime)").singleValue(),
                             db.fetch("SELECT CAST('25:00:00' AS time)").singleValue()
                         ]);
-                    },
-                    function () {
+                    })
+                    .then(function (res) {
+                        assert.deepEqual(res, ['0000-00-00', '0000-00-00 00:00:00', '25:00:00']);
+
                         patio.mysql.convertInvalidDateTime = "String";
                         return Promise.all([
                             db.fetch("SELECT CAST('0000-00-00' AS date)").singleValue(),
                             db.fetch("SELECT CAST('0000-00-00 00:00:00' AS datetime)").singleValue(),
                             db.fetch("SELECT CAST('25:00:00' AS time)").singleValue()
                         ]);
-                    }
-                ]).then(function (res) {
-                    patio.mysql.convertInvalidDateTime = false;
-                    res = comb.array.flatten(res);
-                    assert.deepEqual(res, ['0000-00-00', '0000-00-00 00:00:00', '25:00:00', '0000-00-00', '0000-00-00 00:00:00', '25:00:00', '0000-00-00', '0000-00-00 00:00:00', '25:00:00']);
-                });
-
+                    })
+                    .then(function (res) {
+                        assert.deepEqual(res, ['0000-00-00', '0000-00-00 00:00:00', '25:00:00']);
+                        patio.mysql.convertInvalidDateTime = false;
+                    });
             });
 
             it.should("handle CURRENT_TIMESTAMP as a default value", function () {
-                return comb.serial([
-                    function () {
-                        return MYSQL_DB.alterTable("items", function () {
-                            this.addColumn("timestamp", sql.TimeStamp, {"default": sql.CURRENT_TIMESTAMP});
-                        });
-                    },
-                    function () {
-                        return MYSQL_DB.schema("items").then(function (schema) {
-                            assert.equal(schema.timestamp["default"], "CURRENT_TIMESTAMP");
-                            assert.isNull(schema.timestamp.jsDefault);
-                        });
-                    }
-                ]);
+                return MYSQL_DB
+                    .alterTable("items", function () {
+                        this.addColumn("timestamp", sql.TimeStamp, {"default": sql.CURRENT_TIMESTAMP});
+                    })
+                    .then(function () {
+                        return MYSQL_DB
+                            .schema("items")
+                            .then(function (schema) {
+                                assert.equal(schema.timestamp["default"], "CURRENT_TIMESTAMP");
+                                assert.isNull(schema.timestamp.jsDefault);
+                            });
+                    });
 
             });
 

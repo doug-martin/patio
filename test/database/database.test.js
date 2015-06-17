@@ -442,10 +442,14 @@ it.describe("patio.Database", function (it) {
 
 
         it.should("pass the supplied arguments to executeDdl", function () {
-            db.run("DELETE FROM items");
-            assert.deepEqual(db.sqls, ["DELETE FROM items", {}]);
-            db.run("DELETE FROM items2", {hello: "world"});
-            assert.deepEqual(db.sqls, ["DELETE FROM items2", {hello: "world"}]);
+            return db.run("DELETE FROM items")
+                .then(function () {
+                    assert.deepEqual(db.sqls, ["DELETE FROM items", {}]);
+                    return db.run("DELETE FROM items2", {hello: "world"});
+                })
+                .then(function () {
+                    assert.deepEqual(db.sqls, ["DELETE FROM items2", {hello: "world"}]);
+                });
         });
     });
 
@@ -453,77 +457,61 @@ it.describe("patio.Database", function (it) {
 
         var DB = DummyDatabase;
 
-
         it.should("construct the proper SQL", function () {
             patio.quoteIdentifiers = false;
-            return comb.serial([
-                function () {
-                    var db = new DB();
-                    return db.createTable("test", function (table) {
-                        table.primaryKey("id", "integer", {"null": false});
-                        table.column("name", "text");
-                        table.column("image", Buffer, {"null": false});
-                        table.column("age", "integer");
-                        table.index("name", {unique: true});
-                        table.check({name: "Bob"});
-                        table.constraint("age", {age: {gt: 0}});
-                    }).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            "CREATE TABLE test (id integer NOT NULL PRIMARY KEY AUTOINCREMENT, name text, image blob NOT NULL, age integer, CHECK (name = 'Bob'), CONSTRAINT age CHECK (age > 0))",
-                            "CREATE UNIQUE INDEX test_name_index ON test (name)"
-                        ]);
-                    });
-                },
-                function () {
-                    patio.quoteIdentifiers = true;
-                    var db = new DB();
-                    db.createTable("test", function (table) {
-                        table.primaryKey("id", "integer", {"null": false});
-                        table.column("name", "text");
-                        table.index("name", {unique: true});
-                    }).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'CREATE TABLE "test" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" text)',
-                            'CREATE UNIQUE INDEX "test_name_index" ON "test" ("name")'
-                        ]);
-                    });
-                }
-            ]);
+            var db = new DB();
+
+            return db
+                .createTable("test", function (table) {
+                    table.primaryKey("id", "integer", {"null": false});
+                    table.column("name", "text");
+                    table.column("image", Buffer, {"null": false});
+                    table.column("age", "integer");
+                    table.index("name", {unique: true});
+                    table.check({name: "Bob"});
+                    table.constraint("age", {age: {gt: 0}});
+                })
+                .then(function () {
+                    assert.deepEqual(db.sqls, [
+                        "CREATE TABLE test (id integer NOT NULL PRIMARY KEY AUTOINCREMENT, name text, image blob NOT NULL, age integer, CHECK (name = 'Bob'), CONSTRAINT age CHECK (age > 0))",
+                        "CREATE UNIQUE INDEX test_name_index ON test (name)"
+                    ]);
+                });
         });
 
 
         it.should("create a temporary table", function () {
-            return comb.serial([
+            patio.quoteIdentifiers = true;
+            var db = new DB();
 
-                function () {
-                    patio.quoteIdentifiers = true;
-                    var db = new DB();
-                    return db.createTable("test", {temp: true}, function (table) {
-                        table.primaryKey("id", "integer", {"null": false});
-                        table.column("name", "text");
-                        table.index("name", {unique: true});
-                    }).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'CREATE TEMPORARY TABLE "test" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" text)',
-                            'CREATE UNIQUE INDEX "test_name_index" ON "test" ("name")'
-                        ]);
-                    });
-                },
-                function () {
+            return db
+                .createTable("test", {temp: true}, function (table) {
+                    table.primaryKey("id", "integer", {"null": false});
+                    table.column("name", "text");
+                    table.index("name", {unique: true});
+                })
+                .then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'CREATE TEMPORARY TABLE "test" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" text)',
+                        'CREATE UNIQUE INDEX "test_name_index" ON "test" ("name")'
+                    ]);
+
                     patio.quoteIdentifiers = false;
-                    var db = new DB();
-                    return db.createTable("test", {temp: true}, function (table) {
-                        table.primaryKey("id", "integer", {"null": false});
-                        table.column("name", "text");
-                        table.index("name", {unique: true});
-                    }).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'CREATE TEMPORARY TABLE test (id integer NOT NULL PRIMARY KEY AUTOINCREMENT, name text)',
-                            'CREATE UNIQUE INDEX test_name_index ON test (name)'
-                        ]);
-                    });
-                }
-            ]);
+                    db = new DB();
+
+                    return db
+                        .createTable("test", {temp: true}, function (table) {
+                            table.primaryKey("id", "integer", {"null": false});
+                            table.column("name", "text");
+                            table.index("name", {unique: true});
+                        })
+                        .then(function () {
+                            assert.deepEqual(db.sqls, [
+                                'CREATE TEMPORARY TABLE test (id integer NOT NULL PRIMARY KEY AUTOINCREMENT, name text)',
+                                'CREATE UNIQUE INDEX test_name_index ON test (name)'
+                            ]);
+                        });
+                });
         });
     });
 

@@ -93,13 +93,11 @@ it.describe("Models from multiple databases", function (it) {
             street: "2 nowhere st.",
             city: "NOWHERE2"
         });
-        return comb.serial([
-            function () {
-                return Promise.all([Employee.remove(), Employee2.remove()]);
-            },
-            function () {
+        return Promise.all([Employee.remove(), Employee2.remove()])
+            .then(function() {
+
                 return Promise.all([emp1.save(), emp2.save()]);
-            }]);
+            });
     });
 
     it.describe("patio", function (it) {

@@ -97,11 +97,12 @@ module.exports = function (grunt) {
         var env = process.env;
         env.PATIO_DB = db;
         grunt.util.spawn({
-            cmd: "istanbul",
+            cmd: "./node_modules/istanbul/lib/cli.js",
             args: DEFAULT_COVERAGE_ARGS,
             opts: {stdio: 'inherit', env: env}
         }, function (err) {
             if (err) {
+                console.log(err);
                 done(false);
             } else {
                 done();

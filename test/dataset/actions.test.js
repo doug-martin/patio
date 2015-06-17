@@ -13,7 +13,6 @@ var it = require('it'),
     MockDatabase = helper.MockDatabase,
     MockDataset = helper.MockDataset,
     comb = require("comb"),
-    serial = comb.serial,
     hitch = comb.hitch;
 
 
@@ -21,7 +20,7 @@ it.describe("patio.Dataset actions", function (it) {
 
     patio.identifierInputMethod = null;
     patio.identifierOutputMethod = null;
-    var c = comb.define(Dataset, {
+    var C = comb.define(Dataset, {
         instance: {
 
             fetchRows: function (sql, cb) {
@@ -210,19 +209,19 @@ it.describe("patio.Dataset actions", function (it) {
     });
 
     it.describe("#count", function (it) {
-        var dataset = new c().from("test");
+        var dataset = new C().from("test");
 
         it.should("format SQL properly", function () {
             return Promise.all([
                 dataset.count().then(function (res) {
                     assert.equal(res, 1);
-                    assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LIMIT 1');
+                    assert.equal(C.sql, 'SELECT COUNT(*) AS count FROM test LIMIT 1');
                 }),
 
                 dataset.count(function (err, res) {
                     assert.isNull(err);
                     assert.equal(res, 1);
-                    assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LIMIT 1');
+                    assert.equal(C.sql, 'SELECT COUNT(*) AS count FROM test LIMIT 1');
                 })
             ]);
         });
@@ -231,89 +230,81 @@ it.describe("patio.Dataset actions", function (it) {
             return Promise.all([
                 dataset.filter(sql.abc.sqlNumber.lt(30)).count().then(function (count) {
                     assert.equal(count, 1);
-                    assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test WHERE (abc < 30) LIMIT 1');
+                    assert.equal(C.sql, 'SELECT COUNT(*) AS count FROM test WHERE (abc < 30) LIMIT 1');
                 }),
                 dataset.filter(sql.abc.sqlNumber.lt(30)).count(function (err, count) {
                     assert.isNull(err);
                     assert.equal(count, 1);
-                    assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test WHERE (abc < 30) LIMIT 1');
+                    assert.equal(C.sql, 'SELECT COUNT(*) AS count FROM test WHERE (abc < 30) LIMIT 1');
                 })
             ]);
         });
 
         it.should("count properly for datasets with fixed sql", function () {
-            var dataset = new c().from("test");
+            var dataset = new C().from("test");
             dataset.__opts.sql = "select abc from xyz";
             return Promise.all([
                 dataset.count().then(function (count) {
                     assert.equal(count, 1);
-                    assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (select abc from xyz) AS t1 LIMIT 1");
+                    assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (select abc from xyz) AS t1 LIMIT 1");
                 }),
                 dataset.count(function (err, count) {
                     assert.isNull(err);
                     assert.equal(count, 1);
-                    assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (select abc from xyz) AS t1 LIMIT 1");
+                    assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (select abc from xyz) AS t1 LIMIT 1");
                 })
             ]);
         });
 
         it.should("count properly when using UNION, INTERSECT, or EXCEPT", function () {
-            return serial([
-                function () {
-                    return dataset.union(dataset).count().then(function (count) {
-                        assert.equal(count, 1);
-                        assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test UNION SELECT * FROM test) AS t1 LIMIT 1");
-                    });
-                },
-                function () {
-                    return dataset.intersect(dataset).count().then(function (count) {
-                        assert.equal(count, 1);
-                        assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test INTERSECT SELECT * FROM test) AS t1 LIMIT 1");
-                    });
-                },
-                function () {
-                    return dataset.except(dataset).count().then(function (count) {
-                        assert.equal(count, 1);
-                        assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test EXCEPT SELECT * FROM test) AS t1 LIMIT 1");
-                    });
-                },
-                function () {
-                    //with callback
-                    return dataset.union(dataset).count(function (err, count) {
-                        assert.isNull(err);
-                        assert.equal(count, 1);
-                        assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test UNION SELECT * FROM test) AS t1 LIMIT 1");
-                    });
-                },
-                function () {
-                    return dataset.intersect(dataset).count(function (err, count) {
-                        assert.isNull(err);
-                        assert.equal(count, 1);
-                        assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test INTERSECT SELECT * FROM test) AS t1 LIMIT 1");
-                    });
-                },
-                function () {
+            return dataset.union(dataset).count()
+                .then(function (count) {
+                    assert.equal(count, 1);
+                    assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test UNION SELECT * FROM test) AS t1 LIMIT 1");
+                    return dataset.intersect(dataset).count();
+                })
+                .then(function (count) {
+                    assert.equal(count, 1);
+                    assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test INTERSECT SELECT * FROM test) AS t1 LIMIT 1");
+                    return dataset.except(dataset).count();
+                })
+                .then(function (count) {
+                    assert.equal(count, 1);
+                    assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test EXCEPT SELECT * FROM test) AS t1 LIMIT 1");
+                });
+        });
+
+        it.should("count properly when using UNION, INTERSECT, or EXCEPT with callbacks", function () {
+            return dataset.union(dataset).count(function (err, count) {
+                assert.isNull(err);
+                assert.equal(count, 1);
+                assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test UNION SELECT * FROM test) AS t1 LIMIT 1");
+
+                return dataset.intersect(dataset).count(function (err, count) {
+                    assert.isNull(err);
+                    assert.equal(count, 1);
+                    assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test INTERSECT SELECT * FROM test) AS t1 LIMIT 1");
+
                     return dataset.except(dataset).count(function (err, count) {
                         assert.isNull(err);
                         assert.equal(count, 1);
-                        assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test EXCEPT SELECT * FROM test) AS t1 LIMIT 1");
+                        assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test EXCEPT SELECT * FROM test) AS t1 LIMIT 1");
                     });
-                }
-            ]);
-
+                });
+            });
         });
 
         it.should("return limit if count is greater than it", function () {
             return Promise.all([
                 dataset.limit(5).count().then(function (count) {
                     assert.equal(count, 1);
-                    assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test LIMIT 5) AS t1 LIMIT 1");
+                    assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test LIMIT 5) AS t1 LIMIT 1");
                 }),
 
                 dataset.limit(5).count(function (err, count) {
                     assert.isNull(err);
                     assert.equal(count, 1);
-                    assert.equal(c.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test LIMIT 5) AS t1 LIMIT 1");
+                    assert.equal(C.sql, "SELECT COUNT(*) AS count FROM (SELECT * FROM test LIMIT 5) AS t1 LIMIT 1");
                 })
             ]);
 
@@ -324,12 +315,12 @@ it.describe("patio.Dataset actions", function (it) {
                 return Promise.all([
                     ds.count().then(function (count) {
                         assert.equal(count, 1);
-                        assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');
+                        assert.equal(C.sql, 'SELECT COUNT(*) AS count FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');
                     }),
                     ds.count(function (err, count) {
                         assert.isNull(err);
                         assert.equal(count, 1);
-                        assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');
+                        assert.equal(C.sql, 'SELECT COUNT(*) AS count FROM test LEFT OUTER JOIN test AS test2 USING (a) LIMIT 1');
                     })
                 ]);
             });
@@ -343,7 +334,7 @@ it.describe("patio.Dataset actions", function (it) {
             return Promise.all([
                 ds.count().then(function (count) {
                     assert.equal(count, 1);
-                    assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM blah LIMIT 1');
+                    assert.equal(C.sql, 'SELECT COUNT(*) AS count FROM blah LIMIT 1');
                 }),
 
                 ds.columns.then(function (cols) {
@@ -354,7 +345,7 @@ it.describe("patio.Dataset actions", function (it) {
                 ds.count(function (err, count) {
                     assert.isNull(err);
                     assert.equal(count, 1);
-                    assert.equal(c.sql, 'SELECT COUNT(*) AS count FROM blah LIMIT 1');
+                    assert.equal(C.sql, 'SELECT COUNT(*) AS count FROM blah LIMIT 1');
                 })
             ]);
         });
@@ -362,7 +353,7 @@ it.describe("patio.Dataset actions", function (it) {
     });
 
     it.describe("#isEmpty", function (it) {
-        var C = comb.define(c, {
+        var C2 = comb.define(C, {
             instance: {
                 fetchRows: function (sql, cb) {
                     this._static.sql = sql;
@@ -372,36 +363,37 @@ it.describe("patio.Dataset actions", function (it) {
         });
 
         it.should("return true if records exist in the dataset", function () {
-            var ds = new C().from("test");
-            return serial([
-                function () {
-                    return ds.isEmpty().then(function (res) {
-                        assert.isFalse(res);
-                        assert.equal(C.sql, 'SELECT 1 FROM test LIMIT 1');
-                    });
-                },
-                function () {
-                    return ds.filter(false).isEmpty().then(function (res) {
-                        assert.isTrue(res);
-                        assert.equal(C.sql, "SELECT 1 FROM test WHERE 'f' LIMIT 1");
-                    });
-                },
-                function () {
-                    //with callback
-                    return ds.isEmpty(function (err, res) {
-                        assert.isNull(err);
-                        assert.isFalse(res);
-                        assert.equal(C.sql, 'SELECT 1 FROM test LIMIT 1');
-                    });
-                },
-                function () {
-                    return ds.filter(false).isEmpty(function (err, res) {
-                        assert.isNull(err);
-                        assert.isTrue(res);
-                        assert.equal(C.sql, "SELECT 1 FROM test WHERE 'f' LIMIT 1");
-                    });
-                }
-            ]);
+            var ds = new C2().from("test");
+            return ds
+                .isEmpty()
+                .then(function (res) {
+                    assert.isFalse(res);
+                    assert.equal(C2.sql, 'SELECT 1 FROM test LIMIT 1');
+                    return ds.filter(false).isEmpty();
+                })
+                .then(function (res) {
+                    assert.isTrue(res);
+                    assert.equal(C2.sql, "SELECT 1 FROM test WHERE 'f' LIMIT 1");
+
+                });
+        });
+
+        it.should("return true if records exist in the dataset", function () {
+            var ds = new C2().from("test");
+            return ds
+                .isEmpty(function (err, res) {
+                    assert.isNull(err);
+                    assert.isFalse(res);
+                    assert.equal(C2.sql, 'SELECT 1 FROM test LIMIT 1');
+
+                    return ds
+                        .filter(false)
+                        .isEmpty(function (err, res) {
+                            assert.isNull(err);
+                            assert.isTrue(res);
+                            assert.equal(C2.sql, "SELECT 1 FROM test WHERE 'f' LIMIT 1");
+                        });
+                });
         });
     });
 
@@ -419,50 +411,44 @@ it.describe("patio.Dataset actions", function (it) {
         }))();
 
         it.should("insert all items in the supplied array", function () {
-            return serial([
-                function () {
-                    return d.insertMultiple(["aa", 5, 3, {1: 2}]).then(function () {
-                        assert.deepEqual(d.inserts, ["aa", 5, 3, {1: 2}]);
-                        d.inserts.length = 0;
-                    });
-                },
-                function () {
-                    return d.insertMultiple(["aa", 5, 3, {1: 2}], null, function (err) {
-                        assert.isNull(err);
-                        assert.deepEqual(d.inserts, ["aa", 5, 3, {1: 2}]);
-                    }).then(function () {
-                        d.inserts.length = 0;
-                    });
-                }
-            ]);
+            return d
+                .insertMultiple(["aa", 5, 3, {1: 2}])
+                .then(function () {
+                    assert.deepEqual(d.inserts, ["aa", 5, 3, {1: 2}]);
+                    d.inserts.length = 0;
+
+                    return d
+                        .insertMultiple(["aa", 5, 3, {1: 2}], null, function (err) {
+                            assert.isNull(err);
+                            assert.deepEqual(d.inserts, ["aa", 5, 3, {1: 2}]);
+                        }).then(function () {
+                            d.inserts.length = 0;
+                        });
+                });
         });
 
         it.should("pass array items through the supplied block if given", function () {
             var a = ["inevitable", "hello", "the ticking clock"];
-            return serial([
-                function () {
-                    return d.insertMultiple(a, function (i) {
-                        return i.replace(/l/g, "r");
-                    }).then(function () {
-                        assert.deepEqual(d.inserts, ["inevitabre", "herro", "the ticking crock"]);
-                        d.inserts.length = 0;
-                    });
-                },
-                function () {
-                    return d.insertMultiple(a,
-                        function (i) {
+            return d
+                .insertMultiple(a, function (i) {
+                    return i.replace(/l/g, "r");
+                })
+                .then(function () {
+                    assert.deepEqual(d.inserts, ["inevitabre", "herro", "the ticking crock"]);
+                    d.inserts.length = 0;
+
+                    return d
+                        .insertMultiple(a, function (i) {
                             return i.replace(/l/g, "r");
                         },
                         function (err) {
                             assert.isNull(err);
                             assert.deepEqual(d.inserts, ["inevitabre", "herro", "the ticking crock"]);
-                        }
-                    ).then(function () {
+                        })
+                        .then(function () {
                             d.inserts.length = 0;
                         });
-                }
-            ]);
-
+                });
         });
 
     });
@@ -605,30 +591,25 @@ it.describe("patio.Dataset actions", function (it) {
         }))().from("test");
 
         it.should("generate a correct SQL statement", function () {
-            return serial([
-                function () {
-                    return d.range("stamp").then(function () {
-                        assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test LIMIT 1");
-                    });
-                },
-                function () {
-                    return d.filter(sql.price.sqlNumber.gt(100)).range("stamp").then(function () {
-                        assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test WHERE (price > 100) LIMIT 1");
-                    });
-                },
-                function () {
+            return d
+                .range("stamp")
+                .then(function () {
+                    assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test LIMIT 1");
+                    return d.filter(sql.price.sqlNumber.gt(100)).range("stamp");
+                })
+                .then(function () {
+                    assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test WHERE (price > 100) LIMIT 1");
                     return d.range("stamp", function (err) {
                         assert.isNull(err);
                         assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test LIMIT 1");
                     });
-                },
-                function () {
+                })
+                .then(function () {
                     return d.filter(sql.price.sqlNumber.gt(100)).range("stamp", function (err) {
                         assert.isNull(err);
                         assert.equal(d.lastSql, "SELECT min(stamp) AS min, max(stamp) AS max FROM test WHERE (price > 100) LIMIT 1");
                     });
-                }
-            ]);
+                });
         });
 
         it.should("return a two values", function () {
@@ -694,35 +675,27 @@ it.describe("patio.Dataset actions", function (it) {
             }))().from("test");
 
         it.should("generate a correct SQL statement", function () {
-            return serial([
-                function () {
-                    return d.interval("stamp").then(function () {
-                        assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test LIMIT 1");
-                    });
-                },
-                function () {
-                    return d.filter(sql.price.sqlNumber.gt(100)).interval("stamp").then(function () {
-                        assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test WHERE (price > 100) LIMIT 1");
-                    });
-                },
-
-                //with callback
-                function () {
+            return d.interval("stamp")
+                .then(function () {
+                    assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test LIMIT 1");
+                    return d.filter(sql.price.sqlNumber.gt(100)).interval("stamp");
+                })
+                .then(function () {
+                    assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test WHERE (price > 100) LIMIT 1");
                     d.reset();
                     return d.interval("stamp", function (err) {
                         assert.isNull(err);
                         assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test LIMIT 1");
                     });
-                },
-                function () {
+                })
+                .then(function () {
                     return d.filter(sql.price.sqlNumber.gt(100)).interval("stamp", function (err) {
                         assert.isNull(err);
                         assert.equal(d.lastSql, "SELECT (max(stamp) - min(stamp)) FROM test WHERE (price > 100) LIMIT 1");
                     });
-                }
-            ]);
-
+                });
         });
+
         it.should("return an integer", function () {
             return Promise.all([
                 d.interval("tryme").then(function (r) {
@@ -837,66 +810,63 @@ it.describe("patio.Dataset actions", function (it) {
 
         it.should("set the limit and return an array of records if the given number is > 1", function () {
             var i = Math.floor(Math.random() * 10) + 10;
-            return serial([
-                function () {
-                    return d.order("a").first(i).then(function (r) {
-                        assert.lengthOf(r, i);
-                        assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test ORDER BY a LIMIT %d", i)]);
-                    });
-                },
-                function () {
-                    return d.order("a").last((i = Math.floor(Math.random() * 10) + 10)).then(function (r) {
-                        assert.lengthOf(r, i);
-                        assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test ORDER BY a DESC LIMIT %d", i)]);
-                    });
-                },
-                function () {
-                    //with callback
+            return d
+                .order("a")
+                .first(i)
+                .then(function (r) {
+                    assert.lengthOf(r, i);
+                    assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test ORDER BY a LIMIT %d", i)]);
+                    return d.order("a").last((i = Math.floor(Math.random() * 10) + 10));
+                })
+                .then(function (r) {
+                    assert.lengthOf(r, i);
+                    assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test ORDER BY a DESC LIMIT %d", i)]);
+
                     return d.order("a").first((i = Math.floor(Math.random() * 10) + 10), function (err, r) {
                         assert.isNull(err);
                         assert.lengthOf(r, i);
                         assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test ORDER BY a LIMIT %d", i)]);
                     });
-                },
-                function () {
+                })
+                .then(function () {
                     return d.order("a").last((i = Math.floor(Math.random() * 10) + 10), function (err, r) {
                         assert.isNull(err);
                         assert.lengthOf(r, i);
                         assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test ORDER BY a DESC LIMIT %d", i)]);
                     });
-                }
-            ]);
+                });
         });
 
         it.should("return the first matching record if a block is given without an argument", function () {
-            return serial([
-                function () {
-                    return d.first(function () {
-                        return this.z.sqlNumber.gt(26);
-                    }).then(function (r) {
-                        assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z > 26) LIMIT 1']);
-                    });
-                },
-                function () {
-                    return d.order("name").last(function () {
-                        return this.z.sqlNumber.gt(26);
-                    }).then(function (r) {
-                        assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z > 26) ORDER BY name DESC LIMIT 1']);
-                    });
-                },
-                function () {
-
-                    //with callback
-                    return d.first(function () {
+            return d
+                .first(function () {
+                    return this.z.sqlNumber.gt(26);
+                })
+                .then(function (r) {
+                    assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z > 26) LIMIT 1']);
+                    return d
+                        .order("name")
+                        .last(function () {
+                            return this.z.sqlNumber.gt(26);
+                        })
+                        .then(function (r) {
+                            assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z > 26) ORDER BY name DESC LIMIT 1']);
+                        });
+                })
+                .then(function () {
+                    return d
+                        .first(function () {
                             return this.z.sqlNumber.gt(26);
                         },
                         function (err, r) {
                             assert.isNull(err);
                             assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z > 26) LIMIT 1']);
                         });
-                },
-                function () {
-                    return d.order("name").last(
+                })
+                .then(function () {
+                    return d
+                        .order("name")
+                        .last(
                         function () {
                             return this.z.sqlNumber.gt(26);
                         },
@@ -904,8 +874,7 @@ it.describe("patio.Dataset actions", function (it) {
                             assert.isNull(err);
                             assert.deepEqual(r, ["a", 1, "b", 2, 'SELECT * FROM test WHERE (z > 26) ORDER BY name DESC LIMIT 1']);
                         });
-                }
-            ]);
+                });
         });
 
         it.should("combine block and standard argument filters if argument is not an Integer", function () {
@@ -944,37 +913,33 @@ it.describe("patio.Dataset actions", function (it) {
 
         it.should("return the first matching record if a block is given without an argument", function () {
             var i = Math.floor(Math.random() * 10) + 10;
-            return serial([
-                function () {
+
+            return d.order("a")
+                .first(i, function () {
+                    return this.z.sqlNumber.gt(26);
+                })
+                .then(function (r) {
+                    assert.lengthOf(r, i);
+                    assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test WHERE (z > 26) ORDER BY a LIMIT %d", i)]);
+
+                    return d.order("name").last((i = Math.floor(Math.random() * 10) + 10),
+                        function () {
+                            return this.z.sqlNumber.gt(26);
+                        });
+                })
+                .then(function (r) {
+                    assert.lengthOf(r, i);
+                    assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test WHERE (z > 26) ORDER BY name DESC LIMIT %d", i)]);
+
                     return d.order("a").first(i, function () {
                         return this.z.sqlNumber.gt(26);
-                    }).then(function (r) {
+                    }, function (err, r) {
+                        assert.isNull(err);
                         assert.lengthOf(r, i);
                         assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test WHERE (z > 26) ORDER BY a LIMIT %d", i)]);
                     });
-                },
-                function () {
-                    return d.order("name").last((i = Math.floor(Math.random() * 10) + 10),
-                        function () {
-                            return this.z.sqlNumber.gt(26);
-                        }).then(function (r) {
-                            assert.lengthOf(r, i);
-                            assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test WHERE (z > 26) ORDER BY name DESC LIMIT %d", i)]);
-                        });
-                },
-                function () {
-                    //with callback
-                    return d.order("a").first(i,
-                        function () {
-                            return this.z.sqlNumber.gt(26);
-                        },
-                        function (err, r) {
-                            assert.isNull(err);
-                            assert.lengthOf(r, i);
-                            assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test WHERE (z > 26) ORDER BY a LIMIT %d", i)]);
-                        });
-                },
-                function () {
+                })
+                .then(function () {
                     return d.order("name").last((i = Math.floor(Math.random() * 10) + 10),
                         function () {
                             return this.z.sqlNumber.gt(26);
@@ -984,8 +949,7 @@ it.describe("patio.Dataset actions", function (it) {
                             assert.lengthOf(r, i);
                             assert.deepEqual(r[0], ["a", 1, "b", 2, comb.string.format("SELECT * FROM test WHERE (z > 26) ORDER BY name DESC LIMIT %d", i)]);
                         });
-                }
-            ]);
+                });
         });
 
         it.should("last should raise an error if no order is given", function () {
@@ -1321,26 +1285,22 @@ it.describe("patio.Dataset actions", function (it) {
         var ds = new Dataset(db).from("items");
 
         it.should("accept string keys as column names", function () {
-            return serial([
-                function () {
-                    return ds["import"](['x', 'y'], [
-                        [1, 2],
-                        [3, 4]
-                    ]).then(function (res) {
-                        assert.deepEqual(res, [
-                            'INSERT INTO items (x, y) VALUES (1, 2)',
-                            'INSERT INTO items (x, y) VALUES (3, 4)'
-                        ]);
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN',
-                            "INSERT INTO items (x, y) VALUES (1, 2)",
-                            "INSERT INTO items (x, y) VALUES (3, 4)",
-                            'COMMIT'
-                        ]);
-                        db.reset();
-                    });
-                },
-                function () {
+            return ds["import"](['x', 'y'], [
+                [1, 2],
+                [3, 4]
+            ])
+                .then(function (res) {
+                    assert.deepEqual(res, [
+                        'INSERT INTO items (x, y) VALUES (1, 2)',
+                        'INSERT INTO items (x, y) VALUES (3, 4)'
+                    ]);
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO items (x, y) VALUES (1, 2)",
+                        "INSERT INTO items (x, y) VALUES (3, 4)",
+                        'COMMIT'
+                    ]);
+                    db.reset();
                     return ds["import"](
                         ['x', 'y'],
                         [
@@ -1359,33 +1319,32 @@ it.describe("patio.Dataset actions", function (it) {
                                 "INSERT INTO items (x, y) VALUES (3, 4)",
                                 'COMMIT'
                             ]);
-                        }).then(db.reset.bind(db));
-                }
-            ]);
+                        });
+                })
+                .then(db.reset.bind(db));
         });
 
         it.should("accept a columns array and a values array", function () {
-            return serial([
-                function () {
-                    return ds["import"](
-                        ["x", "y"],
-                        [
-                            [1, 2],
-                            [3, 4]
-                        ]).then(function (res) {
-                            assert.deepEqual(res, [
-                                'INSERT INTO items (x, y) VALUES (1, 2)',
-                                'INSERT INTO items (x, y) VALUES (3, 4)'
-                            ]);
-                            assert.deepEqual(db.sqls, [
-                                'BEGIN',
-                                "INSERT INTO items (x, y) VALUES (1, 2)",
-                                "INSERT INTO items (x, y) VALUES (3, 4)",
-                                'COMMIT'
-                            ]);
-                        }).then(db.reset.bind(db));
-                },
-                function () {
+
+            return ds["import"](
+                ["x", "y"],
+                [
+                    [1, 2],
+                    [3, 4]
+                ])
+                .then(function (res) {
+                    assert.deepEqual(res, [
+                        'INSERT INTO items (x, y) VALUES (1, 2)',
+                        'INSERT INTO items (x, y) VALUES (3, 4)'
+                    ]);
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO items (x, y) VALUES (1, 2)",
+                        "INSERT INTO items (x, y) VALUES (3, 4)",
+                        'COMMIT'
+                    ]);
+                    db.reset.bind(db);
+
                     return ds["import"](
                         ["x", "y"],
                         [
@@ -1404,25 +1363,23 @@ it.describe("patio.Dataset actions", function (it) {
                                 "INSERT INTO items (x, y) VALUES (3, 4)",
                                 'COMMIT'
                             ]);
-                        }).then(db.reset.bind(db));
-                }
-            ]);
+                        });
+                })
+                .then(db.reset.bind(db));
         });
 
         it.should("accept a columns array and a dataset", function () {
             var ds2 = new Dataset(db).from("cats").filter({purr: true}).select("a", "b");
 
-            return serial([
-                function () {
-                    return ds["import"](["x", "y"], ds2).then(function (res) {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN',
-                            "INSERT INTO items (x, y) SELECT a, b FROM cats WHERE (purr IS TRUE)",
-                            'COMMIT'
-                        ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
+            return ds["import"](["x", "y"], ds2)
+                .then(function (res) {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO items (x, y) SELECT a, b FROM cats WHERE (purr IS TRUE)",
+                        'COMMIT'
+                    ]);
+                    db.reset.bind(db);
+
                     return ds["import"](["x", "y"], ds2, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
@@ -1430,43 +1387,38 @@ it.describe("patio.Dataset actions", function (it) {
                             "INSERT INTO items (x, y) SELECT a, b FROM cats WHERE (purr IS TRUE)",
                             'COMMIT'
                         ]);
-                    }).then(db.reset.bind(db));
-                }
-            ]);
+                    });
+                })
+                .then(db.reset.bind(db));
         });
 
         it.should("accept a columns array and a values array with {commitEvery) option", function () {
-            return serial([
-                function () {
-                    return ds["import"](
-                        ["x", "y"],
-                        [
-                            [1, 2],
-                            [3, 4],
-                            [5, 6]
-                        ],
-                        {commitEvery: 1}
-                    ).then(function (res) {
-                            assert.deepEqual(res, [
-                                'INSERT INTO items (x, y) VALUES (1, 2)',
-                                'INSERT INTO items (x, y) VALUES (3, 4)',
-                                'INSERT INTO items (x, y) VALUES (5, 6)'
-                            ]);
-                            assert.deepEqual(db.sqls, [
-                                'BEGIN',
-                                "INSERT INTO items (x, y) VALUES (1, 2)",
-                                'COMMIT',
-                                'BEGIN',
-                                "INSERT INTO items (x, y) VALUES (3, 4)",
-                                'COMMIT',
-                                'BEGIN',
-                                "INSERT INTO items (x, y) VALUES (5, 6)",
-                                'COMMIT'
-                            ]);
-                        }).then(db.reset.bind(db));
-                },
-                function () {
-                    //with callback
+            return ds["import"](
+                ["x", "y"],
+                [
+                    [1, 2],
+                    [3, 4],
+                    [5, 6]
+                ],
+                {commitEvery: 1}
+            ).then(function (res) {
+                    assert.deepEqual(res, [
+                        'INSERT INTO items (x, y) VALUES (1, 2)',
+                        'INSERT INTO items (x, y) VALUES (3, 4)',
+                        'INSERT INTO items (x, y) VALUES (5, 6)'
+                    ]);
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO items (x, y) VALUES (1, 2)",
+                        'COMMIT',
+                        'BEGIN',
+                        "INSERT INTO items (x, y) VALUES (3, 4)",
+                        'COMMIT',
+                        'BEGIN',
+                        "INSERT INTO items (x, y) VALUES (5, 6)",
+                        'COMMIT'
+                    ]);
+                    db.reset.bind(db);
                     return ds["import"](
                         ["x", "y"],
                         [
@@ -1493,40 +1445,36 @@ it.describe("patio.Dataset actions", function (it) {
                                 "INSERT INTO items (x, y) VALUES (5, 6)",
                                 'COMMIT'
                             ]);
-                        }).then(db.reset.bind(db));
-                }
-            ]);
+                        })
+                        .then(db.reset.bind(db));
+                });
         });
 
         it.should("accept a columns array and a values array with slice option", function () {
-            return serial([
-                function () {
-                    return ds["import"](
-                        ["x", "y"],
-                        [
-                            [1, 2],
-                            [3, 4],
-                            [5, 6]
-                        ],
-                        {slice: 2}
-                    ).then(function (res) {
-                            assert.deepEqual(res, [
-                                'INSERT INTO items (x, y) VALUES (1, 2)',
-                                'INSERT INTO items (x, y) VALUES (3, 4)',
-                                'INSERT INTO items (x, y) VALUES (5, 6)'
-                            ]);
-                            assert.deepEqual(db.sqls, [
-                                'BEGIN',
-                                "INSERT INTO items (x, y) VALUES (1, 2)",
-                                "INSERT INTO items (x, y) VALUES (3, 4)",
-                                'COMMIT',
-                                'BEGIN',
-                                "INSERT INTO items (x, y) VALUES (5, 6)",
-                                'COMMIT'
-                            ]);
-                        }).then(db.reset.bind(db));
-                },
-                function () {
+            return ds["import"](
+                ["x", "y"],
+                [
+                    [1, 2],
+                    [3, 4],
+                    [5, 6]
+                ],
+                {slice: 2}
+            ).then(function (res) {
+                    assert.deepEqual(res, [
+                        'INSERT INTO items (x, y) VALUES (1, 2)',
+                        'INSERT INTO items (x, y) VALUES (3, 4)',
+                        'INSERT INTO items (x, y) VALUES (5, 6)'
+                    ]);
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO items (x, y) VALUES (1, 2)",
+                        "INSERT INTO items (x, y) VALUES (3, 4)",
+                        'COMMIT',
+                        'BEGIN',
+                        "INSERT INTO items (x, y) VALUES (5, 6)",
+                        'COMMIT'
+                    ]);
+                    db.reset.bind(db);
                     return ds["import"](
                         ["x", "y"],
                         [
@@ -1554,11 +1502,8 @@ it.describe("patio.Dataset actions", function (it) {
                             ]);
                             db.reset();
                         });
-                }
-            ]);
+                });
         });
-
-
     });
 
 
@@ -1758,19 +1703,17 @@ it.describe("patio.Dataset actions", function (it) {
         ];
 
         it.should("issue multiple insert statements inside a transaction", function () {
-            return serial([
-                function () {
-                    return ds.multiInsert(list).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN',
-                            "INSERT INTO items (name) VALUES ('abc')",
-                            "INSERT INTO items (name) VALUES ('def')",
-                            "INSERT INTO items (name) VALUES ('ghi')",
-                            'COMMIT'
-                        ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
+            return ds.multiInsert(list)
+                .then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO items (name) VALUES ('abc')",
+                        "INSERT INTO items (name) VALUES ('def')",
+                        "INSERT INTO items (name) VALUES ('ghi')",
+                        'COMMIT'
+                    ]);
+                    comb.hitch(db, "reset", db)();
+
                     return ds.multiInsert(list, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
@@ -1780,51 +1723,48 @@ it.describe("patio.Dataset actions", function (it) {
                             "INSERT INTO items (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).then(db.reset.bind(db));
-                }
-            ]);
+                    });
+                })
+                .then(comb.hitch(db, "reset", db));
         });
 
         it.should("handle different formats for tables", function () {
+            return ds.from("sch__tab").multiInsert(list)
+                .then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO sch.tab (name) VALUES ('abc')",
+                        "INSERT INTO sch.tab (name) VALUES ('def')",
+                        "INSERT INTO sch.tab (name) VALUES ('ghi')",
+                        'COMMIT'
+                    ]);
+                }).then(function () {
+                    comb.hitch(db, "reset", db)();
 
-            return serial([
-                function () {
-                    return ds.from("sch__tab").multiInsert(list).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN',
-                            "INSERT INTO sch.tab (name) VALUES ('abc')",
-                            "INSERT INTO sch.tab (name) VALUES ('def')",
-                            "INSERT INTO sch.tab (name) VALUES ('ghi')",
-                            'COMMIT'
-                        ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
-                    return ds.from(sql.tab.qualify("sch")).multiInsert(list).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN',
-                            "INSERT INTO sch.tab (name) VALUES ('abc')",
-                            "INSERT INTO sch.tab (name) VALUES ('def')",
-                            "INSERT INTO sch.tab (name) VALUES ('ghi')",
-                            'COMMIT'
-                        ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
-                    return ds.from(new Identifier("sch__tab")).multiInsert(list).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN',
-                            "INSERT INTO sch__tab (name) VALUES ('abc')",
-                            "INSERT INTO sch__tab (name) VALUES ('def')",
-                            "INSERT INTO sch__tab (name) VALUES ('ghi')",
-                            'COMMIT'
-                        ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
+                    return ds.from(sql.tab.qualify("sch")).multiInsert(list);
+                })
+                .then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO sch.tab (name) VALUES ('abc')",
+                        "INSERT INTO sch.tab (name) VALUES ('def')",
+                        "INSERT INTO sch.tab (name) VALUES ('ghi')",
+                        'COMMIT'
+                    ]);
+                    comb.hitch(db, "reset", db)();
 
+                    return ds.from(new Identifier("sch__tab")).multiInsert(list);
+                })
+                .then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO sch__tab (name) VALUES ('abc')",
+                        "INSERT INTO sch__tab (name) VALUES ('def')",
+                        "INSERT INTO sch__tab (name) VALUES ('ghi')",
+                        'COMMIT'
+                    ]);
+                    comb.hitch(db, "reset", db)();
 
-                    //with callback
                     return ds.from("sch__tab").multiInsert(list, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
@@ -1834,10 +1774,10 @@ it.describe("patio.Dataset actions", function (it) {
                             "INSERT INTO sch.tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
-
+                    });
+                })
+                .then(function () {
+                    comb.hitch(db, "reset", db)();
                     return ds.from(sql.tab.qualify("sch")).multiInsert(list, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
@@ -1847,9 +1787,11 @@ it.describe("patio.Dataset actions", function (it) {
                             "INSERT INTO sch.tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
+                    });
+                })
+                .then(function () {
+                    comb.hitch(db, "reset", db)();
+
                     return ds.from(new Identifier("sch__tab")).multiInsert(list, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
@@ -1859,32 +1801,29 @@ it.describe("patio.Dataset actions", function (it) {
                             "INSERT INTO sch__tab (name) VALUES ('ghi')",
                             'COMMIT'
                         ]);
-                    }).then(db.reset.bind(db));
-                }
-            ]);
+                    });
+                })
+                .then(comb.hitch(db, "reset", db));
         });
 
-
         it.should("accept the commitEvery option for committing every x records", function () {
-            return serial([
-                function () {
-                    return ds.multiInsert(list, {commitEvery: 1}).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN',
-                            "INSERT INTO items (name) VALUES ('abc')",
-                            'COMMIT',
-                            'BEGIN',
-                            "INSERT INTO items (name) VALUES ('def')",
-                            'COMMIT',
-                            'BEGIN',
-                            "INSERT INTO items (name) VALUES ('ghi')",
-                            'COMMIT'
-                        ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
+            return ds.multiInsert(list, {commitEvery: 1})
+                .then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO items (name) VALUES ('abc')",
+                        'COMMIT',
+                        'BEGIN',
+                        "INSERT INTO items (name) VALUES ('def')",
+                        'COMMIT',
+                        'BEGIN',
+                        "INSERT INTO items (name) VALUES ('ghi')",
+                        'COMMIT'
+                    ]);
 
-                    //with callback
+                }).then(function () {
+                    db.reset.bind(db);
+
                     return ds.multiInsert(list, {commitEvery: 1}, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
@@ -1899,27 +1838,24 @@ it.describe("patio.Dataset actions", function (it) {
                             'COMMIT'
                         ]);
                     }).then(db.reset.bind(db));
-                }
-            ]);
+                });
         });
 
 
         it.should("accept the slice option for committing every x records", function () {
-            return serial([
-                function () {
-                    return ds.multiInsert(list, {slice: 2}).then(function () {
-                        assert.deepEqual(db.sqls, [
-                            'BEGIN',
-                            "INSERT INTO items (name) VALUES ('abc')",
-                            "INSERT INTO items (name) VALUES ('def')",
-                            'COMMIT',
-                            'BEGIN',
-                            "INSERT INTO items (name) VALUES ('ghi')",
-                            'COMMIT'
-                        ]);
-                    }).then(db.reset.bind(db));
-                },
-                function () {
+            return ds.multiInsert(list, {slice: 2})
+                .then(function () {
+                    assert.deepEqual(db.sqls, [
+                        'BEGIN',
+                        "INSERT INTO items (name) VALUES ('abc')",
+                        "INSERT INTO items (name) VALUES ('def')",
+                        'COMMIT',
+                        'BEGIN',
+                        "INSERT INTO items (name) VALUES ('ghi')",
+                        'COMMIT'
+                    ]);
+                }).then(function () {
+                    db.reset.bind(db);
                     return ds.multiInsert(list, {slice: 2}, function (err) {
                         assert.isNull(err);
                         assert.deepEqual(db.sqls, [
@@ -1932,8 +1868,7 @@ it.describe("patio.Dataset actions", function (it) {
                             'COMMIT'
                         ]);
                     }).then(db.reset.bind(db));
-                }
-            ]);
+                });
         });
 
 
@@ -2006,7 +1941,7 @@ it.describe("patio.Dataset actions", function (it) {
                         {x: 1, y: 2},
                         {x: 3, y: 4},
                         sql
-                    ])
+                    ]);
                 }
             }
         }))().from("items");
@@ -2033,29 +1968,24 @@ it.describe("patio.Dataset actions", function (it) {
         });
 
         it.should("iterate over the array if a block is given", function () {
-            return comb.serial([
-                function () {
-                    var a = [];
-                    return ds.all(
-                        function (r) {
-                            a.push(comb.isHash(r) ? r.x : r);
-                        }).then(function () {
-                            assert.deepEqual(a, [1, 3, "SELECT * FROM items"]);
-                        });
-                },
-                function () {
-                    //with callback
-                    var a = [];
-                    return ds.all(
-                        function (r) {
+            var a = [];
+            return ds
+                .all(function (r) {
+                    a.push(comb.isHash(r) ? r.x : r);
+                })
+                .then(function () {
+                    assert.deepEqual(a, [1, 3, "SELECT * FROM items"]);
+
+                    a = [];
+                    return ds
+                        .all(function (r) {
                             a.push(comb.isHash(r) ? r.x : r);
                         },
                         function (err) {
                             assert.isNull(err);
                             assert.deepEqual(a, [1, 3, "SELECT * FROM items"]);
                         });
-                }
-            ]);
+                });
         });
     });
 
@@ -2084,95 +2014,77 @@ it.describe("patio.Dataset actions", function (it) {
         ds.db.reset();
 
         it.should("do select and map in one step", function () {
+            return ds.selectMap("a")
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a FROM t']);
+                    ds.db.reset();
 
-            return serial([
-                function () {
-                    return ds.selectMap("a").then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
                     return ds.selectMap("a", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a FROM t']);
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                    });
+                })
+                .then(ds.db.reset.bind(ds.db));
 
         });
 
         it.should("handle implicit qualifiers in arguments", function () {
-            return serial([
-                function () {
-                    return ds.selectMap("a__b").then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
+            return ds.selectMap("a__b")
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t']);
+                    ds.db.reset();
                     return ds.selectMap("a__b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t']);
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                    });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
         it.should("handle implicit aliases in arguments", function () {
-            return serial([
-                function () {
-                    return ds.selectMap("a___b").then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
+            return ds.selectMap("a___b")
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
+                    ds.db.reset();
+
                     return ds.selectMap("a___b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                    });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
         it.should("handle other objects", function () {
-            return serial([
-                function () {
-                    return ds.selectMap(sql.literal("a").as("b")).then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
+            return ds.selectMap(sql.literal("a").as("b"))
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
+                    ds.db.reset();
                     return ds.selectMap(sql.literal("a").as("b"), function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t']);
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                    });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
         it.should("accept a block", function () {
-            return serial([
-                function () {
-                    return ds.selectMap(function (t) {
-                        return t.a(t.t__c);
-                    }).then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
+            return ds
+                .selectMap(function (t) {
+                    return t.a(t.t__c);
+                })
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t']);
+                    ds.db.reset();
                     return ds.selectMap(
                         function (t) {
                             return t.a(t.t__c);
@@ -2180,9 +2092,9 @@ it.describe("patio.Dataset actions", function (it) {
                             assert.isNull(err);
                             assert.deepEqual(res, [1, 2]);
                             assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t']);
-                        }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                        });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
     });
@@ -2229,100 +2141,79 @@ it.describe("patio.Dataset actions", function (it) {
         });
 
         it.should("handle implicit qualifiers in arguments", function () {
-            return serial([
-                function () {
-                    return ds.selectOrderMap("a__b").then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t ORDER BY a.b']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
-                    //with callback
+            return ds.selectOrderMap("a__b")
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t ORDER BY a.b']);
+                    ds.db.reset();
+
                     return ds.selectOrderMap("a__b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a.b FROM t ORDER BY a.b']);
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                    });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
         it.should("handle implicit aliases in arguments", function () {
-            return serial([
-                function () {
-                    return ds.selectOrderMap("a___b").then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
-                    //with callback
+            return ds.selectOrderMap("a___b")
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
+                    ds.db.reset();
                     return ds.selectOrderMap("a___b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                    });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
         it.should("handle implicit qualifiers and aliases in arguments", function () {
-            return serial([
-                function () {
-                    return ds.selectOrderMap("t__a___b").then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT t.a AS b FROM t ORDER BY t.a']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
-                    //with callback
+            return ds.selectOrderMap("t__a___b")
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT t.a AS b FROM t ORDER BY t.a']);
+                    ds.db.reset();
                     return ds.selectOrderMap("t__a___b", function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT t.a AS b FROM t ORDER BY t.a']);
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                    });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
         it.should("handle AliasedExpressions", function () {
-            return serial([
-                function () {
-                    return ds.selectOrderMap(sql.literal("a").as("b")).then(function (res) {
-                        assert.deepEqual(res, [1, 2]);
-                        assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
+            return ds.selectOrderMap(sql.literal("a").as("b"))
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
+                    ds.db.reset();
                     return ds.selectOrderMap(sql.literal("a").as("b"), function (err, res) {
                         assert.isNull(err);
                         assert.deepEqual(res, [1, 2]);
                         assert.deepEqual(ds.db.sqls, ['SELECT a AS b FROM t ORDER BY a']);
                         ds.db.reset();
-                    }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                    });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
         it.should("accept a block", function () {
-            return serial([
-                function () {
-                    return ds.selectOrderMap(
-                        function (t) {
-                            return t.a(t.t__c);
-                        }).then(function (res) {
-                            assert.deepEqual(res, [1, 2]);
-                            assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t ORDER BY a(t.c)']);
-                            ds.db.reset();
-                        });
-                },
-                function () {
-                    //with callback
-                    return ds.selectOrderMap(function (t) {
+            return ds
+                .selectOrderMap(
+                function (t) {
+                    return t.a(t.t__c);
+                })
+                .then(function (res) {
+                    assert.deepEqual(res, [1, 2]);
+                    assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t ORDER BY a(t.c)']);
+                    ds.db.reset();
+                    return ds
+                        .selectOrderMap(function (t) {
                             return t.a(t.t__c);
                         },
                         function (err, res) {
@@ -2330,9 +2221,9 @@ it.describe("patio.Dataset actions", function (it) {
                             assert.deepEqual(res, [1, 2]);
                             assert.deepEqual(ds.db.sqls, ['SELECT a(t.c) FROM t ORDER BY a(t.c)']);
 
-                        }).then(ds.db.reset.bind(ds.db));
-                }
-            ]);
+                        });
+                })
+                .then(ds.db.reset.bind(ds.db));
         });
 
     });
@@ -2364,82 +2255,63 @@ it.describe("patio.Dataset actions", function (it) {
 
 
         it.should("do select and map in one step", function () {
-            return serial([
-                function () {
-                    return ds.selectHash("a", "b").then(function (ret) {
-                        assert.deepEqual(ret, {1: 2, 3: 4});
-                        assert.deepEqual(ds.db.sqls, ['SELECT a, b FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
-                    //with callback
+            return ds.selectHash("a", "b")
+                .then(function (ret) {
+                    assert.deepEqual(ret, {1: 2, 3: 4});
+                    assert.deepEqual(ds.db.sqls, ['SELECT a, b FROM t']);
+                    ds.db.reset();
                     return ds.selectHash("a", "b", function (err, ret) {
                         assert.isNull(err);
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT a, b FROM t']);
-                    }).then(hitch(ds.db, "reset"));
-                }
-            ]);
+                    });
+                })
+                .then(hitch(ds.db, "reset"));
         });
 
         it.should("should handle implicit qualifiers in arguments", function () {
-            return serial([
-                function () {
-                    return ds.selectHash("t__a", "t__b").then(function (ret) {
-                        assert.deepEqual(ret, {1: 2, 3: 4});
-                        assert.deepEqual(ds.db.sqls, ['SELECT t.a, t.b FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
-                    //with callback
+            return ds.selectHash("t__a", "t__b")
+                .then(function (ret) {
+                    assert.deepEqual(ret, {1: 2, 3: 4});
+                    assert.deepEqual(ds.db.sqls, ['SELECT t.a, t.b FROM t']);
+                    ds.db.reset();
                     return ds.selectHash("t__a", "t__b", function (err, ret) {
                         assert.isNull(err);
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT t.a, t.b FROM t']);
-                    }).then(hitch(ds.db, "reset"));
-                }
-            ]);
+                    });
+                })
+                .then(hitch(ds.db, "reset"));
         });
 
         it.should("should handle implicit aliases in arguments", function () {
-            return serial([
-                function () {
-                    return ds.selectHash("c___a", "d___b").then(function (ret) {
-                        assert.deepEqual(ret, {1: 2, 3: 4});
-                        assert.deepEqual(ds.db.sqls, ['SELECT c AS a, d AS b FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
-                    //with callback
+            return ds.selectHash("c___a", "d___b")
+                .then(function (ret) {
+                    assert.deepEqual(ret, {1: 2, 3: 4});
+                    assert.deepEqual(ds.db.sqls, ['SELECT c AS a, d AS b FROM t']);
+                    ds.db.reset();
                     return ds.selectHash("c___a", "d___b", function (err, ret) {
                         assert.isNull(err);
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT c AS a, d AS b FROM t']);
-                    }).then(hitch(ds.db, "reset"));
-                }
-            ]);
+                    });
+                })
+                .then(hitch(ds.db, "reset"));
         });
 
         it.should("should handle implicit qualifiers and aliases in arguments", function () {
-            return comb.serial([
-                function () {
-                    return ds.selectHash("t__c___a", "t__d___b").then(function (ret) {
-                        assert.deepEqual(ret, {1: 2, 3: 4});
-                        assert.deepEqual(ds.db.sqls, ['SELECT t.c AS a, t.d AS b FROM t']);
-                        ds.db.reset();
-                    });
-                },
-                function () {
+            return ds.selectHash("t__c___a", "t__d___b")
+                .then(function (ret) {
+                    assert.deepEqual(ret, {1: 2, 3: 4});
+                    assert.deepEqual(ds.db.sqls, ['SELECT t.c AS a, t.d AS b FROM t']);
+                    ds.db.reset();
                     return ds.selectHash("t__c___a", "t__d___b", function (err, ret) {
                         assert.isNull(err);
                         assert.deepEqual(ret, {1: 2, 3: 4});
                         assert.deepEqual(ds.db.sqls, ['SELECT t.c AS a, t.d AS b FROM t']);
-                    }).then(hitch(ds.db, "reset"));
-                }
-            ]);
+                    });
+                })
+                .then(hitch(ds.db, "reset"));
         });
 
     });

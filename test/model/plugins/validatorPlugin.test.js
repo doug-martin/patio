@@ -25,7 +25,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             });
             Model.validate("date").isAfter(new Date(2006, 1, 1));
 
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid", function () {
@@ -53,7 +53,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("date").isBefore(new Date(2006, 1, 1));
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid", function () {
@@ -80,7 +80,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isDefined();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid", function () {
@@ -103,11 +103,11 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isNotDefined();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid", function () {
-            var m = new Model({str: "HELLO"})
+            var m = new Model({str: "HELLO"});
             assert.isFalse(m.isValid());
             return m.save().then(assert.fail, function (err) {
                 assert.equal(err[0].message, "str cannot be defined.");
@@ -126,7 +126,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             });
             Model.validate("str").isNotNull();
 
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid", function () {
@@ -147,7 +147,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isNull();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid", function () {
@@ -169,7 +169,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             });
             Model.validate("str").isEq("HELLO");
             Model.validate("date").isEq(new Date(2006, 1, 1));
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid", function () {
@@ -200,7 +200,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             });
             Model.validate("str").isNeq("HELLO");
             Model.validate("date").isNeq(new Date(2006, 1, 1));
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid", function () {
@@ -212,7 +212,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         });
 
         it.should("throw an error if invalid with objects", function () {
-            var m = new Model({str: "HELL", date: new Date(2006, 1, 1)})
+            var m = new Model({str: "HELL", date: new Date(2006, 1, 1)});
             assert.isFalse(m.isValid());
             return m.save().then(assert.fail, function (err) {
                 assert.isTrue(err[0].message.match(/date must !==/) !== null);
@@ -231,7 +231,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             });
             Model.validate("str").isLike("HELLO");
             Model.validate("str2").isLike(/HELLO/i);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -266,7 +266,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             });
             Model.validate("str").isNotLike("HELLO");
             Model.validate("str2").isNotLike(/HELLO/i);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -300,7 +300,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("num").isLt(10);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -327,7 +327,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("num").isGt(10);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -353,7 +353,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("num").isLte(10);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -379,7 +379,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("num").isGte(10);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -405,7 +405,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isIn(["a", "b", "c"]);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if arr is not an array", function () {
@@ -438,7 +438,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isNotIn(["a", "b", "c"]);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if arr is not an array", function () {
@@ -471,7 +471,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("macAddress").isMacAddress();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -500,7 +500,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("ipAddress").isIPAddress();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -529,7 +529,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("ipAddress").isIPv4Address();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -541,7 +541,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
         });
 
         it.should("not throw an error if valid", function () {
-            return new Model({ipAddress: "192.168.1.1"}).save()
+            return new Model({ipAddress: "192.168.1.1"}).save();
         });
 
         it.should("not throw an error if values are undefined", function () {
@@ -555,7 +555,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("ipAddress").isIPv6Address();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -581,7 +581,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("uuid").isUUID();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -608,7 +608,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isEmail();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -636,7 +636,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isUrl();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -664,7 +664,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isAlpha();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -691,7 +691,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isAlphaNumeric();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -719,7 +719,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             });
             Model.validate("str").hasLength(10);
             Model.validate("str2").hasLength(7, 10);
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -755,7 +755,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isLowercase();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -782,7 +782,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isUppercase();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -809,7 +809,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isEmpty();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -836,7 +836,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isNotEmpty();
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("throw an error if invalid with string", function () {
@@ -863,7 +863,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                 plugins: [ValidatorPlugin]
             });
             Model.validate("str").isNotEmpty().isAlpha().isLike(/hello/);
-            return  Model.sync();
+            return Model.sync();
         });
         it.should("throw an error if string is empty", function () {
             var m = new Model({str: ""});
@@ -923,7 +923,7 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             Model.validate("num2").isNotNull().check(function (val) {
                 return val % 2 === 0;
             }, {message: "{col} must be even got {val}."});
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("allow adding a check function", function () {
@@ -973,40 +973,37 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
                     return val % 2 === 0;
                 }, {message: "{col} must be even got {val}."});
             });
-            return  Model.sync();
+            return Model.sync();
         });
 
         it.should("allow mass validation", function () {
-            return comb.serial([
-                function () {
-                    var m = new Model({num: 1, num2: 2});
+            var m = new Model({num: 1, num2: 2});
+            assert.isFalse(m.isValid());
+
+            return m.save()
+                .then(assert.fail, function (err) {
+                    assert.equal(err[0].message, "num must be even got 1.");
+
+                    m = new Model({num2: null});
                     assert.isFalse(m.isValid());
-                    return m.save().then(assert.fail, function (err) {
-                        assert.equal(err[0].message, "num must be even got 1.");
-                    });
-                },
-                function () {
-                    var m = new Model({num2: null});
+                    return m.save();
+                })
+                .then(assert.fail, function (err) {
+                    assert.equal(err[0].message, "num2 cannot be null.");
+
+                    m = new Model({num2: 1});
                     assert.isFalse(m.isValid());
-                    return m.save().then(assert.fail, function (err) {
-                        assert.equal(err[0].message, "num2 cannot be null.");
-                    });
-                },
-                function () {
-                    var m = new Model({num2: 1});
-                    assert.isFalse(m.isValid());
-                    return m.save().then(assert.fail, function (err) {
-                        assert.equal(err[0].message, "num2 must be even got 1.");
-                    });
-                },
-                function () {
+                    return m.save();
+                })
+                .then(assert.fail, function (err) {
+                    assert.equal(err[0].message, "num2 must be even got 1.");
+
                     return Promise.all([
                         new Model({num: null, num2: 2}).save(),
                         new Model({num: 2, num2: 2}).save(),
                         new Model({num2: 2}).save()
                     ]);
-                }
-            ]);
+                });
         });
 
     });
@@ -1017,9 +1014,9 @@ it.describe("patio.plugins.ValidatorPlugin", function (it) {
             Model = patio.addModel("validator", {
                 plugins: [ValidatorPlugin]
             });
-            Model.validate("col1").isEq("HELLO", { onlyDefined: true, onlyNotNull: false });
-            Model.validate("col2").isEq("HELLO", { onlyDefined: true, onlyNotNull: true  });
-            return  Model.sync();
+            Model.validate("col1").isEq("HELLO", {onlyDefined: true, onlyNotNull: false});
+            Model.validate("col2").isEq("HELLO", {onlyDefined: true, onlyNotNull: true});
+            return Model.sync();
         });
 
         it.should("throw an error if required field is null", function () {

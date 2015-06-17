@@ -5,8 +5,7 @@ var it = require('it'),
     patio = require("../../lib"),
     sql = patio.SQL,
     comb = require("comb"),
-    config = require("../test.config.js"),
-    serial = comb.serial;
+    config = require("../test.config.js");
 
 if (process.env.PATIO_DB === "pg") {
     it.describe("patio.adapters.Postgres", function (it) {
@@ -28,7 +27,8 @@ if (process.env.PATIO_DB === "pg") {
             });
 
             PG_DB.__defineSetter__("sqls", function (sql) {
-                return this.__sqls = sql;
+                this.__sqls = sql;
+                return this.__sqls;
             });
 
 
@@ -37,46 +37,43 @@ if (process.env.PATIO_DB === "pg") {
                 this.sqls.push(sql.trim());
                 return origExecute.apply(this, arguments);
             };
-            return comb.serial([
-                function () {
-                    return PG_DB.forceCreateTable("test", function () {
-                        this.name("text");
-                        this.value("integer", {index: true});
-                    });
-                },
-                function () {
+            return PG_DB
+                .forceCreateTable("test", function () {
+                    this.name("text");
+                    this.value("integer", {index: true});
+                })
+                .then(function () {
                     return PG_DB.forceCreateTable("test2", function () {
                         this.name("text");
                         this.value("integer");
                     });
-                },
-                function () {
+                })
+                .then(function () {
                     return PG_DB.forceCreateTable("test3", function () {
                         this.value("integer");
                         this.timestamp(sql.TimeStamp);
                         this.time(sql.Time);
                     });
-                },
-                function () {
+                })
+                .then(function () {
                     return PG_DB.forceCreateTable("test4", function () {
                         this.name(String, {size: 20});
                         this.value("bytea");
                     });
-                },
-                function () {
+                })
+                .then(function () {
                     return PG_DB.forceCreateTable("test5", function () {
                         this.value("integer");
                         this.json("json");
                     });
-                },
-                function () {
+                })
+                .then(function () {
                     return PG_DB.forceCreateTable("test6", function () {
                         this.name("String");
                         this["test_value"]("String");
                         this["test_name"]("String");
                     });
-                }
-            ]);
+                });
         });
 
         it.should("provide the server version", function () {
@@ -138,9 +135,9 @@ if (process.env.PATIO_DB === "pg") {
             var d;
             it.beforeEach(function () {
                 d = PG_DB.from("test");
-                return d.remove().then(function () {
-                    return resetDb();
-                });
+                return d
+                    .remove()
+                    .then(resetDb);
             });
 
             it.should("quote columns and tables using double quotes if quoting identifiers", function () {
@@ -238,10 +235,10 @@ if (process.env.PATIO_DB === "pg") {
 
                 it.should("lock table if inside a transaction", function () {
                     return PG_DB.transaction(function () {
-                        return serial([
-                            d.lock.bind(d, 'EXCLUSIVE'),
-                            d.insert.bind(d, {name: 'a'})
-                        ]);
+                        return comb.hitch(d, "lock", 'EXCLUSIVE')()
+                            .then(function () {
+                                return comb.hitch(d, "insert", {name: 'a'})();
+                            });
                     }).then(function () {
                         assert.deepEqual(PG_DB.sqls, ["BEGIN",
                             "LOCK TABLE  test IN EXCLUSIVE MODE",
@@ -267,25 +264,27 @@ if (process.env.PATIO_DB === "pg") {
                 });
 
                 it.should("should return results distinct based on arguments", function () {
-                    return comb.serial([
-                        ds.insert.bind(ds, 20, 10),
-                        ds.insert.bind(ds, 30, 10),
-                        function () {
-                            return Promise.all([
-                                ds.order("b", "a").distinct().map("a"),
-                                ds.order("b", sql.identifier("a").desc()).distinct().map("a"),
-                                ds.order("b", "a").distinct("b").map("a"),
-                                ds.order("b", sql.identifier("a").desc()).distinct("b").map("a")
-                            ]);
-                        }
-                    ]).then(function (res) {
-                        assert.deepEqual(res[2], [
-                            [20, 30],
-                            [30, 20],
-                            [20],
-                            [30]
-                        ]);
-                    });
+                    return comb.hitch(ds, "insert", 20, 10)()
+                        .then(function () {
+                            return comb.hitch(ds, "insert", 30, 10)();
+                        })
+                        .then(function () {
+                            return Promise
+                                .all([
+                                    ds.order("b", "a").distinct().map("a"),
+                                    ds.order("b", sql.identifier("a").desc()).distinct().map("a"),
+                                    ds.order("b", "a").distinct("b").map("a"),
+                                    ds.order("b", sql.identifier("a").desc()).distinct("b").map("a")
+                                ])
+                                .then(function (res) {
+                                    assert.deepEqual(res, [
+                                        [20, 30],
+                                        [30, 20],
+                                        [20],
+                                        [30]
+                                    ]);
+                                });
+                        });
                 });
             });
 
@@ -391,7 +390,7 @@ if (process.env.PATIO_DB === "pg") {
                     ]).then(function () {
                         var called = 0;
                         d.stream()
-                            .on("data", function (data) {
+                            .on("data", function () {
                                 called++;
                             })
                             .on("error", next)
@@ -411,7 +410,7 @@ if (process.env.PATIO_DB === "pg") {
                             .stream()
                             .on("data", assert.fail)
                             .on("error", function (err) {
-                                assert.equal(err.message, 'column "x" does not exist')
+                                assert.equal(err.message, 'column "x" does not exist');
                                 next();
                             }).on("end", assert.fail);
                     }, next);
@@ -437,82 +436,79 @@ if (process.env.PATIO_DB === "pg") {
 
 
             it.should("support column operations", function () {
-                return serial([
-                    db.forceCreateTable.bind(db, "test2", function () {
-                        this.name("text");
-                        this.value("integer");
-                    }),
-                    function () {
+                return comb.hitch(db, "forceCreateTable", "test2")(function () {
+                    this.name("text");
+                    this.value("integer");
+                })
+                    .then(function () {
                         return db.from("test2").insert();
-                    },
-                    function () {
+                    })
+                    .then(function () {
                         return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value"]);
                         });
-                    },
-                    db.addColumn.bind(db, "test2", "xyz", "text", {"default": '000'}),
-                    function () {
+                    })
+                    .then(comb.hitch(db, "addColumn", "test2", "xyz", "text", {"default": '000'}))
+                    .then(function () {
                         return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value", "xyz"]);
                         });
-                    },
-                    function () {
+                    })
+                    .then(function () {
                         return db.from("test2").insert({name: 'mmm', value: 111});
-                    },
-                    function () {
+                    })
+                    .then(function () {
                         return db.from("test2").first().then(function (res) {
                             assert.equal(res.xyz, '000');
                         });
-                    },
-                    function () {
+                    })
+                    .then(function () {
                         return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value", "xyz"]);
                         });
-                    },
-                    db.dropColumn.bind(db, "test2", "xyz"),
-                    function () {
+                    })
+                    .then(comb.hitch(db, "dropColumn", "test2", "xyz"))
+                    .then(function () {
                         return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value"]);
                         });
-                    },
-                    function () {
+                    })
+                    .then(function () {
                         return db.from("test2").remove();
-                    },
-                    db.addColumn.bind(db, "test2", "xyz", "text", {"default": '000'}),
-                    function () {
+                    })
+                    .then(comb.hitch(db, "addColumn", "test2", "xyz", "text", {"default": '000'}))
+                    .then(function () {
                         return db.from("test2").insert({name: 'mmm', value: 111, xyz: 'gggg'});
-                    },
-                    function () {
+                    })
+                    .then(function () {
                         return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value", "xyz"]);
                         });
-                    },
-                    db.renameColumn.bind(db, "test2", "xyz", "zyx"),
-                    function () {
+                    })
+                    .then(comb.hitch(db, "renameColumn", "test2", "xyz", "zyx"))
+                    .then(function () {
                         return db.from("test2").columns.then(function (columns) {
                             assert.deepEqual(columns, ["name", "value", "zyx"]);
                         });
-                    },
-                    function () {
+                    })
+                    .then(function () {
                         db.from("test2").first().then(function (row) {
                             assert.equal(row.zyx, "gggg");
                         });
-                    },
-                    db.addColumn.bind(db, "test2", "xyz", "float"),
-                    function () {
+                    })
+                    .then(comb.hitch(db, "addColumn", "test2", "xyz", "float"))
+                    .then(function () {
                         return db.from("test2").remove();
-                    },
-                    function () {
+                    })
+                    .then(function () {
                         return db.from("test2").insert({name: 'mmm', value: 111, xyz: 56.78});
-                    },
-                    db.setColumnType.bind(db, "test2", "xyz", "integer"),
-                    function () {
+                    })
+                    .then(comb.hitch(db, "setColumnType", "test2", "xyz", "integer"))
+                    .then(function () {
                         return db.from("test2").first().then(function (row) {
                             assert.equal(row.xyz, 57);
                         });
-                    }
-                ]);
-
+                    });
             });
 
             it.should("return a dataset with locks when calling #lock ", function () {
@@ -524,28 +520,29 @@ if (process.env.PATIO_DB === "pg") {
 
             it.should("support specifying integer/bigint types in primary keys and have them be auto incrementing", function () {
                 resetDb();
-                return serial([
-                    function () {
-                        return db.createTable("posts", function () {
-                            this.primaryKey("a", {type: "integer"});
-                        }).then(function () {
-                            assert.deepEqual(PG_DB.sqls, [
-                                "CREATE TABLE posts (a serial PRIMARY KEY)"
-                            ]);
-                        });
-                    },
-                    resetDb,
-                    function () {
-                        return db.forceCreateTable("posts", function () {
-                            this.primaryKey("a", {type: "bigint"});
-                        }).then(function () {
-                            assert.deepEqual(PG_DB.sqls, [
-                                "DROP TABLE posts",
-                                "CREATE TABLE posts (a bigserial PRIMARY KEY)"
-                            ]);
-                        });
-                    }
-                ]);
+                return db
+                    .createTable("posts", function () {
+                        this.primaryKey("a", {type: "integer"});
+                    })
+                    .then(function () {
+                        assert.deepEqual(PG_DB.sqls, [
+                            "CREATE TABLE posts (a serial PRIMARY KEY)"
+                        ]);
+
+                        resetDb();
+                    })
+                    .then(function () {
+                        return db
+                            .forceCreateTable("posts", function () {
+                                this.primaryKey("a", {type: "bigint"});
+                            })
+                            .then(function () {
+                                assert.deepEqual(PG_DB.sqls, [
+                                    "DROP TABLE posts",
+                                    "CREATE TABLE posts (a bigserial PRIMARY KEY)"
+                                ]);
+                            });
+                    });
             });
 
             it.should("support opclass specification", function () {
@@ -565,53 +562,52 @@ if (process.env.PATIO_DB === "pg") {
 
             it.should("support fulltext indexes and searching", function () {
                 var ds = db.from("posts");
-                return serial([
-                    db.createTable.bind(db, "posts", function () {
-                        this.title("text");
-                        this.body("text");
-                        this.fullTextIndex(["title", "body"]);
-                        this.fullTextIndex("title", {language: 'french'});
-                    }),
-                    function () {
+                return comb.hitch(db, "createTable", "posts")(function () {
+                    this.title("text");
+                    this.body("text");
+                    this.fullTextIndex(["title", "body"]);
+                    this.fullTextIndex("title", {language: 'french'});
+                })
+                    .then(function () {
                         assert.deepEqual(db.sqls, [
                             'CREATE TABLE posts (title text, body text)',
                             'CREATE  INDEX posts_title_body_index ON posts USING gin (to_tsvector(\'simple\', (COALESCE(title, \'\') || \' \' || COALESCE(body, \'\'))))',
                             'CREATE  INDEX posts_title_index ON posts USING gin (to_tsvector(\'french\', (COALESCE(title, \'\'))))'
                         ]);
-                    },
-                    function () {
-                        return Promise.all([
-                            ds.insert({title: "node js", body: "hello"}),
-                            ds.insert({title: "patio", body: "orm"}),
-                            ds.insert({title: "java script", body: "world"})
-                        ]);
-                    },
-                    resetDb,
-                    function () {
-                        return Promise.all([
-                            ds.fullTextSearch("title", "node").all(),
-                            ds.fullTextSearch(["title", "body"], ["hello", "node"]).all(),
-                            ds.fullTextSearch("title", 'script', {language: "french"}).all()
-                        ]).then(function (res) {
-                            var all1 = res[0], all2 = res[1], all3 = res[2];
-                            assert.deepEqual(all1, [
-                                {title: "node js", body: "hello"}
-                            ]);
-                            assert.deepEqual(all2, [
-                                {title: "node js", body: "hello"}
-                            ]);
-                            assert.deepEqual(all3, [
-                                {title: "java script", body: "world"}
-                            ]);
-                            assert.deepEqual(db.sqls, [
-                                "SELECT * FROM posts WHERE (to_tsvector('simple', (COALESCE(title, ''))) @@ to_tsquery('simple', 'node'))",
-                                "SELECT * FROM posts WHERE (to_tsvector('simple', (COALESCE(title, '') || ' ' || COALESCE(body, ''))) @@ to_tsquery('simple', 'hello | node'))",
-                                "SELECT * FROM posts WHERE (to_tsvector('french', (COALESCE(title, ''))) @@ to_tsquery('french', 'script'))"
-                            ]);
-                        });
-                    }
-                ]);
 
+                        return Promise
+                            .all([
+                                ds.insert({title: "node js", body: "hello"}),
+                                ds.insert({title: "patio", body: "orm"}),
+                                ds.insert({title: "java script", body: "world"})
+                            ])
+                            .then(function () {
+                                resetDb();
+                                return Promise
+                                    .all([
+                                        ds.fullTextSearch("title", "node").all(),
+                                        ds.fullTextSearch(["title", "body"], ["hello", "node"]).all(),
+                                        ds.fullTextSearch("title", 'script', {language: "french"}).all()
+                                    ])
+                                    .then(function (res) {
+                                        var all1 = res[0], all2 = res[1], all3 = res[2];
+                                        assert.deepEqual(all1, [
+                                            {title: "node js", body: "hello"}
+                                        ]);
+                                        assert.deepEqual(all2, [
+                                            {title: "node js", body: "hello"}
+                                        ]);
+                                        assert.deepEqual(all3, [
+                                            {title: "java script", body: "world"}
+                                        ]);
+                                        assert.deepEqual(db.sqls, [
+                                            "SELECT * FROM posts WHERE (to_tsvector('simple', (COALESCE(title, ''))) @@ to_tsquery('simple', 'node'))",
+                                            "SELECT * FROM posts WHERE (to_tsvector('simple', (COALESCE(title, '') || ' ' || COALESCE(body, ''))) @@ to_tsquery('simple', 'hello | node'))",
+                                            "SELECT * FROM posts WHERE (to_tsvector('french', (COALESCE(title, ''))) @@ to_tsquery('french', 'script'))"
+                                        ]);
+                                    });
+                            });
+                    });
             });
 
             it.should("support spatial indexes", function () {
@@ -675,17 +671,16 @@ if (process.env.PATIO_DB === "pg") {
             });
 
             it.should("support renaming tables", function () {
-                return serial([
-                    db.createTable.bind(db, "posts1", function () {
-                        this.primaryKey("a");
-                    }),
-                    db.renameTable.bind(db, "posts1", "posts")
-                ]).then(function () {
-                    assert.deepEqual(db.sqls, [
-                        "CREATE TABLE posts_1 (a serial PRIMARY KEY)",
-                        "ALTER TABLE posts_1 RENAME TO posts"
-                    ]);
-                });
+                return comb.hitch(db, "createTable", "posts1")(function () {
+                    this.primaryKey("a");
+                })
+                    .then(comb.hitch(db, "renameTable", "posts1", "posts"))
+                    .then(function () {
+                        assert.deepEqual(db.sqls, [
+                            "CREATE TABLE posts_1 (a serial PRIMARY KEY)",
+                            "ALTER TABLE posts_1 RENAME TO posts"
+                        ]);
+                    });
             });
 
             it.describe("#import", function (it) {
@@ -695,36 +690,31 @@ if (process.env.PATIO_DB === "pg") {
                 });
 
                 it.beforeEach(function () {
-                    return serial([
-                        db.forceCreateTable.bind(db, "test", function () {
-                            this.primaryKey("x");
-                            this.y("integer");
-                        }),
-                        resetDb
-                    ]);
+                    return comb.hitch(db, "forceCreateTable", "test")(function () {
+                        this.primaryKey("x");
+                        this.y("integer");
+                        resetDb();
+                    });
                 });
 
                 it.afterAll(function () {
                     return db.forceDropTable("test");
                 });
+
                 it.should("use single insert statement", function () {
-                    return serial([
-                        ds["import"].bind(ds, ["x", "y"], [
-                            [1, 2],
-                            [3, 4]
-                        ]),
-                        function () {
-                            assert.deepEqual(db.sqls, ['BEGIN', 'INSERT INTO test (x, y) VALUES (1, 2), (3, 4)', 'COMMIT']);
-                        },
-                        function () {
-                            return ds.all().then(function (res) {
-                                assert.deepEqual(res, [
-                                    {x: 1, y: 2},
-                                    {x: 3, y: 4}
-                                ]);
-                            });
-                        }
-                    ]);
+                    return comb.hitch(ds, ds["import"], ["x", "y"], [
+                        [1, 2],
+                        [3, 4]
+                    ])(function () {
+                        assert.deepEqual(db.sqls, ['BEGIN', 'INSERT INTO test (x, y) VALUES (1, 2), (3, 4)', 'COMMIT']);
+
+                        return ds.all().then(function (res) {
+                            assert.deepEqual(res, [
+                                {x: 1, y: 2},
+                                {x: 3, y: 4}
+                            ]);
+                        });
+                    });
                 });
             });
 

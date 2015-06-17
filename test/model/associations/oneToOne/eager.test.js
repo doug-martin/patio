@@ -58,10 +58,12 @@ it.describe("patio.Model oneToOne eager", function (it) {
     it.context(function (it) {
 
         it.beforeEach(function () {
-            return comb.serial([
-                hitch(Employee, "remove"),
-                hitch(Works, "remove"),
-                function () {
+            return Promise
+                .all([
+                    Employee.remove(),
+                    Works.remove()
+                ])
+                .then(function () {
                     return new Employee({
                         lastName: "last" + 1,
                         firstName: "first" + 1,
@@ -74,12 +76,12 @@ it.describe("patio.Model oneToOne eager", function (it) {
                             salary: 100000
                         }
                     }).save();
-                }
-            ]);
+                });
         });
 
         it.should("load associations when querying", function () {
-            return Promise.all([Employee.one(), Works.one()])
+            return Promise
+                .all([Employee.one(), Works.one()])
                 .then(function (res) {
                     var emp = res[0], work = res[1];
                     var empWorks = emp.works, worksEmp = work.employee;
