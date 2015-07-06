@@ -108,7 +108,6 @@ it.describe("patio.Dataset actions", function (it) {
 
     });
 
-
     it.describe("#map", function (it) {
         var dataset = new DummyDataset().from("items");
 
@@ -162,50 +161,85 @@ it.describe("patio.Dataset actions", function (it) {
 
     it.describe("#toHash", function (it) {
         var dataset = new DummyDataset().from("test");
+        dataset.VALUES = [
+            {city: 'Kansas City', state: 'Kansas'},
+            {city: 'Olathe', state: 'Kansas'},
+            {city: 'Albany', state: 'New York'}
+        ];
 
         it.should("provide a hash with the first column as key and the second as value", function (next) {
-            var a = {1: 2, 3: 4, 5: 6}, b = {2: 1, 4: 3, 6: 5};
             return Promise.all([
-                dataset.toHash("a", "b").then(function (ret) {
-                    assert.deepEqual(a, ret);
+                dataset.toHash("state", "city").then(function (ret) {
+                    assert.deepEqual({
+                        'Kansas': ['Kansas City', 'Olathe'],
+                        'New York': ['Albany']
+                    }, ret);
                 }),
-                dataset.toHash("b", "a").then(function (ret) {
-                    assert.deepEqual(ret, b);
+                dataset.toHash("city", "state").then(function (ret) {
+                    assert.deepEqual({
+                        'Kansas City': ['Kansas'],
+                        'Olathe': ['Kansas'],
+                        'Albany': ['New York']
+                    }, ret);
                 }),
 
-                dataset.toHash("a", "b", function (err, ret) {
+                dataset.toHash("state", "city", function (err, ret) {
                     assert.isNull(err);
-                    assert.deepEqual(a, ret);
+                    assert.deepEqual({
+                        'Kansas': ['Kansas City', 'Olathe'],
+                        'New York': ['Albany']
+                    }, ret);
                 }),
-                dataset.toHash("b", "a", function (err, ret) {
+                dataset.toHash("city", "state", function (err, ret) {
                     assert.isNull(err);
-                    assert.deepEqual(ret, b);
+                    assert.deepEqual({
+                        'Kansas City': ['Kansas'],
+                        'Olathe': ['Kansas'],
+                        'Albany': ['New York']
+                    }, ret);
                 })
             ]);
 
         });
 
         it.should("provide a hash with the first column as key and the entire hash as value if the value column is blank or null", function (next) {
-            var a = {1: {a: 1, b: 2}, 3: {a: 3, b: 4}, 5: {a: 5, b: 6}};
-            var b = {2: {a: 1, b: 2}, 4: {a: 3, b: 4}, 6: {a: 5, b: 6}};
             return Promise.all([
-                dataset.toHash("a").then(function (ret) {
-                    assert.deepEqual(ret, a);
+                dataset.toHash("state").then(function (ret) {
+                    assert.deepEqual({
+                        'Kansas': [
+                            {city: 'Kansas City', state: 'Kansas'},
+                            {city: 'Olathe', state: 'Kansas'}
+                        ],
+                        'New York': [{city: 'Albany', state: 'New York'}]
+                    }, ret);
                 }),
-                dataset.toHash("b").then(function (ret) {
-                    assert.deepEqual(ret, b);
+                dataset.toHash("city").then(function (ret) {
+                    assert.deepEqual({
+                        'Olathe': [{city: 'Olathe', state: 'Kansas'}],
+                        'Kansas City': [{city: 'Kansas City', state: 'Kansas'}],
+                        'Albany': [{city: 'Albany', state: 'New York'}]
+                    }, ret);
                 }),
-                dataset.toHash("a", function (err, ret) {
+                dataset.toHash("state", function (err, ret) {
                     assert.isNull(err);
-                    assert.deepEqual(ret, a);
+                    assert.deepEqual({
+                        'Kansas': [
+                            {city: 'Kansas City', state: 'Kansas'},
+                            {city: 'Olathe', state: 'Kansas'}
+                        ],
+                        'New York': [{city: 'Albany', state: 'New York'}]
+                    }, ret);
                 }),
-                dataset.toHash("b", function (err, ret) {
+                dataset.toHash("city", function (err, ret) {
                     assert.isNull(err);
-                    assert.deepEqual(ret, b);
+                    assert.deepEqual({
+                        'Olathe': [{city: 'Olathe', state: 'Kansas'}],
+                        'Kansas City': [{city: 'Kansas City', state: 'Kansas'}],
+                        'Albany': [{city: 'Albany', state: 'New York'}]
+                    }, ret);
                 })
             ]);
         });
-
     });
 
     it.describe("#count", function (it) {
