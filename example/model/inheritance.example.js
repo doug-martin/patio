@@ -1,8 +1,7 @@
 "use strict";
 var patio = require("../../index"),
-    comb = require("comb"),
-    config = require("../config"),
-    db = config.connect("sandbox");
+    helper = require("../helper"),
+    db = helper.connect("sandbox");
 
 
 var Employee = patio.addModel("employee", {
@@ -37,15 +36,15 @@ function createEmployees() {
 }
 
 function fetchEmployees() {
-    console.log("\n\n=====INHERITANCE EXAMPLE=====");
+    helper.header("INHERITANCE EXAMPLE");
     return Employee.forEach(function (emp) {
-        console.log("Employee %d", emp.id);
-        console.log("\tname - ", emp.name);
-        console.log("\tkind - ", emp.kind);
-        console.log("\tinstanceof Employee? ", emp instanceof Employee);
-        console.log("\tinstanceof Staff? ", emp instanceof Staff);
-        console.log("\tinstanceof Manager? ", emp instanceof Manager);
-        console.log("\tinstanceof Executive? ", emp instanceof Executive);
+        helper.log("Employee %d", emp.id);
+        helper.log("name - %s", emp.name);
+        helper.log("kind - %s", emp.kind);
+        helper.log("instanceof Employee? %s", emp instanceof Employee);
+        helper.log("instanceof Staff? %s", emp instanceof Staff);
+        helper.log("instanceof Manager? %s", emp instanceof Manager);
+        helper.log("instanceof Executive? %s", emp instanceof Executive);
     });
 }
 
@@ -62,7 +61,7 @@ function setup() {
         })
         .then(function () {
             return db.createTable("manager", function () {
-                this.foreignKey("id", "employee", {key: "id", unique:true});
+                this.foreignKey("id", "employee", {key: "id", unique: true});
                 this.numStaff("integer");
             });
         })

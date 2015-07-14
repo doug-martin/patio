@@ -1,10 +1,7 @@
 "use strict";
 var patio = require("../../index"),
-    sql = patio.sql,
-    comb = require("comb"),
-    format = comb.string.format,
-    config = require("../config"),
-    db = config.connect("sandbox"),
+    helper = require("../helper"),
+    db = helper.connect("sandbox"),
     User = patio.addModel("user");
 
 module.exports = runExamples;
@@ -26,164 +23,161 @@ function runExamples() {
 }
 
 function findById() {
-    console.log("\n\n=====FIND BY ID EXAMPLES=====");
+    helper.header("FIND BY ID EXAMPLES");
     // Find user with primary key (id) 1
-    return User.findById(1)
-        .then(function (user) {
-            console.log("FIND BY ID 1 = %s", user);
-            User.findById(0);
-        })
-        .then(function (user) {
-            console.log("FIND BY ID 0 = %s", user);
-        });
+    return User.findById(1).then(function (user) {
+        helper.log("FIND BY ID 1 = %s", user);
+    });
 }
 
 function first() {
-    console.log("\n\n=====FIRST EXAMPLES=====");
+    helper.header("FIRST EXAMPLES");
     return User.first()
         .then(function (first) {
-            console.log("FIRST = %s", first);
-            return User.first({name: 'Bob'});
+            helper.log("FIRST = %s", first);
+            return User.first({name: 'Bob Yukon'});
         })
         .then(function (bob) {
-            console.log("FIRST = %s", bob);
-            return User.first(sql.name.like('B%'));
+            helper.log("FIRST (WHERE name = 'Bob') = %s", bob);
+            return User.first({name: {like: "B%"}});
         })
         .then(function (user) {
-            console.log("FIRST = %s", user);
+            helper.log("FIRST (WHERE name LIKE 'B%') = %s", user);
             return User.select("name").first();
         })
-        .then(function (user) {
-            console.log("FIRST SELECT JUST NAME = " + user.id);
+        .then(function (name) {
+            helper.log("FIRST SELECT JUST NAME = %s", name);
         });
 }
 
 function last() {
-    console.log("\n\n=====LAST EXAMPLES=====");
+    helper.header("LAST EXAMPLES");
     return User.order("name").last().then(function (user) {
         // SELECT * FROM user ORDER BY name DESC LIMIT 1
-        console.log("LAST = %s", user);
+        helper.log("LAST = %s", user);
     });
 }
 
 function getMethod() {
-    console.log("\n\n=====GET EXAMPLES=====");
+    helper.header("GET EXAMPLES");
     return User.get("name").then(function (name) {
         // SELECT name FROM user LIMIT 1
-        console.log("NAME = %s", name);
+        helper.log("NAME = %s", name);
     });
 }
 
 function all() {
-    console.log("\n\n=====ALL EXAMPLES=====");
+    helper.header("ALL EXAMPLES");
     return User.all().then(function (users) {
         // SELECT * FROM user
-        console.log("USERS = [%s]", users);
+        helper.log("USERS = [%s]", users);
     });
 }
 
 function forEach() {
-    console.log("\n\n=====FOREACH EXAMPLES=====");
+    helper.header("FOREACH EXAMPLES");
     return User
         .forEach(function (user) {
-            console.log("FOR EACH name = %s ", user.name);
+            helper.log("FOR EACH name = %s ", user.name);
         })
         .then(function () {
+            //for each wont resolve until all the updates are done
             return User.forEach(function (user) {
-                console.log("FOREACH WITH PROMISE SETTING user with id:%d to isVerified to ", user.id, !user.isVerified);
-                return user.update({isVerified: !user.isVerified});
+                return user.update({isVerified: !user.isVerified}).then(function () {
+                    helper.log("FOREACH WITH PROMISE SETTING user with id:%d to isVerified to ", user.id, !user.isVerified);
+                });
             });
         })
         .then(function () {
-            return console.log("DONE UDPATING EACH RECORD");
+            return helper.log("DONE UDPATING EACH RECORD");
         });
 }
 
 function map() {
-    console.log("\n\n=====MAP EXAMPLES=====");
+    helper.header("MAP EXAMPLES");
     return User
         .map(function (user) {
             return user.name;
         })
         .then(function (userNames) {
-            console.log("MAPPED USER NAMES = [%s]", userNames);
+            helper.log("MAPPED USER NAMES = [%s]", userNames);
             return User.map("name").then(function (userNames) {
-                console.log("MAPPED USER NAMES BY COLUMN = [%s]", userNames);
+                helper.log("MAPPED USER NAMES BY COLUMN = [%s]", userNames);
             });
         })
         .then(function () {
             return User.selectMap("name").then(function (names) {
-                console.log("SELECT MAP USER NAMES BY COLUMN = [%s]", names);
+                helper.log("SELECT MAP USER NAMES BY COLUMN = [%s]", names);
             });
 
 
         })
         .then(function () {
             return User.selectOrderMap("name").then(function (names) {
-                console.log("SELECT ORDER MAP USER NAMES BY COLUMN = [%s]", names);
+                helper.log("SELECT ORDER MAP USER NAMES BY COLUMN = [%s]", names);
             });
         });
 }
 
 function toHash() {
-    console.log("\n\n=====TO HASH EXAMPLES=====");
+    helper.header("TO HASH EXAMPLES");
     return User.toHash("name", "id")
         .then(function (nameIdMap) {
-            console.log("TO HASH = %j", nameIdMap);
+            helper.log("TO HASH = %j", nameIdMap);
             return User.toHash("id", "name");
         })
         .then(function (idNameMap) {
-            console.log("INVERT TO HASH = %j", idNameMap);
+            helper.log("INVERT TO HASH = %j", idNameMap);
             return User.toHash("name");
         })
         .then(function (idNameMap) {
             // SELECT * FROM user
-            console.log("TO HASH ONE COLUMN = %j", idNameMap);
+            helper.log("TO HASH ONE COLUMN = %j", idNameMap);
             return User.selectHash("name", "id");
         })
         .then(function (nameIdMap) {
             // SELECT name, id FROM user
-            console.log("SELECT HASH = %j", nameIdMap);
+            helper.log("SELECT HASH = %j", nameIdMap);
         });
 }
 
 function isEmpty() {
-    console.log("\n\n=====IS EMPTY EXAMPLES=====");
+    helper.header("IS EMPTY EXAMPLES");
     return User.isEmpty()
         .then(function (isEmpty) {
-            console.log("IS EMPTY = " + isEmpty);
+            helper.log("IS EMPTY = " + isEmpty);
             return User.filter({id: 0}).isEmpty();
         })
         .then(function (isEmpty) {
-            console.log("IS EMPTY = " + isEmpty);
-            return User.filter(sql.name.like('B%')).isEmpty();
+            helper.log("IS EMPTY = " + isEmpty);
+            return User.filter({name: {like: 'B%'}}).isEmpty();
         })
         .then(function (isEmpty) {
-            console.log("IS EMPTY = " + isEmpty);
+            helper.log("IS EMPTY = " + isEmpty);
         });
 }
 
 function aggregateFunctions() {
-    console.log("\n\n=====AGGREGATE EXAMPLES=====");
+    helper.header("AGGREGATE EXAMPLES");
     return User.count()
         .then(function (count) {
-            console.log("COUNT = " + count);
+            helper.log("COUNT = " + count);
             return User.sum("id");
         })
         .then(function (count) {
-            console.log("SUM = " + count);
+            helper.log("SUM = " + count);
             return User.avg("id");
         })
         .then(function (count) {
-            console.log("AVG = " + count);
+            helper.log("AVG = " + count);
             return User.min("id");
         })
         .then(function (count) {
-            console.log("MIN = " + count);
+            helper.log("MIN = " + count);
             return User.max("id");
         })
         .then(function (count) {
-            console.log("MAX = " + count);
+            helper.log("MAX = " + count);
         });
 }
 
@@ -201,8 +195,8 @@ function setup() {
                 this.dateOfBirth(Date);
                 this.isVerified(Boolean, {"default": false});
                 this.lastAccessed(Date);
-                this.created(sql.TimeStamp);
-                this.updated(sql.DateTime);
+                this.created(patio.sql.TimeStamp);
+                this.updated(patio.sql.DateTime);
             });
         })
         .then(patio.syncModels)
@@ -231,7 +225,6 @@ function teardown() {
 }
 
 function fail(err) {
-    console.log(err.stack);
     return teardown().then(function () {
         return Promise.reject(err);
     });

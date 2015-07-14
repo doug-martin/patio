@@ -1,11 +1,8 @@
 "use strict";
 var patio = require("../../index"),
-    sql = patio.sql,
-    comb = require("comb"),
-    format = comb.string.format,
-    config = require("../config"),
-    db1 = config.connect("sandbox"),
-    db2 = config.connect("sandbox2"),
+    helper = require("../helper"),
+    db1 = helper.connect("sandbox"),
+    db2 = helper.connect("sandbox2"),
     User1 = patio.addModel(db1.from("user")),
     User2 = patio.addModel(db2.from("user"));
 
@@ -20,7 +17,7 @@ function runExamples() {
 }
 
 function multiDbSaveExample() {
-    console.log("\n\n=====MULTI DB  EXAMPLES=====");
+    helper.header("MULTI DB EXAMPLES");
     var myUser1 = new User1({
         firstName: "Bob1",
         lastName: "Yukon1",
@@ -39,13 +36,13 @@ function multiDbSaveExample() {
         myUser1.save(),
         myUser2.save()
     ]).then(function () {
-        console.log("USER 1 Saved to db 'sandbox'");
-        console.log(format("%s %s was created at %s", myUser1.firstName, myUser1.lastName, "" + myUser1.created.toString()));
-        console.log(format("%s %s's id is %d", myUser1.firstName, myUser1.lastName, myUser1.id));
+        helper.log("USER 1 Saved to db 'sandbox'");
+        helper.log("%s %s was created at %s", myUser1.firstName, myUser1.lastName, myUser1.created.toString());
+        helper.log("%s %s's id is %d", myUser1.firstName, myUser1.lastName, myUser1.id);
 
-        console.log("USER 1 Saved to db 'sandbox2'");
-        console.log(format("%s %s was created at %s", myUser2.firstName, myUser2.lastName, myUser2.created.toString()));
-        console.log(format("%s %s's id is %d", myUser2.firstName, myUser2.lastName, myUser2.id));
+        helper.log("USER 2 Saved to db 'sandbox2'");
+        helper.log("%s %s was created at %s", myUser2.firstName, myUser2.lastName, myUser2.created.toString());
+        helper.log("%s %s's id is %d", myUser2.firstName, myUser2.lastName, myUser2.id);
     });
 }
 
@@ -62,8 +59,8 @@ function setup() {
                 this.password(String);
                 this.dateOfBirth(Date);
                 this.isVerified(Boolean, {"default": false});
-                this.created(sql.TimeStamp, {"default": patio.sql.literal("now()")});
-                this.updated(sql.DateTime, {"default": patio.sql.literal("now()")});
+                this.created(patio.sql.TimeStamp, {"default": patio.sql.literal("now()")});
+                this.updated(patio.sql.DateTime, {"default": patio.sql.literal("now()")});
             }),
             //drop and recreate the user
             db2.forceCreateTable("user", function () {
@@ -73,8 +70,8 @@ function setup() {
                 this.password(String);
                 this.dateOfBirth(Date);
                 this.isVerified(Boolean, {"default": false});
-                this.created(sql.TimeStamp, {"default": patio.sql.literal("now()")});
-                this.updated(sql.DateTime, {"default": patio.sql.literal("now()")});
+                this.created(patio.sql.TimeStamp, {"default": patio.sql.literal("now()")});
+                this.updated(patio.sql.DateTime, {"default": patio.sql.literal("now()")});
             })
         ])
         .then(patio.syncModels);

@@ -1,17 +1,15 @@
 "use strict";
 
-var patio = require("../../index"),
+var patio = require("../../../lib"),
     sql = patio.sql,
     comb = require("comb"),
-    format = comb.string.format;
-
-patio.camelize = true;
-
-patio.configureLogging({"patio": {level: "ERROR"}});
-var DB = patio.connect("mysql://test:testpass@localhost:3306/sandbox");
+    format = comb.string.format,
+    helper = require("../../helper"),
+    db = helper.connect("sandbox");
 
 //define the BiologicalFather model
-var BiologicalFather = patio.addModel("biologicalFather")
+var BiologicalFather = patio
+    .addModel("biologicalFather")
     .oneToMany("children")
     .oneToMany("letterBChildren", {
         model: "child",
@@ -25,84 +23,97 @@ var BiologicalFather = patio.addModel("biologicalFather")
 //define Child  model
 var Child = patio.addModel("child").manyToOne("biologicalFather");
 
-var errorHandler = function (err) {
-    console.error(err.stack);
-    patio.disconnect();
-};
+module.exports = runExample;
 
-var createTables = function () {
-    return comb.serial([
-        function () {
-            return DB.forceDropTable("child", "biologicalFather");
-        },
-        function () {
-            return DB.createTable("biologicalFather", function () {
-                this.primaryKey("id");
-                this.name(String);
-            });
-        },
-        function () {
-            return DB.createTable("child", function () {
-                this.primaryKey("id");
-                this.name(String);
-                this.foreignKey("biologicalFatherId", "biologicalFather", {key: "id"});
-            });
-        },
-        function () {
-            return patio.syncModels();
-        }
-    ]);
-};
+function runExample() {
+    return setup()
+        .then(saveExample)
+        .then(queryExampleOne)
+        .then(teardown)
+        .catch(fail);
+}
 
-var createData = function () {
+
+function saveExample() {
+    helper.header("CUSTOM DATASET SAVE EXAMPLE");
     //create some data
     return BiologicalFather.save([
         {
-            name: "Fred", children: [
-            {name: "Bobby"},
-            {name: "Alice"},
-            {name: "Susan"}
-        ]
+            name: "Fred",
+            //each of the children will be persisted when save is called
+            children: [
+                {name: "Bobby"},
+                {name: "Alice"},
+                {name: "Susan"}
+            ]
         },
         {name: "Ben"},
         {name: "Bob"},
         {
-            name: "Scott", children: [
-            {name: "Brad"}
-        ]
+            name: "Scott",
+            //each of the children will be persisted when save is called
+            children: [
+                {name: "Brad"}
+            ]
         }
     ]);
-};
+}
 
-createTables()
-    .then(createData)
-    .then(function () {
-        return BiologicalFather.forEach(function (father) {
-            //you use a promise now because this is not an
-            //executeInOrderBlock
-            if (father.letterBChildren.length > 0) {
-                console.log(father.name + " has " + father.letterBChildren.length + " B children");
-                console.log("The B letter children's names are " + father.letterBChildren.map(function (child) {
+function queryExampleOne() {
+    helper.header("CUSTOM DATASET QUERY ONE EXAMPLE");
+    return BiologicalFather.forEach(function (father) {
+        //check our custom dataset for children
+        if (father.letterBChildren.length > 0) {
+            helper.log(father.name + " has " + father.letterBChildren.length + " B children");
+            helper.log("The B letter children's names are " + father.letterBChildren.map(function (child) {
+                    return child.name;
+                }));
+        }
+        return father.children.then(function (children) {
+            helper.log(father.name + " has " + children.length + " children");
+            if (children.length) {
+                helper.log("The children's names are " + children.map(function (child) {
                         return child.name;
                     }));
             }
-            return father.children.then(function (children) {
-                console.log(father.name + " has " + children.length + " children");
-                if (children.length) {
-                    console.log("The children's names are " + children.map(function (child) {
-                            return child.name;
-                        }));
-                }
-            });
         });
-    })
-    .then(function () {
-        return Child.findById(1).then(function (child) {
-            return child.biologicalFather.then(function (father) {
-                console.log(child.name + " father is " + father.name);
-            });
+    });
+}
+
+function queryExampleTwo() {
+    helper.header("CUSTOM DATASET QUERY TWO EXAMPLE");
+    return Child.findById(1).then(function (child) {
+        return child.biologicalFather.then(function (father) {
+            helper.log(child.name + " father is " + father.name);
         });
-    })
-    .then(comb.hitch(patio, "disconnect"), errorHandler);
+    });
+}
 
+function setup() {
+    return db
+        .forceDropTable("child", "biologicalFather")
+        .then(function () {
+            return db.createTable("biologicalFather", function () {
+                this.primaryKey("id");
+                this.name(String);
+            });
+        })
+        .then(function () {
+            return db.createTable("child", function () {
+                this.primaryKey("id");
+                this.name(String);
+                this.foreignKey("biologicalFatherId", "biologicalFather", {key: "id"});
+            });
+        })
+        .then(patio.syncModels);
+}
 
+function teardown() {
+    return db.dropTable("child", "biologicalFather");
+}
+
+function fail(err) {
+    return teardown().then(function () {
+        return Promise.reject(err);
+    });
+}

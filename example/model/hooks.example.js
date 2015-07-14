@@ -1,45 +1,43 @@
 "use strict";
 var patio = require("../../index"),
-    sql = patio.sql,
-    comb = require("comb"),
-    format = comb.string.format,
-    config = require("../config"),
-    db = config.connect("sandbox"),
-    User = patio.addModel("user", {
-        pre: {
-            "save": function (next) {
-                console.log("pre save!!!");
-                next();
-            },
+    helper = require("../helper"),
+    db = helper.connect("sandbox");
 
-            "update": function (next) {
-                console.log("pre update!!!");
-                next();
-            },
-
-            "remove": function (next) {
-                console.log("pre remove!!!");
-                next();
-            }
+var User = patio.addModel("user", {
+    pre: {
+        "save": function (next) {
+            helper.log("pre save!!!");
+            next();
         },
 
-        post: {
-            "save": function (next) {
-                console.log("post save!!!");
-                next();
-            },
+        "update": function (next) {
+            helper.log("pre update!!!");
+            next();
+        },
 
-            "update": function (next) {
-                console.log("post update!!!");
-                next();
-            },
-
-            "remove": function (next) {
-                console.log("post remove!!!");
-                next();
-            }
+        "remove": function (next) {
+            helper.log("pre remove!!!");
+            next();
         }
-    });
+    },
+
+    post: {
+        "save": function (next) {
+            helper.log("post save!!!");
+            next();
+        },
+
+        "update": function (next) {
+            helper.log("post update!!!");
+            next();
+        },
+
+        "remove": function (next) {
+            helper.log("post remove!!!");
+            next();
+        }
+    }
+});
 
 module.exports = runExample;
 
@@ -55,7 +53,7 @@ function runExample() {
 }
 
 function saveExample() {
-    console.log("\n\n=====SAVE EXAMPLE=====");
+    helper.header("SAVE EXAMPLE");
     var myUser = new User({
         firstName: "bob",
         lastName: "yukon",
@@ -64,27 +62,27 @@ function saveExample() {
     });
     //save the user
     return myUser.save().then(function (user) {
-        console.log(format("%s %s was created at %s", user.firstName, user.lastName, "" + user.created));
-        console.log(format("%s %s's id is %d", user.firstName, user.lastName, user.id));
+        helper.log("%s %s was created at %s", user.firstName, user.lastName, user.created);
+        helper.log("%s %s's id is %d", user.firstName, user.lastName, user.id);
     });
 }
 
 function updateExample() {
-    console.log("\n\n=====UPDATE EXAMPLE=====");
+    helper.header("UPDATE EXAMPLE");
     return User.one().then(function (user) {
-        console.log("before update user %d firstName = %s", user.id, user.firstName);
+        helper.log("before update user %d firstName = %s", user.id, user.firstName);
         return user.update({firstName: "sally"}).then(function () {
-            console.log("after update user %d firstName = %s", user.id, user.firstName);
+            helper.log("after update user %d firstName = %s", user.id, user.firstName);
         });
     });
 }
 
 function removeExample() {
-    console.log("\n\n=====REMOVE EXAMPLE=====");
+    helper.header("REMOVE EXAMPLE");
     return User.one().then(function (user) {
         var userId = user.id;
         return user.remove().then(function () {
-            console.log("removed user %d", userId);
+            helper.log("removed user %d", userId);
         });
     });
 }
@@ -114,8 +112,8 @@ function setup() {
             this.dateOfBirth(Date);
             this.isVerified(Boolean, {"default": false});
             this.lastAccessed(Date);
-            this.created(sql.TimeStamp);
-            this.updated(sql.DateTime);
+            this.created(patio.sql.TimeStamp);
+            this.updated(patio.sql.DateTime);
         })
         .then(patio.syncModels);
 }

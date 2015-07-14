@@ -1,5 +1,6 @@
 "use strict";
 var patio = require("../lib"),
+    comb = require("comb"),
     MYSQL_URI = "mysql://root@127.0.0.1:3306",
     PG_URI = "pg://postgres@127.0.0.1:5432",
     PATIO_DB = process.env.PATIO_DB,
@@ -10,7 +11,9 @@ patio.camelize = true;
 module.exports = {
     DB_URI: DB_URI,
     connect: connect,
-    disconnect: disconnect
+    disconnect: disconnect,
+    header: header,
+    log: log
 
 };
 
@@ -20,4 +23,13 @@ function connect(db) {
 
 function disconnect() {
     return patio.disconnect();
+}
+
+
+function header(txt) {
+    console.log("\n\n=====%s=====", txt.toUpperCase());
+}
+
+function log(txt, args) {
+    console.log("   %s", comb.string.format(txt, comb.argsToArray(arguments, 1)));
 }

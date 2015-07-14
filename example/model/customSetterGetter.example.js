@@ -1,10 +1,7 @@
 "use strict";
 var patio = require("../../index"),
-    sql = patio.sql,
-    comb = require("comb"),
-    format = comb.string.format,
-    config = require("../config"),
-    db = config.connect("sandbox");
+    helper = require("../helper"),
+    db = helper.connect("sandbox");
 
 var User = patio.addModel("user", {
     instance: {
@@ -42,27 +39,27 @@ function runExample() {
 }
 
 function setterExample() {
-    console.log("\n\n=====CUSTOM SETTER EXAMPLE=====");
+    helper.header("CUSTOM SETTER EXAMPLE");
     var myUser = new User();
-    console.log("setting firstName to 'sally'");
+    helper.log("setting firstName to 'sally'");
     myUser.firstName = 'sally';
-    console.log("set firstName to 'sally' custom setter transformed to %s", myUser.firstName);
+    helper.log("set firstName to 'sally' custom setter transformed to %s", myUser.firstName);
 
-    console.log("setting lastName to 'ford'");
+    helper.log("setting lastName to 'ford'");
     myUser.lastName = 'ford';
-    console.log("set lastName to 'ford' custom setter transformed to %s", myUser.lastName);
+    helper.log("set lastName to 'ford' custom setter transformed to %s", myUser.lastName);
 
-    console.log("INSERT SQL = '%s'", myUser.insertSql);
+    helper.log("INSERT SQL = '%s'", myUser.insertSql);
 }
 
 function getterExample() {
-    console.log("\n\n=====CUSTOM GETTER EXAMPLE=====");
+    helper.header("CUSTOM GETTER EXAMPLE");
     var myUser = new User(),
         roles = "admin,user,groupAdmin";
-    console.log("setting roles name to '%s'", roles);
+    helper.log("setting roles name to '%s'", roles);
     myUser.roles = roles;
-    console.log("get roles returned as to %j", myUser.roles);
-    console.log("INSERT SQL = '%s'", myUser.insertSql);
+    helper.log("get roles returned as to %j", myUser.roles);
+    helper.log("INSERT SQL = '%s'", myUser.insertSql);
 }
 
 //HELPER METHODS
@@ -78,8 +75,8 @@ function setup() {
             this.dateOfBirth(Date);
             this.isVerified(Boolean, {"default": false});
             this.lastAccessed(Date);
-            this.created(sql.TimeStamp);
-            this.updated(sql.DateTime);
+            this.created(patio.sql.TimeStamp);
+            this.updated(patio.sql.DateTime);
         })
         .then(patio.syncModels);
 }

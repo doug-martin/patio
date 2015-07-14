@@ -114,7 +114,7 @@ module.exports = function (grunt) {
         if (!exp) {
             console.log("Please choose one of the following examples:");
             grunt.file.expand("./example/**/*.example.js").forEach(function (exp) {
-                console.log("\tgrunt example:%s", exp.replace("./example/", "").replace(/\.js$/, ""));
+                console.log("\tgrunt example:%s:%s", db || "mysql", exp.replace("./example/", "").replace(/\.js$/, ""));
             });
         } else {
             if (!/\.example$/.test(exp)) {

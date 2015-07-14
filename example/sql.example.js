@@ -2,9 +2,9 @@
 var patio = require("../index"),
     sql = patio.sql,
     comb = require("comb"),
-    config = require("./config"),
+    helper = require("./helper"),
     format = comb.string.format,
-    db = config.connect("sandbox"),
+    db = helper.connect("sandbox"),
     User = patio.addModel("user"),
     Blog = patio.addModel("blog");
 
