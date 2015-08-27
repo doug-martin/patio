@@ -166,7 +166,7 @@ function teardown() {
 }
 
 function fail(err) {
-    console.log(err.stack)
+    console.log(err.stack);
     return teardown().then(function () {
         return Promise.reject(err);
     });

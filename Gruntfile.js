@@ -4,11 +4,13 @@ module.exports = function (grunt) {
     // Project configuration.
 
     var DEFAULT_COVERAGE_ARGS = ["cover", "-x", "Gruntfile.js", "--report", "none", "--print", "none", "--include-pid", "grunt", "--", "recreate_databases", "it"],
+        DATABASE_OPTIONS = ["mysql", "postgres"],
         path = require("path"),
         comb = require("comb");
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+
         jshint: {
             src: ["./index.js", "lib/**/*.js", "Gruntfile.js"],
             options: {
@@ -77,21 +79,6 @@ module.exports = function (grunt) {
         });
     });
 
-    grunt.registerTask("spawn-example", "spawn tests", function (db, exp) {
-        var done = this.async();
-        grunt.util.spawn({
-            cmd: "grunt",
-            args: ["example" + ":" + db + ":" + exp],
-            opts: {stdio: 'inherit'}
-        }, function (err) {
-            if (err) {
-                done(false);
-            } else {
-                done();
-            }
-        });
-    });
-
     grunt.registerTask("spawn-test-coverage", "spawn tests with coverage", function (db) {
         var done = this.async();
         var env = process.env;
@@ -110,22 +97,35 @@ module.exports = function (grunt) {
         });
     });
 
-    grunt.registerTask("example", "Runs an example from the examples directory", function (db, exp) {
-        if (!exp) {
-            console.log("Please choose one of the following examples:");
-            grunt.file.expand("./example/**/*.example.js").forEach(function (exp) {
-                console.log("\tgrunt example:%s:%s", db || "mysql", exp.replace("./example/", "").replace(/\.js$/, ""));
-            });
-        } else {
-            if (!/\.example$/.test(exp)) {
-                //get all the files to run
-                grunt.file.expand("./example/" + exp + "/*.example.js").forEach(function (exp) {
-                    grunt.task.run("spawn-example:" + db + ":" + exp.replace("./example/", "").replace(/\.js$/, ""));
-                });
+    grunt.registerTask("spawn-example", "spawn tests", function (db, exp) {
+        var done = this.async();
+        grunt.util.spawn({
+            cmd: "grunt",
+            args: ["example" + ":" + db + ":" + exp],
+            opts: {stdio: 'inherit'}
+        }, function (err) {
+            if (err) {
+                done(false);
             } else {
+                done();
+            }
+        });
+    });
+
+    grunt.registerTask("help:example", "Explanation on how to run examples", function () {
+        grunt.file.expand("./example/**/*.example.js").forEach(function (example) {
+            console.log("\tgrunt example:%s:%s", "mysql", example.replace("./example/", "").replace(/\.js$/, ""));
+        });
+    });
+
+    grunt.registerTask("example", "Runs an example from the examples directory", function (db, examplePath) {
+        if (examplePath) {
+            var singleExample = /\.example$/.test(examplePath);
+
+            if (singleExample) {
                 process.env.PATIO_DB = db;
                 var done = this.async();
-                require(path.resolve("./example/", exp))()
+                require(path.resolve("./example/", examplePath))()
                     .then(function () {
                         done();
                     })
@@ -133,7 +133,15 @@ module.exports = function (grunt) {
                         console.log(err.stack || err);
                         done(false);
                     });
+            } else {
+                //get all the files to run
+                grunt.file.expand("./example/" + examplePath + "/*.example.js").forEach(function (example) {
+                    grunt.task.run("spawn-example:" + db + ":" + example.replace("./example/", "").replace(/\.js$/, ""));
+                });
             }
+        } else {
+            console.log("\tInvalid parameters");
+            grunt.task.run("help:example");
         }
     });
 
