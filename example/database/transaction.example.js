@@ -1,38 +1,52 @@
 "use strict";
 
 var patio = require("../../index"),
+    helper = require("../helper"),
+    db = helper.connect("sandbox"),
     sql = patio.sql,
     comb = require("comb"),
     format = comb.string.format;
 
-patio.configureLogging();
+module.exports = runExample;
 
-//disconnect and error callback helpers
-var disconnect = comb.hitch(patio, "disconnect");
-var disconnectError = function (err) {
-    patio.logError(err);
-    return patio.disconnect();
-};
-patio.configureLogging();
-var connectAndCreateSchema = function () {
-    //This assumes new tables each time you could just connect to the database
-    return patio.connectAndExecute("mysql://root@localhost:3306/sandbox",
-        function (db, patio) {
-            //drop and recreate the user
-            db.forceCreateTable("user", function () {
-                this.primaryKey("id");
-                this.firstName(String);
-                this.lastName(String);
-                this.password(String);
-                this.dateOfBirth(Date);
-                this.created(sql.TimeStamp);
-                this.updated(sql.DateTime);
-            });
-        });
-};
+function runExample() {
+    return setup()
+        .then(simpleTransaction)
+        .then(nestedTransaction)
+        .then(multipleTransactions)
+        .then(multipleTransactionsError)
+        .then(inOrderTransaction)
+        .then(errorTransaciton)
+        .then(errorCallbackTransaciton)
+        .then(teardown)
+        .catch(fail);
+}
 
-var simpleTransaction = function (db) {
-    console.log("\n\n********SIMPLE TRANSACTION(NO ROLLBACK)*********");
+function setup() {
+    return db.forceCreateTable("user", function () {
+        this.primaryKey("id");
+        this.firstName(String);
+        this.lastName(String);
+        this.password(String);
+        this.dateOfBirth(Date);
+        this.created(sql.TimeStamp);
+        this.updated(sql.DateTime);
+    }).then(patio.syncModels);
+}
+
+function teardown() {
+    return db.dropTable("user");
+}
+
+function fail(err) {
+    return teardown().then(function () {
+        return Promise.reject(err);
+    });
+}
+
+function simpleTransaction() {
+    helper.header("SIMPLE TRANSACTION(NO ROLLBACK)");
+
     return db.transaction(function () {
         var ds = db.from("user");
         return Promise.all([
@@ -57,10 +71,10 @@ var simpleTransaction = function (db) {
             })
         ]);
     });
-};
+}
 
-var nestedTransaction = function (db) {
-    console.log("\n\n********NESTED TRANSACTION(NO ROLLBACK)*********");
+function nestedTransaction() {
+    helper.header("NESTED TRANSACTION(NO ROLLBACK)");
     return db.transaction(function () {
         var ds = db.from("user");
         return Promise.all([
@@ -71,7 +85,7 @@ var nestedTransaction = function (db) {
                 dateOfBirth: new Date(1980, 8, 29)
             }),
             db.transaction(function () {
-                comb.when(
+                return Promise.all([
                     ds.insert({
                         firstName: "Greg",
                         lastName: "Kilosky",
@@ -79,22 +93,23 @@ var nestedTransaction = function (db) {
                         dateOfBirth: new Date(1988, 7, 19)
                     }),
                     db.transaction(function () {
-                        ds.insert({
+                        return ds.insert({
                             firstName: "Jane",
                             lastName: "Gorgenson",
                             password: "password",
                             dateOfBirth: new Date(1956, 1, 3)
                         });
                     })
-                );
+                ]);
             })
         ]);
     });
-};
+}
 
-var multipleTransactions = function (db) {
+function multipleTransactions() {
+    helper.header("MULTI TRANSACTION(NO ROLLBACK");
+
     var ds = db.from("user");
-    console.log("\n\n********MULTI TRANSACTION(NO ROLLBACK)*********");
     return Promise.all([
         db.transaction(function () {
             return ds.insert({
@@ -125,11 +140,12 @@ var multipleTransactions = function (db) {
             });
         })
     ]);
-};
+}
 
-var multipleTransactionsError = function (db) {
+function multipleTransactionsError() {
+    helper.header("MULTIPLE TRANSACTION(ROLLBACK)");
+
     var ds = db.from("user");
-    console.log("\n\n********MULTIPLE TRANSACTION(ROLLBACK)*********");
     return Promise.all([
         db.transaction(function () {
             return ds.insert({
@@ -160,11 +176,12 @@ var multipleTransactionsError = function (db) {
             });
         })
     ]);
-};
+}
 
-var inOrderTransaction = function (db) {
+function inOrderTransaction() {
+    helper.header("IN ORDER TRANSACTION(NO ROLLBACK)");
+
     var ds = db.from("user");
-    console.log("\n\n********IN ORDER TRANSACTION(NO ROLLBACK)*********");
     return db.transaction(function () {
         return ds.insert({
             firstName: "Bob",
@@ -191,11 +208,12 @@ var inOrderTransaction = function (db) {
             });
         });
     });
-};
+}
 
-var errorTransaciton = function (db) {
+function errorTransaciton() {
+    helper.header("THROW ERROR TRANSACTION(ROLLBACK)");
     var ds = db.from("user");
-    console.log("\n\n********THROW ERROR TRANSACTION(ROLLBACK)*********");
+
     return db.transaction(function () {
         var ds = db.from("user");
         return ds.insert({
@@ -230,11 +248,12 @@ var errorTransaciton = function (db) {
             patio.logInfo(format("COUNT = " + count));
         });
     });
-};
+}
 
-var errorCallbackTransaciton = function (db) {
+function errorCallbackTransaciton() {
+    helper.header("ERRBACK TRANSACTION(ROLLBACK)");
+
     var ds = db.from("user");
-    console.log("\n\n********ERRBACK TRANSACTION(ROLLBACK)*********");
     return db.transaction(function () {
         var ds = db.from("user");
         return ds.insert({
@@ -256,10 +275,9 @@ var errorCallbackTransaciton = function (db) {
                             lastName: "Gorgenson",
                             password: "password",
                             dateOfBirth: new Date(1956, 1, 3)
-                        })
-                            .then(function () {
-                                return new comb.Promise().errback("err");
-                            });
+                        }).then(function () {
+                            return Promise.reject("err");
+                        });
                     });
                 });
             });
@@ -271,22 +289,4 @@ var errorCallbackTransaciton = function (db) {
             patio.logInfo(format("COUNT = " + count));
         });
     });
-};
-
-
-var connectAndExecute = function (cb) {
-    return connectAndCreateSchema()
-        .then(function (db) {
-            return cb(db);
-        })
-        .then(disconnect, disconnectError);
-};
-
-connectAndExecute(multipleTransactions)
-    .then(comb.partial(connectAndExecute, multipleTransactionsError), disconnectError)
-    .then(comb.partial(connectAndExecute, simpleTransaction), disconnectError)
-    .then(comb.partial(connectAndExecute, nestedTransaction), disconnectError)
-    .then(comb.partial(connectAndExecute, inOrderTransaction), disconnectError)
-    .then(comb.partial(connectAndExecute, errorTransaciton), disconnectError)
-    .then(comb.partial(connectAndExecute, errorCallbackTransaciton), disconnectError);
-
+}
