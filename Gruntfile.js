@@ -1,18 +1,37 @@
 "use strict";
 /*global module:false*/
 module.exports = function (grunt) {
-    // Project configuration.
 
+    // Automatic module definition loading. Significantly speeds up build cycles
+    require('jit-grunt')(grunt);
+
+    // Time how long tasks take. Can help when optimizing build times
+    require('time-grunt')(grunt);
+
+    // Project configuration.
     var DEFAULT_COVERAGE_ARGS = ["cover", "-x", "Gruntfile.js", "--report", "none", "--print", "none", "--include-pid", "grunt", "--", "recreate_databases", "it"],
-        DATABASE_OPTIONS = ["mysql", "postgres"],
+        DATABASE_OPTIONS = ["mysql", "pg"],
         path = require("path"),
         comb = require("comb");
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
 
+        patio: {
+            paths: {
+                root: './',
+                examples: './example',
+                lib: './lib'
+            }
+        },
+
         jshint: {
-            src: ["./index.js", "lib/**/*.js", "Gruntfile.js"],
+            src: [
+                "./index.js",
+                "<%= patio.paths.examples %>/**/*.js",
+                "<%= patio.paths.lib %>/**/*.js",
+                "Gruntfile.js"
+            ],
             options: {
                 jshintrc: '.jshintrc'
             }
@@ -169,9 +188,6 @@ module.exports = function (grunt) {
         });
     });
 
-    grunt.loadNpmTasks('grunt-exec');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    // Default task.
     grunt.registerTask('default', ['jshint', "test", "test-coverage", "docs"]);
 
     grunt.registerTask('test', ['jshint', 'test-mysql', 'test-pg']);
@@ -185,9 +201,4 @@ module.exports = function (grunt) {
 
 
     grunt.registerTask("docs", ["exec:removeDocs", "exec:createDocs"]);
-
-    grunt.loadNpmTasks('grunt-it');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-exec');
-
 };
