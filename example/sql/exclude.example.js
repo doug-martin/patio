@@ -2,16 +2,22 @@
 var patio = require("../../index"),
     helper = require("../helper"),
     db = helper.connect("sandbox"),
-    User = patio.addModel("user"),
-    Blog = patio.addModel("blog");
+    User = patio.addModel("user");
 
 module.exports = runExample;
 
 function runExample() {
     return setup()
         .then(examples)
-        .then(teardown)
-        .catch(fail);
+        .then(helper.teardown(db, ["blog", "users"]))
+        .catch(helper.fail(db, ["blog", "user"]));
+}
+
+function examples() {
+    helper.header("SQL:EXCLUDE EXAMPLE");
+    helper.log(User.exclude({id: 5}).sql);
+    helper.log(User.exclude({id: [1, 2]}).sql);
+    helper.log(User.exclude(patio.sql.name.like('%o%')).sql);
 }
 
 function setup() {
@@ -39,23 +45,6 @@ function setup() {
             });
         })
         .then(patio.syncModels);
-}
-
-function teardown() {
-    return db.dropTable("blog", "user");
-}
-
-function fail(err) {
-    return teardown().then(function () {
-        return Promise.reject(err);
-    });
-}
-
-function examples() {
-    helper.header("SQL:EXCLUDE EXAMPLE");
-    helper.log(User.exclude({id: 5}).sql);
-    helper.log(User.exclude({id: [1, 2]}).sql);
-    helper.log(User.exclude(patio.sql.name.like('%o%')).sql);
 }
 
 

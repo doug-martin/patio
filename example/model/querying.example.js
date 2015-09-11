@@ -4,9 +4,9 @@ var patio = require("../../index"),
     db = helper.connect("sandbox"),
     User = patio.addModel("user");
 
+
 module.exports = runExamples;
 function runExamples() {
-//connect and create schema
     return setup()
         .then(findById)
         .then(first)
@@ -18,8 +18,8 @@ function runExamples() {
         .then(toHash)
         .then(isEmpty)
         .then(aggregateFunctions)
-        .then(teardown)
-        .catch(fail);
+        .then(helper.teardown(db, "user"))
+        .catch(helper.fail(db, "user"));
 }
 
 function findById() {
@@ -181,7 +181,9 @@ function aggregateFunctions() {
         });
 }
 
-//HELPER METHODS
+/*
+ * Helper Methods
+ */
 
 function setup() {
     //This assumes new tables each time you could just connect to the database
@@ -218,14 +220,4 @@ function setup() {
                     }
                 ]);
         });
-}
-
-function teardown() {
-    return db.dropTable("user");
-}
-
-function fail(err) {
-    return teardown().then(function () {
-        return Promise.reject(err);
-    });
 }

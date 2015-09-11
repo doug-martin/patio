@@ -13,7 +13,9 @@ module.exports = {
     connect: connect,
     disconnect: disconnect,
     header: header,
-    log: log
+    log: log,
+    teardown: teardown,
+    fail: fail
 
 };
 
@@ -32,4 +34,25 @@ function header(txt) {
 
 function log(txt, args) {
     console.log("   %s", comb.string.format(txt, comb.argsToArray(arguments, 1)));
+}
+
+/*
+ * Teardown an example
+ *
+ */
+function teardown(db, tables) {
+    return function () {
+        return db.dropTable(tables);
+    };
+}
+
+/*
+ * Fail an example
+ */
+function fail(db, tables) {
+    return function (err) {
+        return teardown(db, tables)().then(function () {
+            return Promise.reject(err);
+        });
+    };
 }

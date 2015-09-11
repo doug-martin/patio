@@ -10,9 +10,34 @@ module.exports = runExample;
 function runExample() {
     return setup()
         .then(examples)
-        .then(teardown)
+        .then(helpers.teardown)
         .catch(fail);
 }
+
+
+
+function teardown() {
+    return db.dropTable("blog", "user");
+}
+
+function fail(err) {
+    return teardown().then(function () {
+        return Promise.reject(err);
+    });
+}
+
+function examples() {
+    helper.header("SQL:SELECT EXAMPLE");
+    helper.log(User.select("id", "name").sql);
+    helper.log(User.select("id").select("name").sql);
+    helper.log(User.select("id").selectAppend("name").sql);
+    helper.log(User.select("id").selectAll().sql);
+    helper.log(User.distinct().select("name").sql);
+}
+
+/*
+ * Helper Methods
+ */
 
 function setup() {
     return db.forceDropTable("blog", "user")
@@ -40,26 +65,6 @@ function setup() {
         })
         .then(patio.syncModels);
 }
-
-function teardown() {
-    return db.dropTable("blog", "user");
-}
-
-function fail(err) {
-    return teardown().then(function () {
-        return Promise.reject(err);
-    });
-}
-
-function examples() {
-    helper.header("SQL:SELECT EXAMPLE");
-    helper.log(User.select("id", "name").sql);
-    helper.log(User.select("id").select("name").sql);
-    helper.log(User.select("id").selectAppend("name").sql);
-    helper.log(User.select("id").selectAll().sql);
-    helper.log(User.distinct().select("name").sql);
-}
-
 
 
 

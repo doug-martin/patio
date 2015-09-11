@@ -10,12 +10,12 @@ var BiologicalFather = patio
 
 var StepFather = patio
     .addModel("stepFather")
-    .oneToMany("children", {key: "stepFatherKey"});
+    .oneToMany("children", {key: "stepFatherKey", primaryKey: "name"});
 
 var Child = patio
     .addModel("child")
     .manyToOne("biologicalFather", {key: "biologicalFatherKey"})
-    .manyToOne("stepFather", {key: "stepFatherKey"});
+    .manyToOne("stepFather", {key: "stepFatherKey", primaryKey: "name"});
 
 module.exports = runExample;
 

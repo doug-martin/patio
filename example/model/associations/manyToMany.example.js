@@ -250,7 +250,7 @@ function createData() {
 }
 
 function teardown() {
-    return db.dropTable("classesStudents", "class", "student")
+    return db.dropTable("classesStudents", "class", "student");
 }
 
 function fail(err) {
