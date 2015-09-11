@@ -1,6 +1,5 @@
 "use strict";
 
-"use strict";
 var server = "pg://postgres@127.0.0.1:5432/sandbox?maxConnections=10",
     patio = require("../index"),
     TIMES = parseInt(process.env.TIMES || 3),
